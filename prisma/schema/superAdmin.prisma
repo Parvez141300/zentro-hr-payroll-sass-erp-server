@@ -1,0 +1,23 @@
+model SuperAdmin {
+    id     String @id @default(cuid())
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    fullName String
+    phone    String?
+    photoUrl String?
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // relation
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([id], name: "idx_superAdmin_id")
+    @@index([userId], name: "idx_superAdmin_userId")
+    @@index([companyId], name: "idx_superAdmin_companyId")
+    @@map("super_admin")
+}

@@ -32,7 +32,8 @@ model Company {
     updatedAt DateTime @updatedAt
 
     // relations
-    user User[]
+    user        User[]
+    superAdmins SuperAdmin[]
 
     @@index([email], name: "idx_company_email")
     @@index([id], name: "idx_company_id")

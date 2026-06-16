@@ -9,5 +9,6 @@ model PlatformSuperAdmin {
 
     @@index([id], name: "idx_platform_super_admin_id")
     @@index([email], name: "idx_platform_super_admin_email")
+    @@index([userId], name: "idx_platform_super_admin_userId")
     @@map("platform_super_admin")
 }
