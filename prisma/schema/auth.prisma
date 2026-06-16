@@ -20,6 +20,7 @@ model User {
   platformSuperAdmin PlatformSuperAdmin?
   superAdmin         SuperAdmin?
   hrManager          HrManager?
+  accountant         Accountant?
 
   @@unique([email, id])
   @@index([id], name: "idx_user_id")
