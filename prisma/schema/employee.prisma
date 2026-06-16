@@ -1,0 +1,59 @@
+model Employee {
+    id String @id @default(cuid())
+
+    // Personal Info
+    firstName   String
+    lastName    String
+    phone       String?
+    photoUrl    String?
+    dateOfBirth DateTime?
+    gender      Gender?
+    address     String?
+    nidNumber   String?
+    bloodGroup  String?
+
+    // Job Info
+    employeeCode   String
+    joinDate       DateTime
+    employmentType EmploymentType @default(FULL_TIME)
+    status         EmployeeStatus @default(ACTIVE)
+
+    // Salary Info
+    basicSalary        Float
+    houseAllowance     Float @default(0)
+    medicalAllowance   Float @default(0)
+    transportAllowance Float @default(0)
+
+    // Bank Info
+    bankName    String?
+    bankAccount String?
+
+    // Emergency Contact
+    emergencyName     String?
+    emergencyPhone    String?
+    emergencyRelation String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    departmentId String?
+    department   Department? @relation(fields: [departmentId], references: [id])
+
+    designationId String?
+    designation   Designation? @relation(fields: [designationId], references: [id])
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([employeeCode, companyId])
+    @@index([companyId], name: "idx_employee_companyId")
+    @@index([departmentId], name: "idx_employee_departmentId")
+    @@index([designationId], name: "idx_employee_designationId")
+    @@index([status], name: "idx_employee_status")
+    @@index([joinDate], name: "idx_employee_joinDate")
+    @@map("employee")
+}

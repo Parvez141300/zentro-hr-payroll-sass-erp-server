@@ -15,6 +15,7 @@ model Department {
     hrManagers      HrManager[]
     designations    Designation[]
     departmentHeads DepartmentHead[]
+    employees       Employee[]
 
     @@unique([name, companyId])
     @@index([id], name: "idx_department_id")

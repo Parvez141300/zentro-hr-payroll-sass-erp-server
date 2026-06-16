@@ -39,6 +39,7 @@ model Company {
     designations    Designation[]
     accountants     Accountant[]
     departmentHeads DepartmentHead[]
+    employees       Employee[]
 
     @@index([email], name: "idx_company_email")
     @@index([id], name: "idx_company_id")

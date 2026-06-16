@@ -22,6 +22,7 @@ model User {
   hrManager          HrManager?
   accountant         Accountant?
   departmentHead     DepartmentHead?
+  employee           Employee?
 
   @@unique([email, id])
   @@index([id], name: "idx_user_id")
