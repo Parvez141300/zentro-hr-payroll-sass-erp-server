@@ -781,7 +781,6 @@ model AccountantProfile {
   phone               String?
   photoUrl            String?
   employeeCode        String?
-  designation         String?
   joinDate            DateTime?
   caLicenseNumber     String?
   taxIdNumber         String?

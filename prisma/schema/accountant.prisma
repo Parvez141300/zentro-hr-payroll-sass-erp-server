@@ -1,11 +1,10 @@
 model Accountant {
-    id     String @id @default(cuid())
+    id String @id @default(cuid())
 
     fullName         String
     phone            String?
     photoUrl         String?
     employeeCode     String?
-    designation      String?
     joinDate         DateTime?
     caLicenseNumber  String?
     taxIdNumber      String?
@@ -23,5 +22,8 @@ model Accountant {
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    @@index([companyId])
+    @@index([id], name: "idx_accountant_id")
+    @@index([companyId], name: "idx_accountant_companyId")
+    @@index([employeeCode], name: "idx_accountant_employeeCode")
+    @@map("accountant")
 }
