@@ -756,6 +756,9 @@ model HrManagerProfile {
   // NOT NULL means Department-specific HR Manager
   departmentId        String?
   department          Department? @relation(fields: [departmentId], references: [id])
+      
+  designationId  String?
+  designation    Designation?   @relation(fields: [designationId], references: [id])
   
   // 🆕 Scope of responsibility
   scope               HrScope     @default(COMPANY_WIDE)
@@ -816,6 +819,9 @@ model DepartmentHeadProfile {
   
   companyId           String
   company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  designationId  String?
+  designation    Designation?   @relation(fields: [designationId], references: [id])
   
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
