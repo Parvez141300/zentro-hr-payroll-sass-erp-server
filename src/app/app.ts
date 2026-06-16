@@ -10,5 +10,5 @@ app.use(express.json());
 
 // Basic route
 app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, TypeScript + Express!');
+  res.send('Zentro HR Payroll SaaS ERP Server is running!');
 });
