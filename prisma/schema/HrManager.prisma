@@ -12,6 +12,8 @@ model HrManager {
     hrLicenseNumber String?
     officePhone     String?
     bio             String?
+    // 🆕 Scope of responsibility
+    scope HrScope @default(COMPANY_WIDE)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -19,14 +21,12 @@ model HrManager {
     // relations
     userId       String      @unique
     user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+    
     // 🆕 Department Assignment (Optional)
     // NULL means Company Level HR Manager (manages all departments)
     // NOT NULL means Department-specific HR Manager
     departmentId String?
     department   Department? @relation(fields: [departmentId], references: [id])
-
-    // 🆕 Scope of responsibility
-    scope HrScope @default(COMPANY_WIDE)
 
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -36,4 +36,5 @@ model HrManager {
     @@index([employeeCode], name: "idx_hrManager_employeeCode")
     @@index([departmentId], name: "idx_hrManager_departmentId")
     @@index([scope], name: "idx_hrManager_scope")
+    @@map("hr_manager")
 }

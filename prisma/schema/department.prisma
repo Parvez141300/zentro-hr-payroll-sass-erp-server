@@ -1,0 +1,20 @@
+model Department {
+    id          String  @id @default(cuid())
+    name        String
+    description String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    companyId  String
+    company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    
+    hrManagers HrManager[]
+
+    @@unique([name, companyId])
+    @@index([id], name: "idx_department_id")
+    @@index([name], name: "idx_department_name")
+    @@index([companyId], name: "idx_department_companyId")
+    @@map("department")
+}
