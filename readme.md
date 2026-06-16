@@ -951,6 +951,7 @@ model Attendance {
   company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   createdAt         DateTime         @default(now())
+  updatedAt DateTime @updatedAt
   
   @@unique([employeeId, date])
   @@index([companyId])

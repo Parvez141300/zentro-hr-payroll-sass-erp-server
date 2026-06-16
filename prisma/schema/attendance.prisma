@@ -1,0 +1,31 @@
+model Attendance {
+    id String @id @default(cuid())
+
+    date             DateTime
+    status           AttendanceStatus @default(PRESENT)
+    checkIn          DateTime?
+    checkOut         DateTime?
+    note             String?
+    overtimeHours    Float?           @default(0)
+    lateMinutes      Int?             @default(0)
+    earlyExitMinutes Int?             @default(0)
+    approvedBy       String?
+    approvedAt       DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    employeeId String
+    employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    companyId  String
+    company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([employeeId, date])
+    @@index([id], name: "idx_attendance_id")
+    @@index([employeeId], name: "idx_attendance_employeeId")
+    @@index([companyId], name: "idx_attendance_companyId")
+    @@index([date], name: "idx_attendance_date")
+    @@index([status], name: "idx_attendance_status")
+    @@map("attendance")
+}
