@@ -2,15 +2,18 @@ model Department {
     id          String  @id @default(cuid())
     name        String
     description String?
+    isDeleted   Boolean @default(false)
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
 
     // relations
-    companyId  String
-    company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    
-    hrManagers HrManager[]
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    hrManagers   HrManager[]
+    designations Designation[]
 
     @@unique([name, companyId])
     @@index([id], name: "idx_department_id")

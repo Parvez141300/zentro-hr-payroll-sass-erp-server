@@ -1,0 +1,24 @@
+model Designation {
+    id           String    @id @default(cuid())
+    title        String
+    description  String?
+    departmentId String
+    isDeleted    Boolean   @default(false)
+    
+    deletedAt    DateTime?
+    createdAt    DateTime  @default(now())
+    updatedAt    DateTime  @updatedAt
+
+    //   relations
+    department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([title, departmentId, companyId])
+    @@index([id], name: "idx_designation_id")
+    @@index([companyId], name: "idx_designation_companyId")
+    @@index([departmentId], name: "idx_designation_departmentId")
+    @@index([title], name: "idx_designation_title")
+    @@map("designation")
+}
