@@ -684,6 +684,7 @@ model User {
   company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
   
   // Role profiles
+  platformSuperAdminProfile PlatformSuperAdminProfile?
   superAdminProfile SuperAdminProfile?
   hrManagerProfile  HrManagerProfile?
   accountantProfile AccountantProfile?
@@ -701,7 +702,7 @@ model User {
 // ─── ROLE PROFILES (with companyId) ────────────────────
 
 // Platform Admin Model
-model PlatformAdminProfile {
+model PlatformSuperAdminProfile {
   id              String         @id @default(cuid())
   userId          String         @unique
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)

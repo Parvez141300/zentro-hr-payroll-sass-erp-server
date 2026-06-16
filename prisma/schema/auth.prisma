@@ -14,10 +14,13 @@ model User {
   accounts      Account[]
 
   //relations
-  companyId String?
-  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId          String?
+  company            Company?            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  platformSuperAdmin PlatformSuperAdmin?
 
   @@unique([email, id])
+  @@index([id], name: "idx_user_id")
+  @@index([email], name: "idx_user_email")
   @@map("user")
 }
 
