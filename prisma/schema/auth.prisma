@@ -21,6 +21,7 @@ model User {
   superAdmin         SuperAdmin?
   hrManager          HrManager?
   accountant         Accountant?
+  departmentHead     DepartmentHead?
 
   @@unique([email, id])
   @@index([id], name: "idx_user_id")

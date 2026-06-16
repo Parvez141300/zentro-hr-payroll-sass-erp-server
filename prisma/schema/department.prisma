@@ -12,8 +12,9 @@ model Department {
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    hrManagers   HrManager[]
-    designations Designation[]
+    hrManagers      HrManager[]
+    designations    Designation[]
+    departmentHeads DepartmentHead[]
 
     @@unique([name, companyId])
     @@index([id], name: "idx_department_id")

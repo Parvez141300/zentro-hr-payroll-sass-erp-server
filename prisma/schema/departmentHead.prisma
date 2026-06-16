@@ -21,6 +21,9 @@ model DepartmentHead {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([companyId])
-    @@index([departmentId])
+    @@index([id], name: "idx_departmentHead_id")
+    @@index([companyId], name: "idx_departmentHead_companyId")
+    @@index([departmentId], name: "idx_departmentHead_departmentId")
+    @@index([employeeCode], name: "idx_departmentHead_employeeCode")
+    @@map("department_head")
 }
