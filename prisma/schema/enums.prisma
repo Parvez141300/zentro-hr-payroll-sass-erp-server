@@ -1,0 +1,98 @@
+// Role Enum
+enum Role {
+    PLATFORM_SUPER_ADMIN
+    Super_ADMIN
+    HR_MANAGER
+    ACCOUNTANT
+    DEPARTMENT_HEAD
+    EMPLOYEE
+}
+
+// Gender Enum
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+// Employment Type Enum
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+// Employee Status Enum
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
+}
+
+// Attendance Status Enum
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  HOLIDAY
+  WEEKEND
+}
+
+// Leave Status Enum
+enum LeaveStatus {
+  PENDING
+  APPROVED_BY_HEAD
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// Payroll Status Enum
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+  CANCELLED
+}
+
+// Subscription Plan Enum
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+// Subscription Status Enum
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  TRIAL
+  PAST_DUE
+}
+
+// Payment Status Enum
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// Payment Gateway Enum
+enum PaymentGateway {
+  STRIPE
+  SSLCOMMERZ
+}
+
+// 🆕 HR Scope Enum
+enum HrScope {
+  COMPANY_WIDE     // Manages all departments
+  DEPARTMENT_SPECIFIC // Manages specific department only
+  REGIONAL         // Manages specific region
+}

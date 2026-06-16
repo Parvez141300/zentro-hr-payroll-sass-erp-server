@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { Role } from "../generated/prisma/enums";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -10,4 +11,33 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                required: true,
+                defaultValue: Role.EMPLOYEE,
+            },
+            isActive: {
+                type: "boolean",
+                required: true,
+                defaultValue: true,
+            },
+            isDeleted: {
+                type: "boolean",
+                required: true,
+                defaultValue: false,
+            },
+            deletedAt: {
+                type: "date",
+                required: false,
+                defaultValue: null,
+            },
+            companyId: {
+                type: "string",
+                required: false,
+                defaultValue: null,
+            }
+        }
+    }
 });

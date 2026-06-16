@@ -1,0 +1,39 @@
+model Company {
+    id              String    @id @default(cuid())
+    name            String
+    logo            String?
+    address         String?
+    email           String?
+    phone           String?
+    taxId           String?
+    website         String?
+    fiscalYearStart DateTime?
+    fiscalYearEnd   DateTime?
+
+    // Subscription
+    subscriptionPlan   SubscriptionPlan   @default(FREE)
+    subscriptionStatus SubscriptionStatus @default(TRIAL)
+    subscriptionExpiry DateTime?
+    maxEmployees       Int                @default(10)
+
+    // 🔐 Stripe fields
+    stripeCustomerId     String? // Stripe customer ID
+    stripeSubscriptionId String? // Stripe subscription ID
+
+    // 🇧🇩 SSLCommerz fields (যোগ করতে হবে)
+    sslCommerzStoreId    String? // SSLCommerz store ID for this company
+    sslCommerzCustomerId String? // SSLCommerz customer reference
+    sslCommerzToken      String? // Token for recurring payment (if supported)
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    user User[]
+
+    @@index([email, id])
+    @@map("company")
+}
