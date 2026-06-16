@@ -1,0 +1,23 @@
+model LeaveType {
+    id          String  @id @default(cuid())
+    name        String
+    description String?
+    daysAllowed Int
+    isPaid      Boolean @default(true)
+    isActive    Boolean @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    leaves Leave[]
+
+    @@index([id], name: "idx_leaveType_id")
+    @@unique([name], name: "idx_leaveType_name")
+    @@index([companyId], name: "idx_leaveType_companyId")
+    @@index([isActive], name: "idx_leaveType_isActive")
+    @@map("leaveType")
+}

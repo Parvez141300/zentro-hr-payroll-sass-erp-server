@@ -46,10 +46,11 @@ model Employee {
     designationId String?
     designation   Designation? @relation(fields: [designationId], references: [id])
 
-    companyId   String
-    company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-    
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
     attendances Attendance[]
+    leaves      Leave[]
 
     @@unique([employeeCode, companyId])
     @@index([companyId], name: "idx_employee_companyId")

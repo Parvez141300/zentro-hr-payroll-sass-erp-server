@@ -41,6 +41,8 @@ model Company {
     departmentHeads DepartmentHead[]
     employees       Employee[]
     attendances     Attendance[]
+    leaves          Leave[]
+    leaveTypes      LeaveType[]
 
     @@index([email], name: "idx_company_email")
     @@index([id], name: "idx_company_id")

@@ -1,0 +1,35 @@
+model Leave {
+    id String @id @default(cuid())
+
+    startDate        DateTime
+    endDate          DateTime
+    totalDays        Int
+    reason           String
+    attachmentUrl    String?
+    status           LeaveStatus @default(PENDING)
+    reviewedById     String?
+    reviewNote       String?
+    approvedByHeadAt DateTime?
+    approvedByHRAt   DateTime?
+    rejectedAt       DateTime?
+    rejectedReason   String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    employeeId  String
+    employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    leaveTypeId String
+    leaveType   LeaveType       @relation(fields: [leaveTypeId], references: [id])
+    companyId   String
+    company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([id], name: "idx_leave_id")
+    @@index([employeeId], name: "idx_leave_employeeId")
+    @@index([leaveTypeId], name: "idx_leave_leaveTypeId")
+    @@index([companyId], name: "idx_leave_companyId")
+    @@index([status], name: "idx_leave_status")
+    @@index([startDate, endDate], name: "idx_leave_start_end_date")
+    @@map("leave")
+}
