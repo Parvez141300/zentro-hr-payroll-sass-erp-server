@@ -1,0 +1,38 @@
+model Payment {
+    id String @id @default(cuid())
+
+    gateway   PaymentGateway
+    plan      SubscriptionPlan
+    amountUSD Float?
+    amountBDT Float?
+
+    // Stripe fields
+    stripePaymentIntentId String? @unique
+    stripeInvoiceId       String?
+    stripeSubscriptionId  String?
+
+    // SSLCommerz fields
+    sslTranId     String? @unique
+    sslValId      String?
+    sslSessionKey String?
+
+    status            PaymentStatus @default(PENDING)
+    paidAt            DateTime?
+    subscriptionStart DateTime?
+    subscriptionEnd   DateTime?
+    transactionId     String?       @unique
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    subscriptionHistory SubscriptionHistory?
+
+    @@index([companyId], name: "idx_payment_companyId")
+    @@index([status], name: "idx_payment_status")
+    @@index([paidAt], name: "idx_payment_paidAt")
+    @@map("payment")
+}
