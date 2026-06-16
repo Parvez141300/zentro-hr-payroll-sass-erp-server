@@ -4,6 +4,16 @@ import { companyService } from "./company.service";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 
+const getAllCompanies = catchAsync(async (req: Request, res: Response) => {
+    const result = await companyService.getAllCompaniesFromDB();
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Companies fetched successfully",
+        data: result,
+    });
+});
+
 const getCompany = catchAsync(async (req: Request, res: Response) => {
     const { id: companyId } = req.params;
     const result = await companyService.getCompanyFromDB(companyId as string);
@@ -19,7 +29,7 @@ const createCompany = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const result = await companyService.createCompanyInDB(payload);
     sendResponse(res, {
-        httpStatusCode: status.OK,
+        httpStatusCode: status.CREATED,
         success: true,
         message: "Company created successfully",
         data: result,
@@ -39,6 +49,7 @@ const updateCompany = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const companyController = {
+    getAllCompanies,
     getCompany,
     createCompany,
     updateCompany,

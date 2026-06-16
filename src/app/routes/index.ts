@@ -3,6 +3,6 @@ import { companyRoute } from "../module/company/company.route";
 
 const router = Router();
 
-router.use("/company", companyRoute);
+router.use("/companies", companyRoute);
 
 export const indexRoute = router;
