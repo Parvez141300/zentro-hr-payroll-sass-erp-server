@@ -1,0 +1,24 @@
+model SubscriptionPlanConfig {
+    id             String           @id @default(cuid())
+    name           SubscriptionPlan @unique // FREE, BASIC, PRO, ENTERPRISE
+    displayName    String
+    description    String?
+    priceUSD       Float
+    priceBDT       Float
+    yearlyPriceUSD Float?
+    yearlyPriceBDT Float?
+    maxEmployees   Int
+    features       Json
+    isActive       Boolean          @default(true)
+    sortOrder      Int              @default(0)
+    popularBadge   Boolean          @default(false)
+
+    // ⭐ NO companyId here! - This is PLATFORM level
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([id], name: "idx_subscription_plan_id")
+    @@index([name], name: "idx_subscription_plan_name")
+    @@index([isActive], name: "idx_subscription_plan_isActive")
+    @@map("subscription_plan_config")
+}
