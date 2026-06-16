@@ -15,9 +15,7 @@ model SubscriptionHistory {
     paymentId String?  @unique
     payment   Payment? @relation(fields: [paymentId], references: [id])
 
-    @@index([id], name: "idx_subscription_history_id")
     @@index([companyId], name: "idx_subscription_history_companyId")
     @@index([startDate, endDate], name: "idx_subscription_history_date_range")
-    @@index([status], name: "idx_subscription_history_status")
     @@map("subscription_history")
 }
