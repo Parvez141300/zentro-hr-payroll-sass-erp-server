@@ -48,7 +48,6 @@ model Company {
     payments              Payment[]
 
     @@index([email], name: "idx_company_email")
-    @@index([id], name: "idx_company_id")
     @@index([isDeleted], name: "idx_doctor_isDeleted")
     @@map("company")
 }

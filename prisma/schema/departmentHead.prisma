@@ -27,9 +27,7 @@ model DepartmentHead {
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
 
-    @@index([id], name: "idx_departmentHead_id")
     @@index([companyId], name: "idx_departmentHead_companyId")
     @@index([departmentId], name: "idx_departmentHead_departmentId")
-    @@index([employeeCode], name: "idx_departmentHead_employeeCode")
     @@map("department_head")
 }

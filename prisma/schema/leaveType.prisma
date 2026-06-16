@@ -15,7 +15,6 @@ model LeaveType {
 
     leaves Leave[]
 
-    @@index([id], name: "idx_leaveType_id")
     @@unique([name], name: "idx_leaveType_name")
     @@index([companyId], name: "idx_leaveType_companyId")
     @@index([isActive], name: "idx_leaveType_isActive")

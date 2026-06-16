@@ -24,8 +24,6 @@ model User {
   departmentHead     DepartmentHead?
   employee           Employee?
 
-  @@unique([email, id])
-  @@index([id], name: "idx_user_id")
   @@index([email], name: "idx_user_email")
   @@map("user")
 }

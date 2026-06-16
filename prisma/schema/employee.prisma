@@ -54,10 +54,7 @@ model Employee {
     payrolls    Payroll[]
 
     @@unique([employeeCode, companyId])
-    @@index([companyId], name: "idx_employee_companyId")
     @@index([departmentId], name: "idx_employee_departmentId")
     @@index([designationId], name: "idx_employee_designationId")
-    @@index([status], name: "idx_employee_status")
-    @@index([joinDate], name: "idx_employee_joinDate")
     @@map("employee")
 }

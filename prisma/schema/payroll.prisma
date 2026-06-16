@@ -32,9 +32,6 @@ model Payroll {
     updatedAt DateTime @updatedAt
 
     @@unique([employeeId, month, year])
-    @@index([employeeId], name: "idx_payroll_employeeId")
     @@index([companyId], name: "idx_payroll_companyId")
-    @@index([status], name: "idx_payroll_status")
-    @@index([month, year], name: "idx_payroll_month_year")
     @@map("payroll")
 }

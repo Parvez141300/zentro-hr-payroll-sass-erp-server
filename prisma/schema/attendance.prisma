@@ -22,10 +22,7 @@ model Attendance {
     company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
     @@unique([employeeId, date])
-    @@index([id], name: "idx_attendance_id")
     @@index([employeeId], name: "idx_attendance_employeeId")
     @@index([companyId], name: "idx_attendance_companyId")
-    @@index([date], name: "idx_attendance_date")
-    @@index([status], name: "idx_attendance_status")
     @@map("attendance")
 }

@@ -16,7 +16,6 @@ model SuperAdmin {
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    @@index([id], name: "idx_superAdmin_id")
     @@index([userId], name: "idx_superAdmin_userId")
     @@index([companyId], name: "idx_superAdmin_companyId")
     @@map("super_admin")

@@ -25,11 +25,8 @@ model Leave {
     companyId   String
     company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    @@index([id], name: "idx_leave_id")
     @@index([employeeId], name: "idx_leave_employeeId")
     @@index([leaveTypeId], name: "idx_leave_leaveTypeId")
     @@index([companyId], name: "idx_leave_companyId")
-    @@index([status], name: "idx_leave_status")
-    @@index([startDate, endDate], name: "idx_leave_start_end_date")
     @@map("leave")
 }

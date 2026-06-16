@@ -32,7 +32,5 @@ model Payment {
     subscriptionHistory SubscriptionHistory?
 
     @@index([companyId], name: "idx_payment_companyId")
-    @@index([status], name: "idx_payment_status")
-    @@index([paidAt], name: "idx_payment_paidAt")
     @@map("payment")
 }

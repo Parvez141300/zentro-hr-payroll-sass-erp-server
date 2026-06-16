@@ -20,9 +20,7 @@ model Designation {
     employees       Employee[]
 
     @@unique([title, departmentId, companyId])
-    @@index([id], name: "idx_designation_id")
     @@index([companyId], name: "idx_designation_companyId")
     @@index([departmentId], name: "idx_designation_departmentId")
-    @@index([title], name: "idx_designation_title")
     @@map("designation")
 }

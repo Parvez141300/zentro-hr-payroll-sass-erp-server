@@ -18,7 +18,6 @@ model Department {
     employees       Employee[]
 
     @@unique([name, companyId])
-    @@index([id], name: "idx_department_id")
     @@index([name], name: "idx_department_name")
     @@index([companyId], name: "idx_department_companyId")
     @@map("department")

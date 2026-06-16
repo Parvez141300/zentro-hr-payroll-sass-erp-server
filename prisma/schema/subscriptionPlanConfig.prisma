@@ -17,7 +17,6 @@ model SubscriptionPlanConfig {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([id], name: "idx_subscription_plan_id")
     @@index([name], name: "idx_subscription_plan_name")
     @@index([isActive], name: "idx_subscription_plan_isActive")
     @@map("subscription_plan_config")

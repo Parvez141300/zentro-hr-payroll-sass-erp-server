@@ -22,8 +22,7 @@ model Accountant {
     companyId String
     company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-    @@index([id], name: "idx_accountant_id")
+
     @@index([companyId], name: "idx_accountant_companyId")
-    @@index([employeeCode], name: "idx_accountant_employeeCode")
     @@map("accountant")
 }
