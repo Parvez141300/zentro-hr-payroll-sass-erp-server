@@ -51,6 +51,7 @@ model Employee {
 
     attendances Attendance[]
     leaves      Leave[]
+    payrolls    Payroll[]
 
     @@unique([employeeCode, companyId])
     @@index([companyId], name: "idx_employee_companyId")

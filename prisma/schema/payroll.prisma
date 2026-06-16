@@ -1,0 +1,40 @@
+model Payroll {
+    id String @id @default(cuid())
+
+    month Int
+    year  Int
+
+    basicSalary        Float
+    houseAllowance     Float @default(0)
+    medicalAllowance   Float @default(0)
+    transportAllowance Float @default(0)
+    overtimePay        Float @default(0)
+
+    grossSalary     Float
+    taxDeduction    Float @default(0)
+    pfDeduction     Float @default(0)
+    otherDeductions Float @default(0)
+    totalDeductions Float
+    netSalary       Float
+
+    status        PayrollStatus @default(DRAFT)
+    paidAt        DateTime?
+    generatedById String?
+    approvedById  String?
+
+    // relations
+    employeeId String
+    employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    companyId  String
+    company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([employeeId, month, year])
+    @@index([employeeId], name: "idx_payroll_employeeId")
+    @@index([companyId], name: "idx_payroll_companyId")
+    @@index([status], name: "idx_payroll_status")
+    @@index([month, year], name: "idx_payroll_month_year")
+    @@map("payroll")
+}
