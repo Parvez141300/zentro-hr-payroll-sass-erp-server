@@ -2,6 +2,7 @@
 
 export interface IRegisterSuperAdminPayload {
     name: string;
+    companyName: string;
     email: string;
     password: string;
     phone?: string;

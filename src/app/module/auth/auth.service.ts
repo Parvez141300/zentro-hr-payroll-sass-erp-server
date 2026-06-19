@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { IRegisterSuperAdminPayload } from "./auth.interface"
 
 const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
-  const { name, email, password, phone, address } = payload;
+  const { name, companyName, email, password, phone, address } = payload;
 
   const isExistUser = await prisma.user.findUnique({
     where: {
@@ -29,7 +29,7 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
   // step 1: create company
   const company = await prisma.company.create({
     data: {
-      name: name,
+      name: companyName,
       email: email,
       phone: phone,
       address: address,
