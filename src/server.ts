@@ -1,6 +1,7 @@
 import { app } from "./app";
+import { envVars } from "./app/utils/env";
 
-const port = process.env.PORT || 5000; // The port your express server will be running on.
+const port = envVars.PORT || 5000; // The port your express server will be running on.
 
 
 const bootstrap = async () => {
