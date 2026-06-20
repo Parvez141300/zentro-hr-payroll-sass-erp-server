@@ -2,7 +2,7 @@ import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { ISubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
 
-const createSubscriptionPlanConfig = async (payload: ISubscriptionPlanConfigPayload) => {
+const createSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanConfigPayload) => {
     const { name, displayName, description, priceBDT, priceUSD, yearlyPriceBDT, yearlyPriceUSD, maxEmployees, features, isActive, sortOrder, popularBadge } = payload;
 
     const isExistSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.findUnique(
@@ -36,5 +36,5 @@ const createSubscriptionPlanConfig = async (payload: ISubscriptionPlanConfigPayl
 };
 
 export const subscriptionPlanConfigService = {
-    createSubscriptionPlanConfig,
+    createSubscriptionPlanConfigInDB,
 };
