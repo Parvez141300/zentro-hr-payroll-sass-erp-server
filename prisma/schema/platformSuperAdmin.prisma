@@ -1,11 +1,19 @@
 model PlatformSuperAdmin {
-    id        String   @id @default(cuid())
-    userId    String   @unique
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    fullName  String
-    email     String
+    id String @id @default(cuid())
+
+    fullName String
+    email    String
+    phone    String?
+    photoUrl String?
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@index([email], name: "idx_platform_super_admin_email")
     @@index([userId], name: "idx_platform_super_admin_userId")

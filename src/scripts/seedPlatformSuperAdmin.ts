@@ -53,6 +53,7 @@ const seedPlatformSuperAdmin = async () => {
         });
     });
 
+    console.log('super admin created: ', platformSuperAdmin.user);
     return platformSuperAdmin.user;
 };
 
