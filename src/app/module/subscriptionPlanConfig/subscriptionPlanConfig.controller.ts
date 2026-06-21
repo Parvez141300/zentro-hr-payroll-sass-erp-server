@@ -4,6 +4,16 @@ import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { subscriptionPlanConfigService } from "./subscriptionPlanConfig.service";
 
+const getAllSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
+    const result = await subscriptionPlanConfigService.getAllSubscriptionPlanConfigFromDB();
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Subscription plan config fetched successfully",
+        data: result,
+    });
+});
+
 const createSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const result = await subscriptionPlanConfigService.createSubscriptionPlanConfigInDB(payload);
@@ -28,6 +38,7 @@ const updateSubscriptionPlanConfig = catchAsync(async (req: Request, res: Respon
 });
 
 export const subscriptionPlanConfigController = {
+    getAllSubscriptionPlanConfig,
     createSubscriptionPlanConfig,
     updateSubscriptionPlanConfig,
 };

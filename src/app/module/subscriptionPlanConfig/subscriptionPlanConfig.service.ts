@@ -1,6 +1,13 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { ISubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
+import { ISubscriptionPlanConfigPayload, IUpdateSubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
+
+
+
+const getAllSubscriptionPlanConfigFromDB = async () => {
+    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.findMany();
+    return subscriptionPlanConfig;
+};
 
 const createSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanConfigPayload) => {
     const { name, displayName, description, priceBDT, priceUSD, yearlyPriceBDT, yearlyPriceUSD, maxEmployees, features, isActive, sortOrder, popularBadge } = payload;
@@ -35,8 +42,7 @@ const createSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanConfig
     return subscriptionPlanConfig;
 };
 
-const updateSubscriptionPlanConfigInDB = async (id: string, payload: ISubscriptionPlanConfigPayload) => {
-    const { name, displayName, description, priceBDT, priceUSD, yearlyPriceBDT, yearlyPriceUSD, maxEmployees, features, isActive, sortOrder, popularBadge } = payload;
+const updateSubscriptionPlanConfigInDB = async (id: string, payload: IUpdateSubscriptionPlanConfigPayload) => {
 
     const isExistSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.findUnique({
         where: {
@@ -48,30 +54,23 @@ const updateSubscriptionPlanConfigInDB = async (id: string, payload: ISubscripti
         throw new Error("Subscription plan config not found");
     }
 
-    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.update({
+    const featuresData = payload.features?.map((item) => (item as unknown as Prisma.InputJsonValue));
+
+    const updateSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.update({
         where: {
             id: id,
         },
         data: {
-            name: name,
-            displayName: displayName,
-            description: description,
-            priceBDT: priceBDT,
-            priceUSD: priceUSD,
-            yearlyPriceBDT: yearlyPriceBDT,
-            yearlyPriceUSD: yearlyPriceUSD,
-            maxEmployees: maxEmployees || 10,
-            features: (features || []) as unknown as Prisma.InputJsonValue,
-            isActive: isActive || true,
-            sortOrder: sortOrder || 0,
-            popularBadge: popularBadge || false,
+            ...payload,
+            features: featuresData,
         }
     });
 
-    return subscriptionPlanConfig;
+    return updateSubscriptionPlanConfig;
 }
 
 export const subscriptionPlanConfigService = {
+    getAllSubscriptionPlanConfigFromDB,
     createSubscriptionPlanConfigInDB,
     updateSubscriptionPlanConfigInDB,
 };
