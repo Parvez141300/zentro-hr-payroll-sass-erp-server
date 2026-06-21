@@ -1,7 +1,7 @@
 import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { CompanyWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
-import { ICreateCompanyPayload, IGetCompanyPayload, IUpdateCompanyPayload } from "./company.interface"
+import { IGetCompanyPayload, IUpdateCompanyPayload } from "./company.interface"
 
 
 const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
@@ -70,7 +70,7 @@ const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
     };
 }
 
-const getCompanyFromDB = async (id: string) => {
+const getSingleCompanyFromDB = async (id: string) => {
     const company = await prisma.company.findUnique({
         where: {
             id
@@ -80,16 +80,6 @@ const getCompanyFromDB = async (id: string) => {
     if (!company) {
         throw new Error("Company not found");
     }
-
-    return company;
-}
-
-const createCompanyInDB = async (payload: ICreateCompanyPayload) => {
-    const company = await prisma.company.create({
-        data: {
-            ...payload
-        }
-    });
 
     return company;
 }
@@ -132,8 +122,7 @@ const deleteCompany = async (id: string) => {
 
 export const companyService = {
     getAllOrQueryCompaniesFromDB,
-    getCompanyFromDB,
-    createCompanyInDB,
+    getSingleCompanyFromDB,
     updateCompanyInDB,
     softDeleteCompany,
     deleteCompany,

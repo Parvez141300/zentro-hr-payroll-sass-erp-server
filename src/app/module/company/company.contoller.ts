@@ -24,24 +24,13 @@ const getAllOrQueryCompanies = catchAsync(async (req: Request, res: Response) =>
     });
 });
 
-const getCompany = catchAsync(async (req: Request, res: Response) => {
+const getSingleCompany = catchAsync(async (req: Request, res: Response) => {
     const { id: companyId } = req.params;
-    const result = await companyService.getCompanyFromDB(companyId as string);
+    const result = await companyService.getSingleCompanyFromDB(companyId as string);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
         message: "Company fetched successfully",
-        data: result,
-    });
-});
-
-const createCompany = catchAsync(async (req: Request, res: Response) => {
-    const payload = req.body;
-    const result = await companyService.createCompanyInDB(payload);
-    sendResponse(res, {
-        httpStatusCode: status.CREATED,
-        success: true,
-        message: "Company created successfully",
         data: result,
     });
 });
@@ -58,9 +47,20 @@ const updateCompany = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteCompany = catchAsync(async (req: Request, res: Response) => {
+    const { id: companyId } = req.params;
+    const result = await companyService.deleteCompany(companyId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Company deleted successfully",
+        data: result,
+    });
+});
+
 export const companyController = {
     getAllOrQueryCompanies,
-    getCompany,
-    createCompany,
+    getSingleCompany,
     updateCompany,
+    deleteCompany,
 };
