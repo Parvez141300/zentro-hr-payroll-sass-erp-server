@@ -24,6 +24,7 @@ export interface IGetCompanyPayload {
     search: string | undefined;
     subscriptionPlan: string | undefined;
     subscriptionStatus: string | undefined;
+    isDeleted: boolean | undefined;
     page: number;
     limit: number;
     skip: number;

@@ -5,7 +5,7 @@ import { ICreateCompanyPayload, IGetCompanyPayload, IUpdateCompanyPayload } from
 
 
 const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
-    const { search, subscriptionPlan, subscriptionStatus, page, limit, skip, sortBy, sortOrder } = payload;
+    const { search, subscriptionPlan, subscriptionStatus, isDeleted, page, limit, skip, sortBy, sortOrder } = payload;
 
     const addCondition: CompanyWhereInput[] = [];
 
@@ -43,7 +43,7 @@ const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
     const companies = await prisma.company.findMany({
         where: {
             AND: addCondition,
-            isDeleted: false,
+            isDeleted: isDeleted,
         },
         take: limit,
         skip: skip,
@@ -55,7 +55,7 @@ const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
     const totalCompanies = await prisma.company.count({
         where: {
             AND: addCondition,
-            isDeleted: false,
+            isDeleted: isDeleted,
         }
     });
 

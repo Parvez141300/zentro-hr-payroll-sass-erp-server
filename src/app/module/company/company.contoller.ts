@@ -11,10 +11,11 @@ const getAllOrQueryCompanies = catchAsync(async (req: Request, res: Response) =>
     const search = typeof query.search === "string" ? query.search : undefined;
     const subscriptionPlan = typeof query.subscriptionPlan === "string" ? query.subscriptionPlan : undefined;
     const subscriptionStatus = typeof query.subscriptionStatus === "string" ? query.subscriptionStatus : undefined;
+    const isDeleted = typeof Boolean(query.isDeleted) === "boolean" ? Boolean(query.isDeleted) : undefined;
 
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(query);
 
-    const result = await companyService.getAllOrQueryCompaniesFromDB({ search, subscriptionPlan, subscriptionStatus, page, limit, skip, sortBy, sortOrder });
+    const result = await companyService.getAllOrQueryCompaniesFromDB({ search, subscriptionPlan, subscriptionStatus, isDeleted, page, limit, skip, sortBy, sortOrder });
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
