@@ -3,7 +3,7 @@ import { ISubscriptionPlanConfigPayload } from "../app/module/subscriptionPlanCo
 import { Prisma } from "../generated/prisma/client";
 
 
-export const defaultSubscriptionPlanConfigs: ISubscriptionPlanConfigPayload[] = [
+export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = [
   {
     name: "FREE",
     displayName: "Free Plan",
@@ -175,14 +175,6 @@ export const defaultSubscriptionPlanConfigs: ISubscriptionPlanConfigPayload[] = 
         icon: "BarChart",
         category: "reports"
       },
-      {
-        id: "feat_007",
-        name: "Audit Logs",
-        description: "Track all actions in the system",
-        included: true,
-        icon: "Shield",
-        category: "core"
-      },
     ]
   },
   {
@@ -246,14 +238,6 @@ export const defaultSubscriptionPlanConfigs: ISubscriptionPlanConfigPayload[] = 
         icon: "BarChart",
         category: "reports"
       },
-      {
-        id: "feat_007",
-        name: "Audit Logs",
-        description: "Track all actions in the system",
-        included: true,
-        icon: "Shield",
-        category: "core"
-      },
     ]
   }
 ];
@@ -275,4 +259,4 @@ const seedDefaultSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanC
     return subscriptionPlanConfig;
 };
 
-seedDefaultSubscriptionPlanConfigInDB(defaultSubscriptionPlanConfigs);
+seedDefaultSubscriptionPlanConfigInDB(defaultSubscriptionPlansConfig);
