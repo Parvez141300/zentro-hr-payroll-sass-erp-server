@@ -19,3 +19,14 @@ export interface IUpdateCompanyPayload {
     fiscalYearStart?: Date;
     fiscalYearEnd?: Date;
 }
+
+export interface IGetCompanyPayload {
+    search: string | undefined;
+    subscriptionPlan: string | undefined;
+    subscriptionStatus: string | undefined;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
+}

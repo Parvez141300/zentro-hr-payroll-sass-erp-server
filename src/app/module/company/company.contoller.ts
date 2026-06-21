@@ -3,9 +3,18 @@ import { catchAsync } from "../../utils/catchAsync";
 import { companyService } from "./company.service";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
-const getAllCompanies = catchAsync(async (req: Request, res: Response) => {
-    const result = await companyService.getAllCompaniesFromDB();
+const getAllOrQueryCompanies = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+
+    const search = typeof query.search === "string" ? query.search : undefined;
+    const subscriptionPlan = typeof query.subscriptionPlan === "string" ? query.subscriptionPlan : undefined;
+    const subscriptionStatus = typeof query.subscriptionStatus === "string" ? query.subscriptionStatus : undefined;
+
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(query);
+
+    const result = await companyService.getAllOrQueryCompaniesFromDB({ search, subscriptionPlan, subscriptionStatus, page, limit, skip, sortBy, sortOrder });
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -49,7 +58,7 @@ const updateCompany = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const companyController = {
-    getAllCompanies,
+    getAllOrQueryCompanies,
     getCompany,
     createCompany,
     updateCompany,

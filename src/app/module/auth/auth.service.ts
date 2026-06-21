@@ -99,6 +99,8 @@ const loginUserInDB = async (payload: ILoginUserPayload) => {
     throw new Error("User is deleted");
   }
 
+  // todo: custom access and refresh token generation
+
   return login;
 }
 

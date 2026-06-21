@@ -1,10 +1,73 @@
+import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { CompanyWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
-import { ICreateCompanyPayload, IUpdateCompanyPayload } from "./company.interface"
+import { ICreateCompanyPayload, IGetCompanyPayload, IUpdateCompanyPayload } from "./company.interface"
 
 
-const getAllCompaniesFromDB = async () => {
-    const companies = await prisma.company.findMany();
-    return companies;
+const getAllOrQueryCompaniesFromDB = async (payload: IGetCompanyPayload) => {
+    const { search, subscriptionPlan, subscriptionStatus, page, limit, skip, sortBy, sortOrder } = payload;
+
+    const addCondition: CompanyWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    email: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    if (subscriptionPlan) {
+        addCondition.push({
+            subscriptionPlan: subscriptionPlan as SubscriptionPlan,
+        });
+    }
+
+    if (subscriptionStatus) {
+        addCondition.push({
+            subscriptionStatus: subscriptionStatus as SubscriptionStatus,
+        });
+    }
+
+    const companies = await prisma.company.findMany({
+        where: {
+            AND: addCondition,
+            isDeleted: false,
+        },
+        take: limit,
+        skip: skip,
+        orderBy: {
+            [sortBy]: sortOrder,
+        }
+    });
+
+    const totalCompanies = await prisma.company.count({
+        where: {
+            AND: addCondition,
+            isDeleted: false,
+        }
+    });
+
+    return {
+        data: companies,
+        pagination: {
+            total: totalCompanies,
+            currentPage: page,
+            limit: limit,
+            totalPages: Math.ceil(totalCompanies / limit),
+        }
+    };
 }
 
 const getCompanyFromDB = async (id: string) => {
@@ -14,7 +77,7 @@ const getCompanyFromDB = async (id: string) => {
         }
     });
 
-    if(!company) {
+    if (!company) {
         throw new Error("Company not found");
     }
 
@@ -44,9 +107,34 @@ const updateCompanyInDB = async (id: string, payload: IUpdateCompanyPayload) => 
     return company;
 }
 
+const softDeleteCompany = async (id: string) => {
+    const company = await prisma.company.update({
+        where: {
+            id
+        },
+        data: {
+            isDeleted: true,
+        }
+    });
+
+    return company;
+}
+
+const deleteCompany = async (id: string) => {
+    const company = await prisma.company.delete({
+        where: {
+            id
+        }
+    });
+
+    return company;
+}
+
 export const companyService = {
-    getAllCompaniesFromDB,
+    getAllOrQueryCompaniesFromDB,
     getCompanyFromDB,
     createCompanyInDB,
     updateCompanyInDB,
+    softDeleteCompany,
+    deleteCompany,
 }
