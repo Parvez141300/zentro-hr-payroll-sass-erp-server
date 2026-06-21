@@ -11,11 +11,12 @@ export enum FeatureCategories {
 };
 
 export interface IFeaturePlan {
+    id: string;
     name: string;
     description?: string;
     included: boolean;
     icon?: string;
-    category: 'core' | 'hr' | 'payroll' | 'attendance' | 'leave' | 'reports' | 'support';
+    category: 'core' | 'hr' | 'payroll' | 'attendance' | 'leave' | 'reports';
     limit?: number;
     tooltip?: string;
 }
