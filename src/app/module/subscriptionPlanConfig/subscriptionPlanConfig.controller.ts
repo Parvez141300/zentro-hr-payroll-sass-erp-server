@@ -15,6 +15,19 @@ const createSubscriptionPlanConfig = catchAsync(async (req: Request, res: Respon
     });
 });
 
+const updateSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
+    const { id: subscriptionPlanConfigId } = req.params;
+    const payload = req.body;
+    const result = await subscriptionPlanConfigService.updateSubscriptionPlanConfigInDB(subscriptionPlanConfigId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Subscription plan config updated successfully",
+        data: result,
+    });
+});
+
 export const subscriptionPlanConfigController = {
     createSubscriptionPlanConfig,
+    updateSubscriptionPlanConfig,
 };

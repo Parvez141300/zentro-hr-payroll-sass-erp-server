@@ -35,6 +35,43 @@ const createSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanConfig
     return subscriptionPlanConfig;
 };
 
+const updateSubscriptionPlanConfigInDB = async (id: string, payload: ISubscriptionPlanConfigPayload) => {
+    const { name, displayName, description, priceBDT, priceUSD, yearlyPriceBDT, yearlyPriceUSD, maxEmployees, features, isActive, sortOrder, popularBadge } = payload;
+
+    const isExistSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.findUnique({
+        where: {
+            id: id,
+        },
+    });
+
+    if (!isExistSubscriptionPlanConfig) {
+        throw new Error("Subscription plan config not found");
+    }
+
+    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.update({
+        where: {
+            id: id,
+        },
+        data: {
+            name: name,
+            displayName: displayName,
+            description: description,
+            priceBDT: priceBDT,
+            priceUSD: priceUSD,
+            yearlyPriceBDT: yearlyPriceBDT,
+            yearlyPriceUSD: yearlyPriceUSD,
+            maxEmployees: maxEmployees || 10,
+            features: (features || []) as unknown as Prisma.InputJsonValue,
+            isActive: isActive || true,
+            sortOrder: sortOrder || 0,
+            popularBadge: popularBadge || false,
+        }
+    });
+
+    return subscriptionPlanConfig;
+}
+
 export const subscriptionPlanConfigService = {
     createSubscriptionPlanConfigInDB,
+    updateSubscriptionPlanConfigInDB,
 };

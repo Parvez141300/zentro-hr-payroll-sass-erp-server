@@ -3,6 +3,7 @@ import { subscriptionPlanConfigController } from "./subscriptionPlanConfig.contr
 
 const router = Router();
 
-router.post("/", subscriptionPlanConfigController.createSubscriptionPlanConfig)
+router.post("/", subscriptionPlanConfigController.createSubscriptionPlanConfig);
+router.patch("/:id", subscriptionPlanConfigController.updateSubscriptionPlanConfig);
 
 export const subscriptionPlanConfigRoute = router;

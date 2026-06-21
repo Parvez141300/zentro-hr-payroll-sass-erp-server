@@ -35,3 +35,29 @@ export interface ISubscriptionPlanConfigPayload {
     sortOrder: number;
     popularBadge: boolean;
 }
+
+export interface IUpdateFeaturePlan {
+    id: string;
+    name?: string;
+    description?: string;
+    included?: boolean;
+    icon?: string;
+    category?: 'core' | 'hr' | 'payroll' | 'attendance' | 'leave' | 'reports';
+    limit?: number;
+    tooltip?: string;
+}
+
+export interface IUpdateSubscriptionPlanConfigPayload {
+    name?: SubscriptionPlan;
+    displayName?: string;
+    description?: string;
+    priceUSD?: number;
+    priceBDT?: number;
+    yearlyPriceUSD?: number;
+    yearlyPriceBDT?: number;
+    maxEmployees?: number;
+    features?: IUpdateFeaturePlan[];
+    isActive?: boolean;
+    sortOrder?: number;
+    popularBadge?: boolean;
+}
