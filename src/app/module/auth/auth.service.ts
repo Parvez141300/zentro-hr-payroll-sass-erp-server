@@ -34,6 +34,7 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
       phone: phone,
       address: address,
       subscriptionPlan: SubscriptionPlan.FREE,
+      subscriptionStatus: SubscriptionStatus.TRIAL,
       maxEmployees: 10,
     }
   });
