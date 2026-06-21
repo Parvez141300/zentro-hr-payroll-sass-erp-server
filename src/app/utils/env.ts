@@ -10,6 +10,7 @@ interface IEnvVarialbleConfig {
     PLATFORM_SUPER_ADMIN_NAME: string;
     PLATFORM_SUPER_ADMIN_EMAIL: string;
     PLATFORM_SUPER_ADMIN_PASSWORD: string;
+    FRONTEND_URL: string;
 }
 
 const loadEnvVariables = (): IEnvVarialbleConfig => {
@@ -21,6 +22,7 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         "PLATFORM_SUPER_ADMIN_NAME",
         "PLATFORM_SUPER_ADMIN_EMAIL",
         "PLATFORM_SUPER_ADMIN_PASSWORD",
+        "FRONTEND_URL",
     ];
 
     requireEnvVariables.forEach((envVariable) => {
@@ -37,6 +39,7 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         PLATFORM_SUPER_ADMIN_NAME: process.env.PLATFORM_SUPER_ADMIN_NAME as string,
         PLATFORM_SUPER_ADMIN_EMAIL: process.env.PLATFORM_SUPER_ADMIN_EMAIL as string,
         PLATFORM_SUPER_ADMIN_PASSWORD: process.env.PLATFORM_SUPER_ADMIN_PASSWORD as string,
+        FRONTEND_URL: process.env.FRONTEND_URL as string,
     }
 }
 

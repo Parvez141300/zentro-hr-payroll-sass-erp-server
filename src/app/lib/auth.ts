@@ -13,6 +13,9 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        minPasswordLength: 8,
+        autoSignIn: false,
+        requireEmailVerification: false,
     },
     user: {
         additionalFields: {
@@ -42,5 +45,6 @@ export const auth = betterAuth({
                 defaultValue: null,
             }
         }
-    }
+    },
+    trustedOrigins: [envVars.FRONTEND_URL, envVars.BETTER_AUTH_URL, "http://localhost:3000", "http://localhost:5000"],
 });
