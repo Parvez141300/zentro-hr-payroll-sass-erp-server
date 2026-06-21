@@ -1,7 +1,7 @@
 import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { IRegisterSuperAdminPayload } from "./auth.interface"
+import { ILoginUserPayload, IRegisterSuperAdminPayload } from "./auth.interface"
 
 const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
   const { name, companyName, email, password, phone, address } = payload;
@@ -82,6 +82,27 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
   return register;
 }
 
+const loginUserInDB = async (payload: ILoginUserPayload) => {
+  const { email, password } = payload;
+  const login = await auth.api.signInEmail({
+    body: {
+      email: email,
+      password: password,
+    }
+  });
+
+  if(!login.user.isActive){
+    throw new Error("User is inactive");
+  }
+
+  if(login.user.isDeleted){
+    throw new Error("User is deleted");
+  }
+
+  return login;
+}
+
 export const authService = {
   registerSuperAdminInDB,
+  loginUserInDB,
 }

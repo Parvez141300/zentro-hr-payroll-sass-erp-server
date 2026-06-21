@@ -9,3 +9,8 @@ export interface IRegisterSuperAdminPayload {
     address?: string;
     maxEmployees: number;
 }
+
+export interface ILoginUserPayload {
+    email: string;
+    password: string;
+}
