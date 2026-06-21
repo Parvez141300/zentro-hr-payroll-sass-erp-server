@@ -69,8 +69,29 @@ const updateSubscriptionPlanConfigInDB = async (id: string, payload: IUpdateSubs
     return updateSubscriptionPlanConfig;
 }
 
+const deleteSubscriptionPlanConfigFromDB = async (id: string) => {
+
+    const isExistSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.findUnique({
+        where: {
+            id: id,
+        },
+    });
+
+    if (!isExistSubscriptionPlanConfig) {
+        throw new Error("Subscription plan config not found");
+    }
+
+    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.delete({
+        where: {
+            id: id,
+        }
+    });
+    return subscriptionPlanConfig;
+};
+
 export const subscriptionPlanConfigService = {
     getAllSubscriptionPlanConfigFromDB,
     createSubscriptionPlanConfigInDB,
     updateSubscriptionPlanConfigInDB,
+    deleteSubscriptionPlanConfigFromDB,
 };

@@ -37,8 +37,20 @@ const updateSubscriptionPlanConfig = catchAsync(async (req: Request, res: Respon
     });
 });
 
+const deleteSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
+    const { id: subscriptionPlanConfigId } = req.params;
+    const result = await subscriptionPlanConfigService.deleteSubscriptionPlanConfigFromDB(subscriptionPlanConfigId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Subscription plan config deleted successfully",
+        data: result,
+    });
+});
+
 export const subscriptionPlanConfigController = {
     getAllSubscriptionPlanConfig,
     createSubscriptionPlanConfig,
     updateSubscriptionPlanConfig,
+    deleteSubscriptionPlanConfig,
 };
