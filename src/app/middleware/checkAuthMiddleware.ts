@@ -42,9 +42,11 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
                 console.log("remaining time percentage", remainingTimePercentage);
 
                 if (remainingTimePercentage < 20) {
-                    res.setHeader("X-Session-Refresh", "true");
-                    res.setHeader("X-Session-Expires-At", expiresAt.toISOString());
-                    res.setHeader("X-Time-Remaining", remainingTime.toString());
+                    res.set({
+                        "X-Session-Refresh": "true",
+                        "X-Session-Expires-At": expiresAt.toISOString(),
+                        "X-Time-Remaining": remainingTime.toString(),
+                    });
 
                     console.log('sessin is expiring soon');
                 }
@@ -70,10 +72,6 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
             throw new Error("Unauthorized access! Invalid access token.");
         }
 
-        if (authRoles.length > 0 && !authRoles.includes(verifyToken.data?.role as Role)) {
-            throw new Error("Unauthorized access! Invalid user role.");
-        }
-
         req.user = {
             companId: verifyToken.data?.companyId,
             userId: verifyToken.data?.userId,
@@ -82,6 +80,10 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
             role: verifyToken.data?.role,
             isActive: verifyToken.data?.isActive,
             isDeleted: verifyToken.data?.isDeleted
+        }
+
+        if (authRoles.length > 0 && !authRoles.includes(verifyToken.data?.role as Role)) {
+            throw new Error("Unauthorized access! Invalid user role.");
         }
 
         next();
