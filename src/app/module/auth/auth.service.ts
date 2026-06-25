@@ -107,16 +107,20 @@ const loginUserInDB = async (payload: ILoginUserPayload) => {
   const accessToken = tokenUtils.getAccessToken({
     companyId: loginData.user.companyId,
     userId: loginData.user.id,
+    name: loginData.user.name,
     email: loginData.user.email,
     role: loginData.user.role,
+    isActive: loginData.user.isActive,
     isDeleted: loginData.user.isDeleted,
   });
 
   const refreshToken = tokenUtils.getRefreshToken({
     companyId: loginData.user.companyId,
     userId: loginData.user.id,
+    name: loginData.user.name,
     email: loginData.user.email,
     role: loginData.user.role,
+    isActive: loginData.user.isActive,
     isDeleted: loginData.user.isDeleted,
   });
 
