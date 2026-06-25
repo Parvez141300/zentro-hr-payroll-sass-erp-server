@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { indexRoute } from "./app/routes";
+import { notFoundMiddleware } from "./app/middleware/notFound";
 
 export const app: Application = express();
 
@@ -18,3 +19,5 @@ app.use("/api/v1", indexRoute);
 app.get('/', (req: Request, res: Response) => {
   res.send('Zentro HR Payroll SaaS ERP Server is running!');
 });
+
+app.use(notFoundMiddleware);
