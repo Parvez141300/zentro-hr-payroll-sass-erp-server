@@ -18,11 +18,17 @@ const registerSuperAdmin = catchAsync(async (req: Request, res: Response) => {
 const loginUser = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const result = await authService.loginUserInDB(payload);
+    const {accessToken, refreshToken, token, ...rest} = result;
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
         message: "User logged in successfully",
-        data: result,
+        data: {
+            token,
+            accessToken,
+            refreshToken,
+            ...rest
+        },
     });
 });
 

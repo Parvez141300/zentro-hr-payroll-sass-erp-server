@@ -85,42 +85,42 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
 
 const loginUserInDB = async (payload: ILoginUserPayload) => {
   const { email, password } = payload;
-  const login = await auth.api.signInEmail({
+  const loginData = await auth.api.signInEmail({
     body: {
       email: email,
       password: password,
     }
   });
 
-  if (!login.user.isActive) {
+  if (!loginData.user.isActive) {
     throw new Error("User is inactive");
   }
 
-  if (login.user.isDeleted) {
+  if (loginData.user.isDeleted) {
     throw new Error("User is deleted");
   }
 
-  if (!login.user.id) {
+  if (!loginData.user.id) {
     throw new Error("User not logged in");
   }
 
   const accessToken = tokenUtils.getAccessToken({
-    companyId: login.user.companyId,
-    userId: login.user.id,
-    email: login.user.email,
-    role: login.user.role,
-    isDeleted: login.user.isDeleted,
+    companyId: loginData.user.companyId,
+    userId: loginData.user.id,
+    email: loginData.user.email,
+    role: loginData.user.role,
+    isDeleted: loginData.user.isDeleted,
   });
 
   const refreshToken = tokenUtils.getRefreshToken({
-    companyId: login.user.companyId,
-    userId: login.user.id,
-    email: login.user.email,
-    role: login.user.role,
-    isDeleted: login.user.isDeleted,
+    companyId: loginData.user.companyId,
+    userId: loginData.user.id,
+    email: loginData.user.email,
+    role: loginData.user.role,
+    isDeleted: loginData.user.isDeleted,
   });
 
-  return { login, accessToken, refreshToken };
+  return { ...loginData, accessToken, refreshToken };
 }
 
 export const authService = {
