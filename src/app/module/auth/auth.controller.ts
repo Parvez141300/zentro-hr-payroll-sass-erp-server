@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { authService } from "./auth.service";
+import { tokenUtils } from "../../utils/token";
 
 const registerSuperAdmin = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -19,6 +20,11 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const result = await authService.loginUserInDB(payload);
     const {accessToken, refreshToken, token, ...rest} = result;
+    
+    tokenUtils.setAccessTokenInCookie(res, accessToken);
+    tokenUtils.setRefreshTokenInCookie(res, refreshToken);
+    tokenUtils.setBetterAuthSessionTokenInCookie(res, token);
+
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

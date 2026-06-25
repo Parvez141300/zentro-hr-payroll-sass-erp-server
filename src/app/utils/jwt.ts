@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 
 
@@ -6,7 +7,20 @@ const createToken = (payload: JwtPayload, secret: string, { expiresIn }: SignOpt
 };
 
 const verifyToken = (token: string, secret: string) => {
-    return jwt.verify(token, secret);
+    try {
+        const deocded = jwt.verify(token, secret) as JwtPayload;
+        return {
+            success: true,
+            data: deocded,
+        }
+    } catch (error: any) {
+        return {
+            success: false,
+            data: null,
+            message: error.message,
+            error
+        }
+    }
 };
 
 export const jwtUtils = {
