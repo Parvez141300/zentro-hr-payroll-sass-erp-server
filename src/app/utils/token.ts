@@ -31,7 +31,7 @@ const setAccessTokenInCookie = (res: Response, accessToken: string) => {
         accessToken, 
         { 
             httpOnly: true, 
-            secure: true,
+            secure: envVars.NODE_ENV === "production",
             sameSite: "none",
             maxAge: maxAge,
         }
@@ -46,7 +46,22 @@ const setRefreshTokenInCookie = (res: Response, refreshToken: string) => {
         refreshToken, 
         { 
             httpOnly: true, 
-            secure: true,
+            secure: envVars.NODE_ENV === "production",
+            sameSite: "none",
+            maxAge: maxAge,
+        }
+    );
+}
+
+const setBetterAuthSessionTokenInCookie = (res: Response, sessionToken: string) => {
+    const maxAge = ms(envVars.JWT_REFRESH_TOKEN_EXPIRATION_TIME as StringValue);
+    cookieUtils.setCookie(
+        res, 
+        "better-auth.session_token", 
+        sessionToken, 
+        { 
+            httpOnly: true, 
+            secure: envVars.NODE_ENV === "production",
             sameSite: "none",
             maxAge: maxAge,
         }
@@ -58,4 +73,5 @@ export const tokenUtils = {
     getRefreshToken,
     setAccessTokenInCookie,
     setRefreshTokenInCookie,
+    setBetterAuthSessionTokenInCookie,
 }

@@ -47,4 +47,16 @@ export const auth = betterAuth({
         }
     },
     trustedOrigins: [envVars.FRONTEND_URL, envVars.BETTER_AUTH_URL, "http://localhost:3000", "http://localhost:5000"],
+    advanced: {
+        cookies: {
+            session_token: {
+                attributes: {
+                    httpOnly: true,
+                    secure: envVars.NODE_ENV === "production",
+                    sameSite: "none",
+                    path: "/",
+                }
+            },
+        }
+    }
 });

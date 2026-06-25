@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 interface IEnvVarialbleConfig {
+    NODE_ENV: string;
     PORT: string;
     DATABASE_URL: string;
     BETTER_AUTH_URL: string;
@@ -18,6 +19,7 @@ interface IEnvVarialbleConfig {
 
 const loadEnvVariables = (): IEnvVarialbleConfig => {
     const requireEnvVariables = [
+        "NODE_ENV",
         "PORT",
         "DATABASE_URL",
         "BETTER_AUTH_URL",
@@ -38,6 +40,7 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
     });
 
     return {
+        NODE_ENV: process.env.NODE_ENV as string,
         PORT: process.env.PORT as string,
         DATABASE_URL: process.env.DATABASE_URL as string,
         BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string,
