@@ -1,6 +1,9 @@
 import { JwtPayload, SignOptions } from "jsonwebtoken";
 import { jwtUtils } from "./jwt";
 import { envVars } from "./env";
+import { Response } from "express";
+import { cookieUtils } from "./cookie";
+import ms, { StringValue } from "ms";
 
 const getAccessToken = (payload: JwtPayload) => {
     const accessToken = jwtUtils.createToken(
@@ -20,7 +23,39 @@ const getRefreshToken = (payload: JwtPayload) => {
     return refreshToken;
 }
 
+const setAccessTokenInCookie = (res: Response, accessToken: string) => {
+    const maxAge = ms(envVars.JWT_ACCESS_TOKEN_EXPIRATION_TIME as StringValue);
+    cookieUtils.setCookie(
+        res, 
+        "accessToken", 
+        accessToken, 
+        { 
+            httpOnly: true, 
+            secure: true,
+            sameSite: "none",
+            maxAge: maxAge,
+        }
+    );
+}
+
+const setRefreshTokenInCookie = (res: Response, refreshToken: string) => {
+    const maxAge = ms(envVars.JWT_REFRESH_TOKEN_EXPIRATION_TIME as StringValue);
+    cookieUtils.setCookie(
+        res, 
+        "refreshToken", 
+        refreshToken, 
+        { 
+            httpOnly: true, 
+            secure: true,
+            sameSite: "none",
+            maxAge: maxAge,
+        }
+    );
+}
+
 export const tokenUtils = {
     getAccessToken,
     getRefreshToken,
+    setAccessTokenInCookie,
+    setRefreshTokenInCookie,
 }
