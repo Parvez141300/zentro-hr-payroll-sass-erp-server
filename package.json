@@ -30,6 +30,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "http-status": "^2.1.0",
+    "jsonwebtoken": "^9.0.3",
     "pg": "^8.21.0",
     "tsx": "^4.22.4"
   },
@@ -37,6 +38,7 @@
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.9.3",
     "@types/pg": "^8.20.0",
     "eslint": "^10.5.0",

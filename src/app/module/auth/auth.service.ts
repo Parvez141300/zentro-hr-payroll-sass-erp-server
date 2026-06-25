@@ -1,6 +1,7 @@
 import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+import { tokenUtils } from "../../utils/token";
 import { ILoginUserPayload, IRegisterSuperAdminPayload } from "./auth.interface"
 
 const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
@@ -91,17 +92,35 @@ const loginUserInDB = async (payload: ILoginUserPayload) => {
     }
   });
 
-  if(!login.user.isActive){
+  if (!login.user.isActive) {
     throw new Error("User is inactive");
   }
 
-  if(login.user.isDeleted){
+  if (login.user.isDeleted) {
     throw new Error("User is deleted");
   }
 
-  // todo: custom access and refresh token generation
+  if (!login.user.id) {
+    throw new Error("User not logged in");
+  }
 
-  return login;
+  const accessToken = tokenUtils.getAccessToken({
+    companyId: login.user.companyId,
+    userId: login.user.id,
+    email: login.user.email,
+    role: login.user.role,
+    isDeleted: login.user.isDeleted,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    companyId: login.user.companyId,
+    userId: login.user.id,
+    email: login.user.email,
+    role: login.user.role,
+    isDeleted: login.user.isDeleted,
+  });
+
+  return { login, accessToken, refreshToken };
 }
 
 export const authService = {
