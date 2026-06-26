@@ -3,3 +3,8 @@ export interface ICreateDesignationPayload {
     description?: string;
     departmentId: string;
 }
+
+export interface IUpdateDesignationPayload {
+    title?: string;
+    description?: string;
+}

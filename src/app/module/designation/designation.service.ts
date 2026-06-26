@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { ICreateDesignationPayload } from "./designation.interface";
+import { ICreateDesignationPayload, IUpdateDesignationPayload } from "./designation.interface";
 
 const createDesignationInDB = async (companyId: string, payload: ICreateDesignationPayload) => {
     const isExistCompany = await prisma.company.findUnique({
@@ -36,6 +36,21 @@ const createDesignationInDB = async (companyId: string, payload: ICreateDesignat
     return designation;
 }
 
+const updateDesignationInDB = async (designationId: string, payload: IUpdateDesignationPayload) => {
+
+    const updateDesignation = await prisma.designation.update({
+        where: {
+            id: designationId
+        },
+        data: {
+            ...payload
+        }
+    });
+
+    return updateDesignation;
+}
+
 export const designationService = {
     createDesignationInDB,
+    updateDesignationInDB,
 }
