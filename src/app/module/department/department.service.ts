@@ -3,12 +3,22 @@ import { IDepartmentPayload, IUpdateDepartmentPayload } from "./department.inter
 
 
 
-const createDepartmentInDB = async (payload: IDepartmentPayload) => {
+const getAllCompanyDepartmentsFromDB = async (companyId: string) => {
+    const departments = await prisma.department.findMany({
+        where: {
+            companyId: companyId,
+        }
+    });
+
+    return departments;
+}
+
+const createDepartmentInDB = async (companyId: string, payload: IDepartmentPayload) => {
     const isExistDepartment = await prisma.department.findUnique({
         where: {
             name_companyId: {
                 name: payload.name,
-                companyId: payload.companyId,
+                companyId: companyId,
             }
         }
     });
@@ -19,7 +29,8 @@ const createDepartmentInDB = async (payload: IDepartmentPayload) => {
 
     const department = await prisma.department.create({
         data: {
-            ...payload
+            companyId: companyId,
+            ...payload,
         }
     });
 
@@ -29,7 +40,7 @@ const createDepartmentInDB = async (payload: IDepartmentPayload) => {
 const updateDepartmentInDB = async (id: string, payload: IUpdateDepartmentPayload) => {
     const department = await prisma.department.update({
         where: {
-            id
+            id,
         },
         data: {
             ...payload
@@ -40,6 +51,7 @@ const updateDepartmentInDB = async (id: string, payload: IUpdateDepartmentPayloa
 }
 
 export const departmentService = {
+    getAllCompanyDepartmentsFromDB,
     createDepartmentInDB,
     updateDepartmentInDB,
 }

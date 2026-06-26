@@ -4,9 +4,21 @@ import { departmentService } from "./department.service";
 import status from "http-status";
 import { sendResponse } from "../../utils/sendResponse";
 
+const getAllCompanyDepartments = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const result = await departmentService.getAllCompanyDepartmentsFromDB(companyId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Departments fetched successfully",
+        data: result,
+    });
+});
+
 const createDepartment = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
-    const result = await departmentService.createDepartmentInDB(payload);
+    const { companyId } = req.user;
+    const result = await departmentService.createDepartmentInDB(companyId, payload);
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,
@@ -28,6 +40,7 @@ const updateDepartment = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const departmentController = {
+    getAllCompanyDepartments,
     createDepartment,
     updateDepartment,
 };
