@@ -7,5 +7,6 @@ const router = Router();
 
 router.post("/", checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), designationController.createDesignation);
 router.patch("/:id", checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), designationController.updateDesignation);
+router.delete("/:id", checkAuthMiddleware(Role.Super_ADMIN), designationController.deleteDesignation);
 
 export const designationRoute = router;

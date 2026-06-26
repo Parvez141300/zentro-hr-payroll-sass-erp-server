@@ -50,7 +50,18 @@ const updateDesignationInDB = async (designationId: string, payload: IUpdateDesi
     return updateDesignation;
 }
 
+const deleteDesignationInDB = async (designationId: string) => {
+    const deleteDesignation = await prisma.designation.delete({
+        where: {
+            id: designationId,
+        }
+    });
+
+    return deleteDesignation;
+}
+
 export const designationService = {
     createDesignationInDB,
     updateDesignationInDB,
+    deleteDesignationInDB,
 }

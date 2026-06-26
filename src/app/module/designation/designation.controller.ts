@@ -28,7 +28,19 @@ const updateDesignation = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteDesignation = catchAsync(async (req: Request, res: Response) => {
+    const { id: designationId } = req.params;
+    const result = await designationService.deleteDesignationInDB(designationId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Designation deleted successfully",
+        data: result,
+    });
+});
+
 export const designationController = {
     createDesignation,
     updateDesignation,
+    deleteDesignation,
 }
