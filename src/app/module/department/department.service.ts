@@ -4,7 +4,7 @@ import { IDepartmentPayload, IGetCompanyDepartmentPayload, IUpdateDepartmentPayl
 
 
 
-const getAllCompanyDepartmentsFromDB = async (companyId: string, payload: IGetCompanyDepartmentPayload) => {
+const getCompanyAllOrQueryDepartmentsFromDB = async (companyId: string, payload: IGetCompanyDepartmentPayload) => {
     const addCondition: DepartmentWhereInput[] = [];
 
     const { search, page, limit, skip, sortBy, sortOrder } = payload;
@@ -107,7 +107,7 @@ const deleteCompanyDepartmentInDB = async (departmentId: string) => {
 }
 
 export const departmentService = {
-    getAllCompanyDepartmentsFromDB,
+    getCompanyAllOrQueryDepartmentsFromDB,
     createDepartmentInDB,
     updateDepartmentInDB,
     deleteCompanyDepartmentInDB,

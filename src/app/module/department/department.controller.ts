@@ -5,11 +5,11 @@ import status from "http-status";
 import { sendResponse } from "../../utils/sendResponse";
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
-const getAllCompanyDepartments = catchAsync(async (req: Request, res: Response) => {
+const getCompanyAllOrQueryDepartments = catchAsync(async (req: Request, res: Response) => {
     const { companyId } = req.user;
     const search = typeof req.query.search === "string" ? req.query.search : undefined;
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
-    const result = await departmentService.getAllCompanyDepartmentsFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder });
+    const result = await departmentService.getCompanyAllOrQueryDepartmentsFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder });
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -54,7 +54,7 @@ const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const departmentController = {
-    getAllCompanyDepartments,
+    getCompanyAllOrQueryDepartments,
     createDepartment,
     updateDepartment,
     deleteDepartment,
