@@ -3,6 +3,20 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { designationService } from "./designation.service";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
+
+const getCompanyAllOrQueryDesignation = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
+    const result = await designationService.getCompanyAllOrQueryDesignationFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Designations fetched successfully",
+        data: result,
+    });
+})
 
 const createDesignation = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -40,6 +54,7 @@ const deleteDesignation = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const designationController = {
+    getCompanyAllOrQueryDesignation,
     createDesignation,
     updateDesignation,
     deleteDesignation,

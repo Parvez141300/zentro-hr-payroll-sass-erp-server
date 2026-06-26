@@ -1,5 +1,60 @@
+import { DesignationWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { ICreateDesignationPayload, IUpdateDesignationPayload } from "./designation.interface";
+import { ICreateDesignationPayload, IGetCompanyDesignationPayload, IUpdateDesignationPayload } from "./designation.interface";
+
+const getCompanyAllOrQueryDesignationFromDB = async (companyId: string, payload: IGetCompanyDesignationPayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder } = payload;
+
+    const addCondition: DesignationWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    title: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    description: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    const designations = await prisma.designation.findMany({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const designationCount = await prisma.designation.count({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: designations,
+        pagination: {
+            total: designationCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(designationCount / limit),
+        }
+    }
+};
 
 const createDesignationInDB = async (companyId: string, payload: ICreateDesignationPayload) => {
     const isExistCompany = await prisma.company.findUnique({
@@ -61,6 +116,7 @@ const deleteDesignationInDB = async (designationId: string) => {
 }
 
 export const designationService = {
+    getCompanyAllOrQueryDesignationFromDB,
     createDesignationInDB,
     updateDesignationInDB,
     deleteDesignationInDB,
