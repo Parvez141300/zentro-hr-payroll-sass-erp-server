@@ -42,8 +42,20 @@ const updateDepartment = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
+    const { id: departmentId } = req.params;
+    const result = await departmentService.deleteCompanyDepartmentInDB(departmentId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Department deleted successfully",
+        data: result,
+    });
+});
+
 export const departmentController = {
     getAllCompanyDepartments,
     createDepartment,
     updateDepartment,
+    deleteDepartment,
 };

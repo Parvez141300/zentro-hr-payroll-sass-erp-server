@@ -13,5 +13,6 @@ router.post(
     departmentController.createDepartment
 );
 router.patch("/:id", checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), departmentController.updateDepartment);
+router.delete("/:id", checkAuthMiddleware(Role.Super_ADMIN), departmentController.deleteDepartment);
 
 export const departmentRoute = router;

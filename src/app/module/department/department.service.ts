@@ -83,10 +83,10 @@ const createDepartmentInDB = async (companyId: string, payload: IDepartmentPaylo
     return department;
 };
 
-const updateDepartmentInDB = async (id: string, payload: IUpdateDepartmentPayload) => {
+const updateDepartmentInDB = async (departmentId: string, payload: IUpdateDepartmentPayload) => {
     const department = await prisma.department.update({
         where: {
-            id,
+            id: departmentId,
         },
         data: {
             ...payload
@@ -96,8 +96,19 @@ const updateDepartmentInDB = async (id: string, payload: IUpdateDepartmentPayloa
     return department;
 };
 
+const deleteCompanyDepartmentInDB = async (departmentId: string) => {
+    const department = await prisma.department.delete({
+        where: {
+            id: departmentId,
+        }
+    });
+
+    return department;
+}
+
 export const departmentService = {
     getAllCompanyDepartmentsFromDB,
     createDepartmentInDB,
     updateDepartmentInDB,
+    deleteCompanyDepartmentInDB,
 }
