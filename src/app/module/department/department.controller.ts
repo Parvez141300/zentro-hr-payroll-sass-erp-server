@@ -15,6 +15,19 @@ const createDepartment = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const updateDepartment = catchAsync(async (req: Request, res: Response) => {
+    const { id: departmentId } = req.params;
+    const payload = req.body;
+    const result = await departmentService.updateDepartmentInDB(departmentId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Department updated successfully",
+        data: result,
+    });
+});
+
 export const departmentController = {
     createDepartment,
+    updateDepartment,
 };

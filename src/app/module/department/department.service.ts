@@ -1,5 +1,7 @@
 import { prisma } from "../../lib/prisma";
-import { IDepartmentPayload } from "./department.interface";
+import { IDepartmentPayload, IUpdateDepartmentPayload } from "./department.interface";
+
+
 
 const createDepartmentInDB = async (payload: IDepartmentPayload) => {
     const isExistDepartment = await prisma.department.findUnique({
@@ -24,6 +26,20 @@ const createDepartmentInDB = async (payload: IDepartmentPayload) => {
     return department;
 }
 
+const updateDepartmentInDB = async (id: string, payload: IUpdateDepartmentPayload) => {
+    const department = await prisma.department.update({
+        where: {
+            id
+        },
+        data: {
+            ...payload
+        }
+    });
+
+    return department;
+}
+
 export const departmentService = {
-    createDepartmentInDB
+    createDepartmentInDB,
+    updateDepartmentInDB,
 }
