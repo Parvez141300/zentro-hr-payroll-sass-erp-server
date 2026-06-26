@@ -74,7 +74,7 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
             }
 
             req.user = {
-                companId: verifyToken.data?.companyId,
+                companyId: verifyToken.data?.companyId,
                 userId: verifyToken.data?.userId,
                 name: verifyToken.data?.name,
                 email: verifyToken.data?.email,
