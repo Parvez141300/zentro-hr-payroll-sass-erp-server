@@ -22,7 +22,7 @@ router.post(
 );
 router.post(
     "/create-company-employee",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
     userController.createCompanyEmployee
 );
 
