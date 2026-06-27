@@ -2,8 +2,7 @@ model Employee {
     id String @id @default(cuid())
 
     // Personal Info
-    firstName   String
-    lastName    String
+    fullName    String
     phone       String?
     photoUrl    String?
     dateOfBirth DateTime?
@@ -13,8 +12,8 @@ model Employee {
     bloodGroup  String?
 
     // Job Info
-    employeeCode   String
-    joinDate       DateTime
+    employeeCode   String?
+    joinDate       DateTime?
     employmentType EmploymentType @default(FULL_TIME)
     status         EmployeeStatus @default(ACTIVE)
 

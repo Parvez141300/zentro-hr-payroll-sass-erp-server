@@ -20,5 +20,10 @@ router.post(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     userController.createCompanyDepartmentHead
 );
+router.post(
+    "/create-company-employee",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
+    userController.createCompanyEmployee
+);
 
 export const userRoute = router;

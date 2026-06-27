@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -211,8 +211,83 @@ const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICrea
     return registerDepartmentHead;
 };
 
+const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateCompanyEmployeePayload) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            email: payload.email
+        }
+    });
+
+    if (isExistUser) {
+        throw new Error(`User with email ${payload.email} already exist`);
+    }
+
+    const registerEmployee = await auth.api.signUpEmail({
+        body: {
+            companyId: companyId,
+            name: payload.name,
+            email: payload.email,
+            password: payload.password,
+            role: Role.EMPLOYEE,
+        }
+    });
+
+    if (!registerEmployee.user.id) {
+        throw new Error("User not created");
+    }
+
+    const employeeCode = await generateEmployeeCode(Role.EMPLOYEE, companyId);
+
+    await prisma.employee.create({
+        data: {
+            userId: registerEmployee.user.id,
+            companyId: companyId,
+            departmentId: payload.departmentId,
+            designationId: payload.designationId,
+
+            fullName: payload.name,
+            phone: payload.phone || null,
+            photoUrl: payload.photoUrl || null,
+            dateOfBirth: payload.dateOfBirth || null,
+            gender: payload.gender,
+            address: payload.address || null,
+            nidNumber: payload.nidNumber || null,
+            bloodGroup: payload.bloodGroup || null,
+            employeeCode: employeeCode,
+            joinDate: payload.joinDate || null,
+
+            employmentType: payload.employmentType,
+
+            basicSalary: payload.basicSalary,
+            houseAllowance: payload.houseAllowance || 0,
+            medicalAllowance: payload.medicalAllowance || 0,
+            transportAllowance: payload.transportAllowance || 0,
+
+            bankName: payload.bankName || null,
+            bankAccount: payload.bankAccount || null,
+
+            emergencyName: payload.emergencyName || null,
+            emergencyPhone: payload.emergencyPhone || null,
+            emergencyRelation: payload.emergencyRelation || null,
+        }
+    });
+
+    return registerEmployee;
+}
+
 export const userService = {
     createCompanyHrInDB,
     createCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
+    createCompanyEmployeeInDB,
 }
