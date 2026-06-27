@@ -55,7 +55,6 @@ export interface IUpdateAccountantPayload {
 }
 
 export interface ICreateCompanyDepartmentHeadPayload {
-    companyId: string;
     departmentId: string;
     designationId: string;
     name: string;
@@ -79,7 +78,6 @@ export interface IUpdateDepartmentHeadPayload {
 }
 
 export interface ICreateCompanyEmployeePayload {
-    companyId: string;
     departmentId: string;
     designationId: string;
 
@@ -99,9 +97,9 @@ export interface ICreateCompanyEmployeePayload {
     joinDate?: Date;
 
     basicSalary: number;
-    houseAllowance: number;
-    medicalAllowance: number;
-    transportAllowance: number;
+    houseAllowance?: number;
+    medicalAllowance?: number;
+    transportAllowance?: number;
 
     bankName?: string;
     bankAccount?: string;
