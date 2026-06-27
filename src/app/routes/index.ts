@@ -5,6 +5,7 @@ import { authRoute } from "../module/auth/auth.route";
 import { departmentRoute } from "../module/department/department.route";
 import { designationRoute } from "../module/designation/designation.route";
 import { userRoute } from "../module/user/user.route";
+import { employeeRoute } from "../module/employee/employee.route";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/subscription-plans-config", subscriptionPlanConfigRoute);
 router.use("/departments", departmentRoute);
 router.use("/designations", designationRoute);
 router.use("/users", userRoute);
+router.use("/employees", employeeRoute);
 
 export const indexRoute = router;
