@@ -4,6 +4,7 @@ import { subscriptionPlanConfigRoute } from "../module/subscriptionPlanConfig/su
 import { authRoute } from "../module/auth/auth.route";
 import { departmentRoute } from "../module/department/department.route";
 import { designationRoute } from "../module/designation/designation.route";
+import { userRoute } from "../module/user/user.route";
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use("/companies", companyRoute);
 router.use("/subscription-plans-config", subscriptionPlanConfigRoute);
 router.use("/departments", departmentRoute);
 router.use("/designations", designationRoute);
+router.use("/users", userRoute);
 
 export const indexRoute = router;
