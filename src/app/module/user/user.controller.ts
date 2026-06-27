@@ -67,6 +67,7 @@ const createCompanyEmployee = catchAsync(async (req: Request, res: Response) => 
 
 export const userController = {
     createCompanyHr,
+    updateCompanyHr,
     createCompanyAccountant,
     createCompanyDepartmentHead,
     createCompanyEmployee,

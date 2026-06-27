@@ -113,6 +113,7 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, payload: IUp
 
     const isExistHr = await prisma.hrManager.findUnique({
         where: {
+            companyId: companyId,
             id: hrId
         }
     });
