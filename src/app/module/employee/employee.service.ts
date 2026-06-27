@@ -1,6 +1,7 @@
+import { Role } from "../../../generated/prisma/enums";
 import { EmployeeWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IGetAllOrQueryEmployeePayload } from "./employee.interface";
+import { IGetAllOrQueryEmployeePayload, IUpdateEmployeePayload } from "./employee.interface";
 
 const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllOrQueryEmployeePayload) => {
 
@@ -88,6 +89,99 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllO
     };
 }
 
+const updateEmployeeInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateEmployeePayload) => {
+    const {name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation} = payload;
+    
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+    
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    });
+
+    if (!isExistUser) {
+        throw new Error(`This ${userId} user not found`);
+    }
+
+    const employeeData = await prisma.employee.findUnique({
+        where: {
+            id: userId,
+            companyId: companyId,
+        }
+    });
+
+    if (!employeeData) {
+        throw new Error("Employee not found");
+    }
+
+    if(role === Role.Super_ADMIN || role === Role.HR_MANAGER) {
+        const updateEmployee = await prisma.employee.update({
+            where: {
+                id: userId,
+                companyId: companyId,
+            },
+            data: {
+                name: name || employeeData.name,
+                phone: phone || employeeData.phone,
+                photoUrl: photoUrl || employeeData.photoUrl,
+                dateOfBirth: dateOfBirth || employeeData.dateOfBirth,
+                gender: gender || employeeData.gender,
+                address: address || employeeData.address,
+                nidNumber: nidNumber || employeeData.nidNumber,
+                bloodGroup: bloodGroup || employeeData.bloodGroup,
+                employmentType: employmentType || employeeData.employmentType,
+                basicSalary: basicSalary || employeeData.basicSalary,
+                houseAllowance: houseAllowance || employeeData.houseAllowance,
+                medicalAllowance: medicalAllowance || employeeData.medicalAllowance,
+                transportAllowance: transportAllowance || employeeData.transportAllowance,
+                bankName: bankName || employeeData.bankName,
+                bankAccount: bankAccount || employeeData.bankAccount,
+                emergencyName: emergencyName || employeeData.emergencyName,
+                emergencyPhone: emergencyPhone || employeeData.emergencyPhone,
+                emergencyRelation: emergencyRelation || employeeData.emergencyRelation,
+            }
+        });
+
+        return updateEmployee;
+    }
+
+    if(role === Role.EMPLOYEE) {
+        const updateEmployee = await prisma.employee.update({
+            where: {
+                id: userId,
+                companyId: companyId,
+            },
+            data: {
+                name: name || employeeData.name,
+                phone: phone || employeeData.phone,
+                photoUrl: photoUrl || employeeData.photoUrl,
+                dateOfBirth: dateOfBirth || employeeData.dateOfBirth,
+                gender: gender || employeeData.gender,
+                address: address || employeeData.address,
+                nidNumber: nidNumber || employeeData.nidNumber,
+                bloodGroup: bloodGroup || employeeData.bloodGroup,
+                bankName: bankName || employeeData.bankName,
+                bankAccount: bankAccount || employeeData.bankAccount,
+                emergencyName: emergencyName || employeeData.emergencyName,
+                emergencyPhone: emergencyPhone || employeeData.emergencyPhone,
+                emergencyRelation: emergencyRelation || employeeData.emergencyRelation,
+            }
+        });
+
+        return updateEmployee;
+    }
+}
+
 export const employeeService = {
     getAllOrQueryEmployeesFromDB,
+    updateEmployeeInDB,
 };
