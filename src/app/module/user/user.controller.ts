@@ -28,7 +28,20 @@ const createCompanyAccountant = catchAsync(async (req: Request, res: Response) =
     });
 });
 
+const createCompanyDepartmentHead = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+    const user = req.user;
+    const result = await userService.createCompanyDepartmentHeadInDB(user.companyId, payload);
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "Company department head created successfully",
+        data: result,
+    });
+});
+
 export const userController = {
     createCompanyHr,
     createCompanyAccountant,
+    createCompanyDepartmentHead,
 };

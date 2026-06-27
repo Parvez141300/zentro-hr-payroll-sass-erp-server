@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -133,6 +133,8 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
         throw new Error("User not created");
     }
 
+    const employeeCode = await generateEmployeeCode(Role.ACCOUNTANT, companyId)
+
     await prisma.accountant.create({
         data: {
             userId: registerAccountant.user.id,
@@ -140,6 +142,7 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
             fullName: payload.name,
             phone: payload.phone || null,
             photoUrl: payload.photoUrl || null,
+            employeeCode: employeeCode || null,
             joinDate: payload.joinDate || null,
             caLicenseNumber: payload.caLicenseNumber || null,
             taxIdNumber: payload.taxIdNumber || null,
@@ -151,7 +154,65 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
     return;
 };
 
+const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICreateCompanyDepartmentHeadPayload) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+    
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            email: payload.email
+        }
+    });
+
+    if (isExistUser) {
+        throw new Error(`User with email ${payload.email} already exist`);
+    }
+
+    const registerDepartmentHead = await auth.api.signUpEmail({
+        body: {
+            companyId: companyId,
+            name: payload.name,
+            email: payload.email,
+            password: payload.password,
+            role: Role.DEPARTMENT_HEAD,
+        }
+    });
+
+    if (!registerDepartmentHead.user.id) {
+        throw new Error("User not created");
+    }
+
+    const employeeCode = await generateEmployeeCode(Role.DEPARTMENT_HEAD, companyId);
+
+    await prisma.departmentHead.create({
+        data: {
+            userId: registerDepartmentHead.user.id,
+            companyId: companyId,
+            departmentId: payload.departmentId,
+            designationId: payload.designationId,
+            fullName: payload.name,
+            phone: payload.phone || null,
+            photoUrl: payload.photoUrl || null,
+            employeeCode: employeeCode || null,
+            joinDate: payload.joinDate || null,
+            officeLocation: payload.officeLocation || null,
+            linkedinUrl: payload.linkedinUrl || null,
+            bio: payload.bio || null,
+        }
+    });
+
+    return registerDepartmentHead;
+};
+
 export const userService = {
     createCompanyHrInDB,
     createCompanyAccountantInDB,
+    createCompanyDepartmentHeadInDB,
 }
