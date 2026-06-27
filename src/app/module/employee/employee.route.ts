@@ -9,6 +9,11 @@ router.get(
     "/",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD), employeeController.getAllOrQueryEmployees
 );
+router.get(
+    "/own-profile",
+    checkAuthMiddleware(Role.EMPLOYEE),
+    employeeController.getEmployeeOwnProfile
+);
 router.patch(
     "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE), employeeController.updateEmployee

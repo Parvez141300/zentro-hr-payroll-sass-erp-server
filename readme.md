@@ -133,7 +133,7 @@ Cannot: Manage Employees, Manage Attendance, Approve Leave, Manage Settings
 
 #### DEPARTMENT_HEAD — Can:
 
-- View Employees in Own Department
+- View Employees in Own Department ✅
 - View Department Attendance
 - Approve Leave for Own Department
 - View Department Reports

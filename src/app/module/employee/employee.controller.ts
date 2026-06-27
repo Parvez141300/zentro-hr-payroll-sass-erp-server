@@ -24,6 +24,17 @@ const getAllOrQueryEmployees = catchAsync(async (req: Request, res: Response) =>
     });
 });
 
+const getEmployeeOwnProfile = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    const result = await employeeService.getEmployeeOwnProfileFromDB(user.companyId, user.email);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Employee fetched successfully",
+        data: result,
+    });
+});
+
 const updateEmployee = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
     const role = user.role as Role;
@@ -52,6 +63,7 @@ const deleteEmployee = catchAsync(async (req: Request, res: Response) => {
 
 export const employeeController = {
     getAllOrQueryEmployees,
+    getEmployeeOwnProfile,
     updateEmployee,
     deleteEmployee,
 };

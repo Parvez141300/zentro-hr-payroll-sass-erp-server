@@ -143,6 +143,24 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
     };
 }
 
+const getEmployeeOwnProfileFromDB = async (companyId: string, userId: string) => {
+    const employee = await prisma.employee.findUnique({
+        where: {
+            userId: userId,
+            companyId: companyId,
+        },
+        include: {
+            user: true,
+        }
+    });
+
+    if (!employee) {
+        throw new Error("Employee not found");
+    }
+
+    return employee;
+}
+
 const updateEmployeeInDB = async (companyId: string, employeeId: string, role: Role, payload: IUpdateEmployeePayload) => {
     const { name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation } = payload;
 
@@ -290,6 +308,7 @@ const deleteEmployeeInDB = async (companyId: string, employeeId: string) => {
 
 export const employeeService = {
     getAllOrQueryEmployeesFromDB,
+    getEmployeeOwnProfileFromDB,
     updateEmployeeInDB,
     deleteEmployeeInDB,
 };
