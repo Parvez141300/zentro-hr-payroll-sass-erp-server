@@ -63,7 +63,7 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
     data: {
       userId: register.user.id,
       companyId: company.id,
-      fullName: name,
+      name: name,
       phone: phone,
     }
   });
