@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateDepartmentHeadPayload, IUpdateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -336,6 +336,50 @@ const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICrea
     return registerDepartmentHead;
 };
 
+const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHeadId: string, payload: IUpdateDepartmentHeadPayload) => {
+    const isExistDepartmentHead = await prisma.departmentHead.findUnique({
+        where: {
+            companyId: companyId,
+            id: departmentHeadId
+        }
+    });
+
+    if (!isExistDepartmentHead) {
+        throw new Error("Department head not found");
+    }
+
+    const updateDepartmentHead = await prisma.$transaction(async (tx) => {
+        const departmentHead = await tx.departmentHead.update({
+            where: {
+                id: departmentHeadId
+            },
+            data: {
+                ...payload,
+            }
+        });
+
+        const userData = await tx.user.findUnique({
+            where: {
+                id: departmentHead.userId
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: departmentHead.userId
+            },
+            data: {
+                name: payload.name,
+                image: payload.photoUrl || userData?.image,
+            }
+        });
+
+        return departmentHead;
+    });
+
+    return updateDepartmentHead;
+}
+
 const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateCompanyEmployeePayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
@@ -428,5 +472,6 @@ export const userService = {
     createCompanyAccountantInDB,
     updateCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
+    updateCompanyDepartmentHeadInDB,
     createCompanyEmployeeInDB,
 }

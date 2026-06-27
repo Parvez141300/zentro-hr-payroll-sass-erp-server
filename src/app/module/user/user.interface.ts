@@ -29,7 +29,6 @@ export interface IUpdateHRManagerPayload {
     name?: string;
     phone?: string;
     photoUrl?: string;
-    joinDate?: Date;
     hrLicenseNumber?: string;
     officePhone?: string;
     bio?: string;
@@ -53,7 +52,6 @@ export interface IUpdateAccountantPayload {
     name?: string;
     phone?: string;
     photoUrl?: string;
-    joinDate?: Date;
     caLicenseNumber?: string;
     taxIdNumber?: string;
     bankName?: string;
@@ -70,6 +68,15 @@ export interface ICreateCompanyDepartmentHeadPayload {
     phone?: string;
     photoUrl?: string;
     joinDate?: Date;
+    officeLocation?: string;
+    linkedinUrl?: string;
+    bio?: string;
+}
+
+export interface IUpdateDepartmentHeadPayload {
+    name?: string;
+    phone?: string;
+    photoUrl?: string;
     officeLocation?: string;
     linkedinUrl?: string;
     bio?: string;

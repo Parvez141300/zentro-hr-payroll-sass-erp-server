@@ -66,6 +66,19 @@ const createCompanyDepartmentHead = catchAsync(async (req: Request, res: Respons
     });
 });
 
+const updateCompanyDepartmentHead = catchAsync(async (req: Request, res: Response) => {
+    const { id: departmentHeadId } = req.params;
+    const payload = req.body;
+    const user = req.user;
+    const result = await userService.updateCompanyDepartmentHeadInDB(user.companyId, departmentHeadId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Company department head updated successfully",
+        data: result,
+    });
+});
+
 const createCompanyEmployee = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const user = req.user;
@@ -84,5 +97,6 @@ export const userController = {
     createCompanyAccountant,
     updateCompanyAccountant,
     createCompanyDepartmentHead,
+    updateCompanyDepartmentHead,
     createCompanyEmployee,
 };
