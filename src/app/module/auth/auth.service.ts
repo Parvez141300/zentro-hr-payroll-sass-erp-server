@@ -55,29 +55,38 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
   });
 
   if (!register.user.id) {
+    await prisma.company.delete(
+      {
+        where: {
+          id: company.id
+        }
+      }
+    );
     throw new Error("User not created");
   }
 
-  // step 3: create super admin
-  await prisma.superAdmin.create({
-    data: {
-      userId: register.user.id,
-      companyId: company.id,
-      name: name,
-      phone: phone,
-    }
-  });
+  await prisma.$transaction(async (tx) => {
+    // step 3: create super admin
+    await tx.superAdmin.create({
+      data: {
+        userId: register.user.id,
+        companyId: company.id,
+        name: name,
+        phone: phone,
+      }
+    });
 
-  // step 4: create subscription history
-  await prisma.subscriptionHistory.create({
-    data: {
-      companyId: company.id,
-      plan: SubscriptionPlan.FREE,
-      status: SubscriptionStatus.TRIAL,
-      startDate: new Date(),
-      endDate: new Date("2099-01-01"),
-      paymentId: null,
-    }
+    // step 4: create subscription history
+    await tx.subscriptionHistory.create({
+      data: {
+        companyId: company.id,
+        plan: SubscriptionPlan.FREE,
+        status: SubscriptionStatus.TRIAL,
+        startDate: new Date(),
+        endDate: new Date("2099-01-01"),
+        paymentId: null,
+      }
+    });
   });
 
   return register;
