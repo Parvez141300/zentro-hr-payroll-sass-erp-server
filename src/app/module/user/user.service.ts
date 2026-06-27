@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateDepartmentHeadPayload, IUpdateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateDepartmentHeadPayload, IUpdateEmployeePayload, IUpdateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -466,6 +466,50 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
     return registerEmployee;
 }
 
+const updateCompanyEmployeeInDB = async (companyId: string, employeeId: string, payload: IUpdateEmployeePayload) => {
+    const isExistEmployee = await prisma.employee.findUnique({
+        where: {
+            companyId: companyId,
+            id: employeeId
+        }
+    });
+
+    if (!isExistEmployee) {
+        throw new Error("Employee not found");
+    }
+
+    const updateEmployee = await prisma.$transaction(async (tx) => {
+        const employee = await tx.employee.update({
+            where: {
+                id: employeeId
+            },
+            data: {
+                ...payload,
+            }
+        });
+
+        const userData = await tx.user.findUnique({
+            where: {
+                id: employee.userId
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: employee.userId
+            },
+            data: {
+                name: payload.name,
+                image: payload.photoUrl || userData?.image,
+            }
+        });
+
+        return employee;
+    });
+
+    return updateEmployee;
+}
+
 export const userService = {
     createCompanyHrInDB,
     updateCompanyHrInDB,
@@ -474,4 +518,5 @@ export const userService = {
     createCompanyDepartmentHeadInDB,
     updateCompanyDepartmentHeadInDB,
     createCompanyEmployeeInDB,
+    updateCompanyEmployeeInDB,
 }
