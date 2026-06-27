@@ -24,3 +24,17 @@ export interface ICreateHRManagerPayload {
     // System fields
     isActive?: boolean;
 }
+
+export interface ICreateCompanyAccountantPayload {
+    userId: string;
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    photoUrl?: string;
+    joinDate?: Date;
+    caLicenseNumber?: string;
+    taxIdNumber?: string;
+    bankName?: string;
+    bankAccount?: string;
+}

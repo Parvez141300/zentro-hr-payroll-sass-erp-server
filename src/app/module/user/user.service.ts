@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -97,6 +97,61 @@ const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerP
     return registerHr;
 };
 
+const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCompanyAccountantPayload) => {
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            email: payload.email
+        }
+    });
+
+    if (isExistUser) {
+        throw new Error(`User with email ${payload.email} already exist`);
+    }
+
+    const registerAccountant = await auth.api.signUpEmail({
+        body: {
+            companyId: companyId,
+            name: payload.name,
+            email: payload.email,
+            password: payload.password,
+            role: Role.ACCOUNTANT,
+        }
+    });
+
+    if (!registerAccountant.user.id) {
+        throw new Error("User not created");
+    }
+
+    await prisma.accountant.create({
+        data: {
+            userId: registerAccountant.user.id,
+            companyId: companyId,
+            fullName: payload.name,
+            phone: payload.phone || null,
+            photoUrl: payload.photoUrl || null,
+            joinDate: payload.joinDate || null,
+            caLicenseNumber: payload.caLicenseNumber || null,
+            taxIdNumber: payload.taxIdNumber || null,
+            bankName: payload.bankName || null,
+            bankAccount: payload.bankAccount || null,
+        }
+    });
+
+    return;
+};
+
 export const userService = {
     createCompanyHrInDB,
+    createCompanyAccountantInDB,
 }

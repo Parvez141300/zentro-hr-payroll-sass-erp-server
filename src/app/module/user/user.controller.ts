@@ -16,6 +16,19 @@ const createCompanyHr = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const createCompanyAccountant = catchAsync(async (req: Request, res: Response) => {
+    const payload = req.body;
+    const user = req.user;
+    const result = await userService.createCompanyAccountantInDB(user.companyId, payload);
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "Company accountant created successfully",
+        data: result,
+    });
+});
+
 export const userController = {
     createCompanyHr,
+    createCompanyAccountant,
 };
