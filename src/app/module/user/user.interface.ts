@@ -20,9 +20,6 @@ export interface ICreateHRManagerPayload {
     scope: HrScope;  // "COMPANY_WIDE" or "DEPARTMENT_SPECIFIC"
     departmentId?: string;  // Required if scope is "DEPARTMENT_SPECIFIC"
     designationId?: string;
-
-    // System fields
-    isActive?: boolean;
 }
 
 export interface IUpdateHRManagerPayload {
