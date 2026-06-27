@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { indexRoute } from "./app/routes";
 import { notFoundMiddleware } from "./app/middleware/notFound";
+import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 
 export const app: Application = express();
 
@@ -21,3 +22,5 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use(notFoundMiddleware);
+// global error handler
+app.use(globalErrorHandler);
