@@ -1,9 +1,10 @@
+import { DepartmentHead } from "../../../generated/prisma/client";
 import { Role } from "../../../generated/prisma/enums";
 import { EmployeeWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryEmployeePayload, IUpdateEmployeePayload } from "./employee.interface";
 
-const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllOrQueryEmployeePayload) => {
+const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | undefined, role: Role | undefined, payload: IGetAllOrQueryEmployeePayload) => {
 
     const { search, page, limit, skip, sortBy, sortOrder, employmentType, status } = payload;
 
@@ -18,6 +19,27 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllO
     }
 
     const addCondition: EmployeeWhereInput[] = [];
+
+    let departmentHeadData: DepartmentHead | null = null;
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const isExistsDepartmentHead = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        if (!isExistsDepartmentHead) {
+            throw new Error("Department head not found");
+        }
+
+        departmentHeadData = await prisma.departmentHead.findUnique({
+            where: {
+                companyId: companyId,
+                userId: isExistsDepartmentHead.id
+            }
+        });
+    }
 
     if (search) {
         addCondition.push({
@@ -56,27 +78,59 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllO
         });
     }
 
-    const employees = await prisma.employee.findMany({
-        where: {
-            companyId: companyId,
-            AND: addCondition
-        },
-        skip: skip,
-        take: limit,
-        orderBy: {
-            [sortBy]: sortOrder
-        },
-        include: {
-            user: true,
-        }
-    });
+    let employees;
+    let employeeCount: number;
 
-    const employeeCount = await prisma.employee.count({
-        where: {
-            companyId: companyId,
-            AND: addCondition
-        }
-    });
+    if (role === Role.DEPARTMENT_HEAD && departmentHeadData) {
+        employees = await prisma.employee.findMany({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+                departmentId: departmentHeadData?.departmentId,
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                [sortBy]: sortOrder
+            },
+            include: {
+                user: true,
+            }
+        });
+
+        employeeCount = await prisma.employee.count({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+                departmentId: departmentHeadData?.departmentId,
+            }
+        });
+    }
+    else {
+        employees = await prisma.employee.findMany({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                [sortBy]: sortOrder
+            },
+            include: {
+                user: true,
+            }
+        });
+
+        employeeCount = await prisma.employee.count({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+            }
+        });
+    }
+
+
 
     return {
         data: employees,

@@ -86,9 +86,9 @@ Zentro is a modern HR and Payroll ERP platform designed to centralize employee m
 ### Permission Matrix
 
 #### PLATFORM_SUPER_ADMIN — Can do everything across ALL companies:
-- Manage ALL Companies
-- View ALL Subscriptions
-- Create/Edit/Delete Subscription Plans
+- Manage ALL Companies ✅
+- View ALL Subscriptions ✅
+- Create/Edit/Delete Subscription Plans ✅
 - Set Global System Settings
 - View ALL Audit Logs
 - Configure Payment Gateways (Stripe, SSLCommerz)
@@ -96,8 +96,12 @@ Zentro is a modern HR and Payroll ERP platform designed to centralize employee m
 
 #### SUPER_ADMIN — Can do everything:
 
-- Manage Employees
-- Manage Departments
+- Manage Departments ✅
+- Manage Designations ✅
+- Manage HR Managers
+- Manage Accountants
+- Manage Department Heads
+- Manage Employees ✅
 - Manage Attendance
 - Manage Leave Requests
 - Generate & Approve Payroll
@@ -108,9 +112,9 @@ Zentro is a modern HR and Payroll ERP platform designed to centralize employee m
 
 #### HR_MANAGER — Can:
 
-- Add/Edit Employees
-- Create/Edit Departments
-- Manage Attendance
+- Add/Edit Employees ✅
+- Create/Edit Departments ✅
+- Manage Attendance 
 - Approve Leave Requests
 - View HR Reports
 
@@ -118,7 +122,7 @@ Cannot: Delete Departments, Delete Employees, Manage Payroll, Manage System Sett
 
 #### ACCOUNTANT — Can:
 
-- View Employees
+- View Employees ✅
 - Generate Payroll
 - Edit Payroll
 - Mark Payroll as Paid
