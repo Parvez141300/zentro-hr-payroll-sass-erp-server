@@ -220,7 +220,7 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
         });
     })
 
-    return;
+    return registerAccountant;
 };
 
 const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, payload: IUpdateAccountantPayload) => {

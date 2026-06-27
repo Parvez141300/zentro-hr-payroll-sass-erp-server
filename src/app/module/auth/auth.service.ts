@@ -1,4 +1,4 @@
-import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { Role, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 import { tokenUtils } from "../../utils/token";
@@ -51,6 +51,7 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
       name: name,
       email: email,
       password: password,
+      role: Role.Super_ADMIN,
     }
   });
 

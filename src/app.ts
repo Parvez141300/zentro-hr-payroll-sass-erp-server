@@ -3,6 +3,7 @@ import cors from "cors";
 import { indexRoute } from "./app/routes";
 import { notFoundMiddleware } from "./app/middleware/notFound";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
+import cookieParser from "cookie-parser";
 
 export const app: Application = express();
 
@@ -12,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 // api route
 app.use("/api/v1", indexRoute);

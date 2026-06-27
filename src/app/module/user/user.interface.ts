@@ -32,7 +32,6 @@ export interface IUpdateHRManagerPayload {
 }
 
 export interface ICreateCompanyAccountantPayload {
-    userId: string;
     name: string;
     email: string;
     password: string;

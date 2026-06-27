@@ -8,6 +8,7 @@ import { Role } from "../../generated/prisma/enums";
 export const checkAuthMiddleware = (...authRoles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
+            console.log('cookie data from global check auth', req.cookies);
             const sessionToken = cookieUtils.getCookie(req, "accessToken");
 
             if (!sessionToken) {
