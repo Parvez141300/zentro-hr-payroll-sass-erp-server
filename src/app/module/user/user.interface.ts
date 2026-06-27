@@ -9,7 +9,6 @@ export interface ICreateHRManagerPayload {
     name: string;
     phone?: string;
     photoUrl?: string;
-    employeeCode?: string;
     
     // Job fields
     joinDate?: Date;

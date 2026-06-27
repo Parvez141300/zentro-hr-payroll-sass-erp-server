@@ -2,6 +2,7 @@ import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
 import { ICreateHRManagerPayload } from "./user.interface";
+import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
     const isExistCompany = await prisma.company.findUnique({
@@ -73,6 +74,8 @@ const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerP
         throw new Error("User not created");
     }
 
+    const employeeCode = await generateEmployeeCode(Role.HR_MANAGER, companyId)
+
     await prisma.hrManager.create({
         data: {
             userId: registerHr.user.id,
@@ -82,7 +85,7 @@ const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerP
             fullName: payload.name,
             phone: payload.phone || null,
             photoUrl: payload.photoUrl || null,
-            employeeCode: payload.employeeCode || null,
+            employeeCode: employeeCode || null,
             joinDate: payload.joinDate || null,
             hrLicenseNumber: payload.hrLicenseNumber || null,
             officePhone: payload.officePhone || null,
