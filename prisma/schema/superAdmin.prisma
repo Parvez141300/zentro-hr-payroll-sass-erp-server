@@ -3,7 +3,7 @@ model SuperAdmin {
     userId String @unique
     user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    fullName String
+    name String
     phone    String?
     photoUrl String?
 

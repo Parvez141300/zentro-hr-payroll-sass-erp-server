@@ -47,7 +47,7 @@ const seedPlatformSuperAdmin = async () => {
         await tx.platformSuperAdmin.create({
             data: {
                 userId: platformSuperAdmin.user.id,
-                fullName: platformSuperAdmin.user.name,
+                name: platformSuperAdmin.user.name,
                 email: platformSuperAdmin.user.email,
             }
         });

@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -76,26 +76,82 @@ const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerP
 
     const employeeCode = await generateEmployeeCode(Role.HR_MANAGER, companyId)
 
-    await prisma.hrManager.create({
-        data: {
-            userId: registerHr.user.id,
-            companyId: companyId,
-            departmentId: payload.departmentId || null,
-            designationId: payload.designationId || null,
-            fullName: payload.name,
-            phone: payload.phone || null,
-            photoUrl: payload.photoUrl || null,
-            employeeCode: employeeCode || null,
-            joinDate: payload.joinDate || null,
-            hrLicenseNumber: payload.hrLicenseNumber || null,
-            officePhone: payload.officePhone || null,
-            bio: payload.bio || null,
-            scope: payload.scope,
-        }
+    await prisma.$transaction(async (tx) => {
+        await tx.hrManager.create({
+            data: {
+                userId: registerHr.user.id,
+                companyId: companyId,
+                departmentId: payload.departmentId || null,
+                designationId: payload.designationId || null,
+                name: payload.name,
+                phone: payload.phone || null,
+                photoUrl: payload.photoUrl || null,
+                employeeCode: employeeCode || null,
+                joinDate: payload.joinDate || null,
+                hrLicenseNumber: payload.hrLicenseNumber || null,
+                officePhone: payload.officePhone || null,
+                bio: payload.bio || null,
+                scope: payload.scope,
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: registerHr.user.id
+            },
+            data: {
+                image: payload.photoUrl || null,
+                emailVerified: true,
+            }
+        });
     });
 
     return registerHr;
 };
+
+const updateCompanyHrInDB = async (companyId: string, hrId: string, payload: IUpdateHRManagerPayload) => {
+
+    const isExistHr = await prisma.hrManager.findUnique({
+        where: {
+            id: hrId
+        }
+    });
+
+    if (!isExistHr) {
+        throw new Error("HR Manager not found");
+    }
+
+    const updateHr = await prisma.$transaction(async (tx) => {
+        const hr = await tx.hrManager.update({
+            where: {
+                id: hrId
+            },
+            data: {
+                ...payload,
+            }
+        });
+
+        const userData = await tx.user.findUnique({
+            where: {
+                id: hr.userId
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: hr.userId
+            },
+            data: {
+                name: payload.name,
+                image: payload.photoUrl || userData?.image,
+            }
+        });
+
+        return hr;
+    });
+
+    return updateHr;
+}
 
 const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCompanyAccountantPayload) => {
 
@@ -135,21 +191,33 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
 
     const employeeCode = await generateEmployeeCode(Role.ACCOUNTANT, companyId)
 
-    await prisma.accountant.create({
-        data: {
-            userId: registerAccountant.user.id,
-            companyId: companyId,
-            fullName: payload.name,
-            phone: payload.phone || null,
-            photoUrl: payload.photoUrl || null,
-            employeeCode: employeeCode || null,
-            joinDate: payload.joinDate || null,
-            caLicenseNumber: payload.caLicenseNumber || null,
-            taxIdNumber: payload.taxIdNumber || null,
-            bankName: payload.bankName || null,
-            bankAccount: payload.bankAccount || null,
-        }
-    });
+    await prisma.$transaction(async (tx) => {
+        await tx.accountant.create({
+            data: {
+                userId: registerAccountant.user.id,
+                companyId: companyId,
+                name: payload.name,
+                phone: payload.phone || null,
+                photoUrl: payload.photoUrl || null,
+                employeeCode: employeeCode || null,
+                joinDate: payload.joinDate || null,
+                caLicenseNumber: payload.caLicenseNumber || null,
+                taxIdNumber: payload.taxIdNumber || null,
+                bankName: payload.bankName || null,
+                bankAccount: payload.bankAccount || null,
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: registerAccountant.user.id
+            },
+            data: {
+                image: payload.photoUrl || null,
+                emailVerified: true,
+            }
+        });
+    })
 
     return;
 };
@@ -164,7 +232,7 @@ const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICrea
     if (!isExistCompany) {
         throw new Error("Company not found");
     }
-    
+
     const isExistUser = await prisma.user.findUnique({
         where: {
             email: payload.email
@@ -191,21 +259,33 @@ const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICrea
 
     const employeeCode = await generateEmployeeCode(Role.DEPARTMENT_HEAD, companyId);
 
-    await prisma.departmentHead.create({
-        data: {
-            userId: registerDepartmentHead.user.id,
-            companyId: companyId,
-            departmentId: payload.departmentId,
-            designationId: payload.designationId,
-            fullName: payload.name,
-            phone: payload.phone || null,
-            photoUrl: payload.photoUrl || null,
-            employeeCode: employeeCode || null,
-            joinDate: payload.joinDate || null,
-            officeLocation: payload.officeLocation || null,
-            linkedinUrl: payload.linkedinUrl || null,
-            bio: payload.bio || null,
-        }
+    await prisma.$transaction(async (tx) => {
+        await tx.departmentHead.create({
+            data: {
+                userId: registerDepartmentHead.user.id,
+                companyId: companyId,
+                departmentId: payload.departmentId,
+                designationId: payload.designationId,
+                name: payload.name,
+                phone: payload.phone || null,
+                photoUrl: payload.photoUrl || null,
+                employeeCode: employeeCode || null,
+                joinDate: payload.joinDate || null,
+                officeLocation: payload.officeLocation || null,
+                linkedinUrl: payload.linkedinUrl || null,
+                bio: payload.bio || null,
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: registerDepartmentHead.user.id
+            },
+            data: {
+                image: payload.photoUrl || null,
+                emailVerified: true,
+            }
+        });
     });
 
     return registerDepartmentHead;
@@ -248,38 +328,50 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
 
     const employeeCode = await generateEmployeeCode(Role.EMPLOYEE, companyId);
 
-    await prisma.employee.create({
-        data: {
-            userId: registerEmployee.user.id,
-            companyId: companyId,
-            departmentId: payload.departmentId,
-            designationId: payload.designationId,
+    await prisma.$transaction(async (tx) => {
+        await tx.employee.create({
+            data: {
+                userId: registerEmployee.user.id,
+                companyId: companyId,
+                departmentId: payload.departmentId,
+                designationId: payload.designationId,
 
-            fullName: payload.name,
-            phone: payload.phone || null,
-            photoUrl: payload.photoUrl || null,
-            dateOfBirth: payload.dateOfBirth || null,
-            gender: payload.gender,
-            address: payload.address || null,
-            nidNumber: payload.nidNumber || null,
-            bloodGroup: payload.bloodGroup || null,
-            employeeCode: employeeCode,
-            joinDate: payload.joinDate || null,
+                name: payload.name,
+                phone: payload.phone || null,
+                photoUrl: payload.photoUrl || null,
+                dateOfBirth: payload.dateOfBirth || null,
+                gender: payload.gender,
+                address: payload.address || null,
+                nidNumber: payload.nidNumber || null,
+                bloodGroup: payload.bloodGroup || null,
+                employeeCode: employeeCode,
+                joinDate: payload.joinDate || null,
 
-            employmentType: payload.employmentType,
+                employmentType: payload.employmentType,
 
-            basicSalary: payload.basicSalary,
-            houseAllowance: payload.houseAllowance || 0,
-            medicalAllowance: payload.medicalAllowance || 0,
-            transportAllowance: payload.transportAllowance || 0,
+                basicSalary: payload.basicSalary,
+                houseAllowance: payload.houseAllowance || 0,
+                medicalAllowance: payload.medicalAllowance || 0,
+                transportAllowance: payload.transportAllowance || 0,
 
-            bankName: payload.bankName || null,
-            bankAccount: payload.bankAccount || null,
+                bankName: payload.bankName || null,
+                bankAccount: payload.bankAccount || null,
 
-            emergencyName: payload.emergencyName || null,
-            emergencyPhone: payload.emergencyPhone || null,
-            emergencyRelation: payload.emergencyRelation || null,
-        }
+                emergencyName: payload.emergencyName || null,
+                emergencyPhone: payload.emergencyPhone || null,
+                emergencyRelation: payload.emergencyRelation || null,
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: registerEmployee.user.id
+            },
+            data: {
+                image: payload.photoUrl || null,
+                emailVerified: true,
+            }
+        });
     });
 
     return registerEmployee;
@@ -287,6 +379,7 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
 
 export const userService = {
     createCompanyHrInDB,
+    updateCompanyHrInDB,
     createCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
     createCompanyEmployeeInDB,

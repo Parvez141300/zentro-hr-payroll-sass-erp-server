@@ -2,7 +2,7 @@ model Employee {
     id String @id @default(cuid())
 
     // Personal Info
-    fullName    String
+    name    String
     phone       String?
     photoUrl    String?
     dateOfBirth DateTime?

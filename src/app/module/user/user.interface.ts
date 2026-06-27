@@ -25,6 +25,16 @@ export interface ICreateHRManagerPayload {
     isActive?: boolean;
 }
 
+export interface IUpdateHRManagerPayload {
+    name?: string;
+    phone?: string;
+    photoUrl?: string;
+    joinDate?: Date;
+    hrLicenseNumber?: string;
+    officePhone?: string;
+    bio?: string;
+}
+
 export interface ICreateCompanyAccountantPayload {
     userId: string;
     name: string;

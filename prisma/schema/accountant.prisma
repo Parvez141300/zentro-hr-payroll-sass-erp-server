@@ -1,7 +1,7 @@
 model Accountant {
     id String @id @default(cuid())
 
-    fullName         String
+    name         String
     phone            String?
     photoUrl         String?
     employeeCode     String?
