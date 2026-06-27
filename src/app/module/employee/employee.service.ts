@@ -89,7 +89,7 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, payload: IGetAllO
     };
 }
 
-const updateEmployeeInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateEmployeePayload) => {
+const updateEmployeeInDB = async (companyId: string, employeeId: string, role: Role, payload: IUpdateEmployeePayload) => {
     const { name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation } = payload;
 
     const isExistCompany = await prisma.company.findUnique({
@@ -102,19 +102,9 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
         throw new Error("Company not found");
     }
 
-    const isExistUser = await prisma.user.findUnique({
-        where: {
-            id: userId
-        }
-    });
-
-    if (!isExistUser) {
-        throw new Error(`This ${userId} user not found`);
-    }
-
     const employeeData = await prisma.employee.findUnique({
         where: {
-            id: userId,
+            id: employeeId,
             companyId: companyId,
         }
     });
@@ -127,7 +117,7 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
         const updateEmployee = await prisma.$transaction(async (tx) => {
             const uEmployee = await tx.employee.update({
                 where: {
-                    id: userId,
+                    id: employeeId,
                     companyId: companyId,
                 },
                 data: {
@@ -154,7 +144,8 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
 
             await tx.user.update({
                 where: {
-                    id: userId,
+                    id: employeeId,
+                    companyId: companyId,
                 },
                 data: {
                     name: name || employeeData.name,
@@ -172,7 +163,7 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
         const updateEmployee = await prisma.$transaction(async (tx) => {
             const uEmployee = await tx.employee.update({
                 where: {
-                    id: userId,
+                    id: employeeId,
                     companyId: companyId,
                 },
                 data: {
@@ -194,7 +185,8 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
 
             await tx.user.update({
                 where: {
-                    id: userId,
+                    id: employeeId,
+                    companyId: companyId,
                 },
                 data: {
                     name: name || employeeData.name,
@@ -209,7 +201,41 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
     }
 }
 
+const deleteEmployeeInDB = async (companyId: string, employeeId: string) => {
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistEmployee = await prisma.employee.findUnique({
+        where: {
+            id: employeeId,
+            companyId: companyId,
+        }
+    });
+
+    if (!isExistEmployee) {
+        throw new Error("Employee not found");
+    }
+
+    const employee = await prisma.employee.delete({
+        where: {
+            id: employeeId,
+            companyId: companyId,
+        }
+    });
+
+    return employee;
+}
+
 export const employeeService = {
     getAllOrQueryEmployeesFromDB,
     updateEmployeeInDB,
+    deleteEmployeeInDB,
 };
