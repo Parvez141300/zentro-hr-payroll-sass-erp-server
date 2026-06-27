@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateHRManagerPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -223,6 +223,50 @@ const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCo
     return;
 };
 
+const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, payload: IUpdateAccountantPayload) => {
+    const isExistAccountant = await prisma.accountant.findUnique({
+        where: {
+            companyId: companyId,
+            id: accountantId
+        }
+    });
+
+    if (!isExistAccountant) {
+        throw new Error("Accountant not found");
+    }
+
+    const updateAccountant = await prisma.$transaction(async (tx) => {
+        const accountant = await tx.accountant.update({
+            where: {
+                id: accountantId
+            },
+            data: {
+                ...payload,
+            }
+        });
+
+        const userData = await tx.user.findUnique({
+            where: {
+                id: accountant.userId
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: accountant.userId
+            },
+            data: {
+                name: payload.name,
+                image: payload.photoUrl || userData?.image,
+            }
+        });
+
+        return accountant;
+    });
+
+    return updateAccountant;
+};
+
 const createCompanyDepartmentHeadInDB = async (companyId: string, payload: ICreateCompanyDepartmentHeadPayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
@@ -382,6 +426,7 @@ export const userService = {
     createCompanyHrInDB,
     updateCompanyHrInDB,
     createCompanyAccountantInDB,
+    updateCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
     createCompanyEmployeeInDB,
 }
