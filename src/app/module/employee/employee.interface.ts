@@ -30,4 +30,6 @@ export interface IUpdateEmployeePayload {
     emergencyName?: string;
     emergencyPhone?: string;
     emergencyRelation?: string;
+    departmentId?: string;
+    designationId?: string;
 }

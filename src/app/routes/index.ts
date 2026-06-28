@@ -6,6 +6,7 @@ import { departmentRoute } from "../module/department/department.route";
 import { designationRoute } from "../module/designation/designation.route";
 import { userRoute } from "../module/user/user.route";
 import { employeeRoute } from "../module/employee/employee.route";
+import { hrManagerRoute } from "../module/hrManager/hrManager.route";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/departments", departmentRoute);
 router.use("/designations", designationRoute);
 router.use("/users", userRoute);
 router.use("/employees", employeeRoute);
+router.use("/hr-managers", hrManagerRoute);
 
 export const indexRoute = router;

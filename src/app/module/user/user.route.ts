@@ -10,11 +10,6 @@ router.post(
     checkAuthMiddleware(Role.Super_ADMIN),
     userController.createCompanyHr
 );
-router.patch(
-    "/update-company-hr/:id",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
-    userController.updateCompanyHr
-);
 router.post(
     "/create-company-accountant",
     checkAuthMiddleware(Role.Super_ADMIN),

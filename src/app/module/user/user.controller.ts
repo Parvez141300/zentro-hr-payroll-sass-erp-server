@@ -16,19 +16,6 @@ const createCompanyHr = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const updateCompanyHr = catchAsync(async (req: Request, res: Response) => {
-    const { id: hrId } = req.params;
-    const payload = req.body;
-    const user = req.user;
-    const result = await userService.updateCompanyHrInDB(user.companyId, hrId as string, payload);
-    sendResponse(res, {
-        httpStatusCode: status.OK,
-        success: true,
-        message: "Company HR updated successfully",
-        data: result,
-    });
-});
-
 const createCompanyAccountant = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const user = req.user;
@@ -106,7 +93,6 @@ const updateCompanyEmployee = catchAsync(async (req: Request, res: Response) => 
 
 export const userController = {
     createCompanyHr,
-    updateCompanyHr,
     createCompanyAccountant,
     updateCompanyAccountant,
     createCompanyDepartmentHead,

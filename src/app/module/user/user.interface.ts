@@ -22,15 +22,6 @@ export interface ICreateHRManagerPayload {
     designationId?: string;
 }
 
-export interface IUpdateHRManagerPayload {
-    name?: string;
-    phone?: string;
-    photoUrl?: string;
-    hrLicenseNumber?: string;
-    officePhone?: string;
-    bio?: string;
-}
-
 export interface ICreateCompanyAccountantPayload {
     name: string;
     email: string;

@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateDepartmentHeadPayload, IUpdateEmployeePayload, IUpdateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IUpdateAccountantPayload, IUpdateDepartmentHeadPayload, IUpdateEmployeePayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
@@ -108,51 +108,6 @@ const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerP
 
     return registerHr;
 };
-
-const updateCompanyHrInDB = async (companyId: string, hrId: string, payload: IUpdateHRManagerPayload) => {
-
-    const isExistHr = await prisma.hrManager.findUnique({
-        where: {
-            companyId: companyId,
-            id: hrId
-        }
-    });
-
-    if (!isExistHr) {
-        throw new Error("HR Manager not found");
-    }
-
-    const updateHr = await prisma.$transaction(async (tx) => {
-        const hr = await tx.hrManager.update({
-            where: {
-                id: hrId
-            },
-            data: {
-                ...payload,
-            }
-        });
-
-        const userData = await tx.user.findUnique({
-            where: {
-                id: hr.userId
-            }
-        });
-
-        await tx.user.update({
-            where: {
-                id: hr.userId
-            },
-            data: {
-                name: payload.name,
-                image: payload.photoUrl || userData?.image,
-            }
-        });
-
-        return hr;
-    });
-
-    return updateHr;
-}
 
 const createCompanyAccountantInDB = async (companyId: string, payload: ICreateCompanyAccountantPayload) => {
 
@@ -512,7 +467,6 @@ const updateCompanyEmployeeInDB = async (companyId: string, employeeId: string, 
 
 export const userService = {
     createCompanyHrInDB,
-    updateCompanyHrInDB,
     createCompanyAccountantInDB,
     updateCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
