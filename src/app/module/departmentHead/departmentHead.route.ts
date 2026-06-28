@@ -5,6 +5,16 @@ import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
+router.get(
+    "/",
+    checkAuthMiddleware(Role.Super_ADMIN),
+    departmentHeadController.getAllOrQueryDepartmentHeads
+);
+router.get(
+    "/own-profile",
+    checkAuthMiddleware(Role.DEPARTMENT_HEAD),
+    departmentHeadController.getDepartmentHeadOwnProfile
+);
 router.patch(
     "/",
     checkAuthMiddleware(Role.Super_ADMIN, Role.DEPARTMENT_HEAD),

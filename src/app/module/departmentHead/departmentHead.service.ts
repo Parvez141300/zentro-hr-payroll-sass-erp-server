@@ -1,6 +1,95 @@
 import { Role } from "../../../generated/prisma/enums";
+import { DepartmentHeadWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IUpdateDepartmentHeadPayload } from "./departmentHead.interface";
+import { IGetAllOrQueryDepartmentHeadPayload, IUpdateDepartmentHeadPayload } from "./departmentHead.interface";
+
+const getAllOrQueryDepartmentHeadsFromDB = async (companyId: string, payload: IGetAllOrQueryDepartmentHeadPayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder } = payload;
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const addCondition: DepartmentHeadWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    phone: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    employeeCode: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    const departmentHeads = await prisma.departmentHead.findMany({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const departmentHeadsCount = await prisma.departmentHead.count({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: departmentHeads,
+        pagination: {
+            total: departmentHeadsCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(departmentHeadsCount / limit),
+        }
+    }
+}
+
+const getDepartmentHeadOwnProfileFromDB = async (companyId: string, departmentHeadId: string) => {
+    const isExistDepartmentHead = await prisma.departmentHead.findUnique({
+        where: {
+            companyId: companyId,
+            id: departmentHeadId
+        },
+        include: {
+            user: true,
+        }
+    });
+
+    if (!isExistDepartmentHead) {
+        throw new Error("Department head not found");
+    }
+
+    return isExistDepartmentHead;
+}
 
 const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHeadId: string, role: Role, payload: IUpdateDepartmentHeadPayload) => {
     const isExistDepartmentHead = await prisma.departmentHead.findUnique({
@@ -93,7 +182,7 @@ const deleteDepartmentHeadFromDB = async (companyId: string, departmentHeadId: s
     if (!isExistCompany) {
         throw new Error("Company not found");
     }
-    
+
     const isExistDepartmentHead = await prisma.departmentHead.findUnique({
         where: {
             companyId: companyId,
@@ -125,6 +214,8 @@ const deleteDepartmentHeadFromDB = async (companyId: string, departmentHeadId: s
 }
 
 export const departmentHeadService = {
+    getAllOrQueryDepartmentHeadsFromDB,
+    getDepartmentHeadOwnProfileFromDB,
     updateCompanyDepartmentHeadInDB,
     deleteDepartmentHeadFromDB,
 }

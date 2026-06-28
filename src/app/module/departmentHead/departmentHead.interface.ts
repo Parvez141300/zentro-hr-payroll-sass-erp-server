@@ -7,7 +7,16 @@ export interface IUpdateDepartmentHeadPayload {
     linkedinUrl?: string;
     bio?: string;
     joinDate?: Date;
-    
+
     departmentId?: string;
     designationId?: string;
+}
+
+export interface IGetAllOrQueryDepartmentHeadPayload {
+    search: string | undefined;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
 }

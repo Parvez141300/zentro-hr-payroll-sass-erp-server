@@ -4,6 +4,31 @@ import { departmentHeadService } from "./departmentHead.service";
 import { Role } from "../../../generated/prisma/enums";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
+
+const getAllOrQueryDepartmentHeads = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const search = typeof req.query.search === "string" ? req.query.search : "";
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
+    const result = await departmentHeadService.getAllOrQueryDepartmentHeadsFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Department heads fetched successfully",
+        data: result,
+    });
+});
+
+const getDepartmentHeadOwnProfile = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    const result = await departmentHeadService.getDepartmentHeadOwnProfileFromDB(user.companyId, user.userId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Department head fetched successfully",
+        data: result,
+    });
+});
 
 const updateCompanyDepartmentHead = catchAsync(async (req: Request, res: Response) => {
     const { id: departmentHeadId } = req.params;
@@ -32,6 +57,8 @@ const deleteCompanyDepartmentHead = catchAsync(async (req: Request, res: Respons
 });
 
 export const departmentHeadController = {
+    getAllOrQueryDepartmentHeads,
+    getDepartmentHeadOwnProfile,
     updateCompanyDepartmentHead,
     deleteCompanyDepartmentHead,
 };
