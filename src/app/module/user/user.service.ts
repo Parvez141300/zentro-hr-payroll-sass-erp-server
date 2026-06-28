@@ -5,22 +5,12 @@ import { prisma } from "../../lib/prisma";
 import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IGetAllOrQueryUsersPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
-const getAllOrQueryCompanyUsersFromDB = async (companyId: string, payload: IGetAllOrQueryUsersPayload) => {
+const getAllOrQueryUsersFromDB = async (payload: IGetAllOrQueryUsersPayload) => {
     const { search, page, limit, skip, sortBy, sortOrder, isActive, role } = payload;
-
-    const isExistCompany = await prisma.company.findUnique({
-        where: {
-            id: companyId
-        }
-    });
-
-    if (!isExistCompany) {
-        throw new Error("Company not found");
-    }
 
     const addCondition: UserWhereInput[] = [];
 
-    if(search) {
+    if (search) {
         addCondition.push({
             OR: [
                 {
@@ -39,13 +29,87 @@ const getAllOrQueryCompanyUsersFromDB = async (companyId: string, payload: IGetA
         });
     }
 
-    if(isActive) {
+    if (isActive) {
         addCondition.push({
             isActive: isActive
         });
     }
 
-    if(role) {
+    if (role) {
+        addCondition.push({
+            role: role
+        });
+    }
+
+    const users = await prisma.user.findMany({
+        where: {
+            AND: addCondition
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const usersCount = await prisma.user.count({
+        where: {
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: users,
+        pagination: {
+            total: usersCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(usersCount / limit),
+        }
+    };
+}
+
+const getAllOrQueryCompanyUsersFromDB = async (companyId: string, payload: IGetAllOrQueryUsersPayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder, isActive, role } = payload;
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const addCondition: UserWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    email: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    if (isActive) {
+        addCondition.push({
+            isActive: isActive
+        });
+    }
+
+    if (role) {
         addCondition.push({
             role: role
         });
@@ -452,4 +516,5 @@ export const userService = {
     createCompanyEmployeeInDB,
     getAllOrQueryCompanyUsersFromDB,
     getSingleCompanyUserFromDB,
+    getAllOrQueryUsersFromDB,
 }

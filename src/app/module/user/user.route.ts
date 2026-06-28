@@ -5,6 +5,11 @@ import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
+router.get("/all-users", 
+    checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN), 
+    userController.getAllOrQueryUsers
+);
+
 router.get("/all-company-users",
     checkAuthMiddleware(Role.Super_ADMIN),
     userController.getAllOrQueryCompanyUsers
@@ -12,8 +17,8 @@ router.get("/all-company-users",
 
 router.get(
     "/:id", 
-    checkAuthMiddleware(Role.Super_ADMIN), 
-    userController.getSingleCompanyUserFromDB
+    checkAuthMiddleware(Role.Super_ADMIN, Role.PLATFORM_SUPER_ADMIN), 
+    userController.getSingleCompanyUser
 );
 
 router.post(

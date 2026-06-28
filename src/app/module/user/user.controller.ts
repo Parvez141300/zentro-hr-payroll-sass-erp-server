@@ -6,11 +6,26 @@ import status from "http-status";
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 import { Role } from "../../../generated/prisma/enums";
 
+const getAllOrQueryUsers = catchAsync(async (req: Request, res: Response) => {
+    const search = typeof req.query.search === "string" ? req.query.search : "";
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
+    const isActive = typeof req.query.isActive === "boolean" ? req.query.isActive : undefined;
+    const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
+
+    const result = await userService.getAllOrQueryUsersFromDB({ search, page, limit, skip, sortBy, sortOrder, isActive, role });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Users fetched successfully",
+        data: result,
+    });
+});
+
 const getAllOrQueryCompanyUsers = catchAsync(async (req: Request, res: Response) => {
     const { companyId } = req.user;
     const search = typeof req.query.search === "string" ? req.query.search : "";
-    const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
     const isActive = typeof req.query.isActive === "boolean" ? req.query.isActive : undefined;
+    const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
 
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
 
@@ -23,7 +38,7 @@ const getAllOrQueryCompanyUsers = catchAsync(async (req: Request, res: Response)
     });
 });
 
-const getSingleCompanyUserFromDB = catchAsync(async (req: Request, res: Response) => {
+const getSingleCompanyUser = catchAsync(async (req: Request, res: Response) => {
     const { id: userId } = req.params;
     const user = req.user;
     const result = await userService.getSingleCompanyUserFromDB(user.companyId, userId as string);
@@ -89,5 +104,6 @@ export const userController = {
     createCompanyDepartmentHead,
     createCompanyEmployee,
     getAllOrQueryCompanyUsers,
-    getSingleCompanyUserFromDB,
+    getSingleCompanyUser,
+    getAllOrQueryUsers,
 };
