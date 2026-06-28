@@ -96,123 +96,123 @@ const getHrManagerOwnProfileFromDB = async (companyId: string, userId: string) =
     return hrManager;
 }
 
-    const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, payload: IUpdateHRManagerPayload) => {
+const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, payload: IUpdateHRManagerPayload) => {
 
-        const isExistHr = await prisma.hrManager.findUnique({
-            where: {
-                companyId: companyId,
-                id: hrId
-            }
-        });
-
-        if (!isExistHr) {
-            throw new Error("HR Manager not found");
+    const isExistHr = await prisma.hrManager.findUnique({
+        where: {
+            companyId: companyId,
+            id: hrId
         }
+    });
 
-        if (role === Role.Super_ADMIN) {
-            const updateHr = await prisma.$transaction(async (tx) => {
-                const uHr = await tx.hrManager.update({
-                    where: {
-                        id: hrId
-                    },
-                    data: {
-                        ...payload,
-                    }
-                });
-
-
-                const userData = await tx.user.findUnique({
-                    where: {
-                        id: uHr.userId
-                    }
-                });
-
-                await tx.user.update({
-                    where: {
-                        id: uHr.userId
-                    },
-                    data: {
-                        name: payload.name,
-                        image: payload.photoUrl || userData?.image,
-                    }
-                });
-
-                return uHr;
-            });
-
-            return updateHr;
-        }
-        else {
-            const updateHr = await prisma.$transaction(async (tx) => {
-                const uHr = await tx.hrManager.update({
-                    where: {
-                        id: hrId
-                    },
-                    data: {
-                        name: payload.name,
-                        photoUrl: payload.photoUrl,
-                        phone: payload.phone,
-                        bio: payload.bio,
-                    }
-                });
-
-                const userData = await tx.user.findUnique({
-                    where: {
-                        id: uHr.userId
-                    }
-                });
-
-                await tx.user.update({
-                    where: {
-                        id: uHr.userId
-                    },
-                    data: {
-                        name: payload.name,
-                        image: payload.photoUrl || userData?.image,
-                    }
-                });
-
-                return uHr;
-            });
-
-            return updateHr;
-        }
+    if (!isExistHr) {
+        throw new Error("HR Manager not found");
     }
 
-    const deleteCompanyHrFromDB = async (companyId: string, hrId: string) => {
-        const isExistHr = await prisma.hrManager.findUnique({
-            where: {
-                companyId: companyId,
-                id: hrId
-            }
-        });
-
-        if (!isExistHr) {
-            throw new Error("HR Manager not found");
-        }
-
-        const deleteHr = await prisma.$transaction(async (tx) => {
-            const dHr = await tx.hrManager.delete({
+    if (role === Role.Super_ADMIN) {
+        const updateHr = await prisma.$transaction(async (tx) => {
+            const uHr = await tx.hrManager.update({
                 where: {
                     id: hrId
+                },
+                data: {
+                    ...payload,
                 }
             });
 
-            await tx.user.delete({
+
+            const userData = await tx.user.findUnique({
                 where: {
-                    id: dHr.userId
+                    id: uHr.userId
                 }
             });
 
-            return dHr;
+            await tx.user.update({
+                where: {
+                    id: uHr.userId
+                },
+                data: {
+                    name: payload.name,
+                    image: payload.photoUrl || userData?.image,
+                }
+            });
+
+            return uHr;
         });
 
-        return deleteHr;
+        return updateHr;
+    }
+    else {
+        const updateHr = await prisma.$transaction(async (tx) => {
+            const uHr = await tx.hrManager.update({
+                where: {
+                    id: hrId
+                },
+                data: {
+                    name: payload.name,
+                    photoUrl: payload.photoUrl,
+                    phone: payload.phone,
+                    bio: payload.bio,
+                }
+            });
+
+            const userData = await tx.user.findUnique({
+                where: {
+                    id: uHr.userId
+                }
+            });
+
+            await tx.user.update({
+                where: {
+                    id: uHr.userId
+                },
+                data: {
+                    name: payload.name,
+                    image: payload.photoUrl || userData?.image,
+                }
+            });
+
+            return uHr;
+        });
+
+        return updateHr;
+    }
+}
+
+const deleteCompanyHrFromDB = async (companyId: string, hrId: string) => {
+    const isExistHr = await prisma.hrManager.findUnique({
+        where: {
+            companyId: companyId,
+            id: hrId
+        }
+    });
+
+    if (!isExistHr) {
+        throw new Error("HR Manager not found");
     }
 
-    export const hrManagerService = {
-        getAllOrQueryHrManagersFromDB,
-        getHrManagerOwnProfileFromDB,
-        updateCompanyHrInDB,
-        deleteCompanyHrFromDB,
-    };
+    const deleteHr = await prisma.$transaction(async (tx) => {
+        const dHr = await tx.hrManager.delete({
+            where: {
+                id: hrId
+            }
+        });
+
+        await tx.user.delete({
+            where: {
+                id: dHr.userId
+            }
+        });
+
+        return dHr;
+    });
+
+    return deleteHr;
+}
+
+export const hrManagerService = {
+    getAllOrQueryHrManagersFromDB,
+    getHrManagerOwnProfileFromDB,
+    updateCompanyHrInDB,
+    deleteCompanyHrFromDB,
+};
