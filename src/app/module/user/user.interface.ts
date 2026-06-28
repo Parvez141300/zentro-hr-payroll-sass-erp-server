@@ -35,15 +35,7 @@ export interface ICreateCompanyAccountantPayload {
     bankAccount?: string;
 }
 
-export interface IUpdateAccountantPayload {
-    name?: string;
-    phone?: string;
-    photoUrl?: string;
-    caLicenseNumber?: string;
-    taxIdNumber?: string;
-    bankName?: string;
-    bankAccount?: string;
-}
+
 
 export interface ICreateCompanyDepartmentHeadPayload {
     departmentId: string;

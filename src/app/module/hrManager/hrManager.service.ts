@@ -132,7 +132,7 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
                     id: uHr.userId
                 },
                 data: {
-                    name: payload.name,
+                    name: payload.name || userData?.name,
                     image: payload.photoUrl || userData?.image,
                 }
             });
@@ -149,10 +149,10 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
                     id: hrId
                 },
                 data: {
-                    name: payload.name,
-                    photoUrl: payload.photoUrl,
-                    phone: payload.phone,
-                    bio: payload.bio,
+                    name: payload.name || isExistHr.name,
+                    photoUrl: payload.photoUrl || isExistHr.photoUrl,
+                    phone: payload.phone || isExistHr.phone,
+                    bio: payload.bio || isExistHr.bio,
                 }
             });
 
@@ -167,7 +167,7 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
                     id: uHr.userId
                 },
                 data: {
-                    name: payload.name,
+                    name: payload.name || userData?.name,
                     image: payload.photoUrl || userData?.image,
                 }
             });
