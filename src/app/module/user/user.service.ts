@@ -1,8 +1,118 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
+import { UserWhereInput } from "../../../generated/prisma/models";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IGetAllOrQueryUsersPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
+
+const getAllOrQueryCompanyUsersFromDB = async (companyId: string, payload: IGetAllOrQueryUsersPayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder, isActive, role } = payload;
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const addCondition: UserWhereInput[] = [];
+
+    if(search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    email: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    if(isActive) {
+        addCondition.push({
+            isActive: isActive
+        });
+    }
+
+    if(role) {
+        addCondition.push({
+            role: role
+        });
+    }
+
+    const users = await prisma.user.findMany({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const userCount = await prisma.user.count({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: users,
+        pagination: {
+            total: userCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(userCount / limit),
+        }
+    }
+}
+
+const getSingleCompanyUserFromDB = async (companyId: string, userId: string) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+            companyId: companyId
+        },
+        include: {
+            superAdmin: true,
+            company: true,
+            hrManager: true,
+            accountant: true,
+            departmentHead: true,
+            employee: true,
+        }
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+}
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
     const isExistCompany = await prisma.company.findUnique({
@@ -340,4 +450,6 @@ export const userService = {
     createCompanyAccountantInDB,
     createCompanyDepartmentHeadInDB,
     createCompanyEmployeeInDB,
+    getAllOrQueryCompanyUsersFromDB,
+    getSingleCompanyUserFromDB,
 }

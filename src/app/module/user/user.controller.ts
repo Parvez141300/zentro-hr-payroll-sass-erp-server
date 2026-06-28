@@ -3,6 +3,37 @@ import { catchAsync } from "../../utils/catchAsync";
 import { userService } from "./user.service";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
+import { Role } from "../../../generated/prisma/enums";
+
+const getAllOrQueryCompanyUsers = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const search = typeof req.query.search === "string" ? req.query.search : "";
+    const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
+    const isActive = typeof req.query.isActive === "boolean" ? req.query.isActive : undefined;
+
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
+
+    const result = await userService.getAllOrQueryCompanyUsersFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder, isActive, role });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Users fetched successfully",
+        data: result,
+    });
+});
+
+const getSingleCompanyUserFromDB = catchAsync(async (req: Request, res: Response) => {
+    const { id: userId } = req.params;
+    const user = req.user;
+    const result = await userService.getSingleCompanyUserFromDB(user.companyId, userId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User fetched successfully",
+        data: result,
+    });
+});
 
 const createCompanyHr = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -57,4 +88,6 @@ export const userController = {
     createCompanyAccountant,
     createCompanyDepartmentHead,
     createCompanyEmployee,
+    getAllOrQueryCompanyUsers,
+    getSingleCompanyUserFromDB,
 };

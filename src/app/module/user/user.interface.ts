@@ -1,4 +1,4 @@
-import { EmploymentType, Gender, HrScope } from "../../../generated/prisma/enums";
+import { EmploymentType, Gender, HrScope, Role } from "../../../generated/prisma/enums";
 
 export interface ICreateHRManagerPayload {
     // User fields
@@ -79,4 +79,15 @@ export interface ICreateCompanyEmployeePayload {
     emergencyName?: string;
     emergencyPhone?: string;
     emergencyRelation?: string;
+}
+
+export interface IGetAllOrQueryUsersPayload {
+    search: string | undefined;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
+    isActive: boolean | undefined;
+    role: Role | undefined;
 }
