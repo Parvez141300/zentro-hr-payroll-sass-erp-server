@@ -13,8 +13,10 @@ const getAllOrQueryEmployees = catchAsync(async (req: Request, res: Response) =>
     const search = typeof req.query.search === "string" ? req.query.search : "";
     const employmentType = typeof req.query.employmentType === "string" ? (req.query.employmentType as EmploymentType) : undefined;
     const employeeStatus = typeof req.query.status === "string" ? (req.query.status as EmployeeStatus) : undefined;
+    const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
+    const designationId = typeof req.query.designationId === "string" ? req.query.designationId : undefined;
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
-    const result = await employeeService.getAllOrQueryEmployeesFromDB(companyId, email, userRole, { search, page, limit, skip, sortBy, sortOrder, employmentType, status: employeeStatus });
+    const result = await employeeService.getAllOrQueryEmployeesFromDB(companyId, email, userRole, { search, page, limit, skip, sortBy, sortOrder, employmentType, status: employeeStatus, departmentId, designationId });
 
     sendResponse(res, {
         httpStatusCode: status.OK,

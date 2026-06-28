@@ -9,6 +9,8 @@ export interface IGetAllOrQueryEmployeePayload {
     sortOrder: string;
     employmentType: EmploymentType | undefined;
     status: EmployeeStatus | undefined;
+    departmentId: string | undefined;
+    designationId: string | undefined;
 }
 
 export interface IUpdateEmployeePayload {
