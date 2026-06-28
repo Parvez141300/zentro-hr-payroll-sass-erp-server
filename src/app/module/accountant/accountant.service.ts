@@ -1,6 +1,82 @@
 import { Role } from "../../../generated/prisma/enums";
+import { AccountantWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IUpdateAccountantPayload } from "./accountant.interface";
+import { IGetAllOrQueryAccountantPayload, IUpdateAccountantPayload } from "./accountant.interface";
+
+const getAllOrQueryAccountantFromDB = async (companyId: string, payload: IGetAllOrQueryAccountantPayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder } = payload;
+
+    const addCondition: AccountantWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    phone: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+                {
+                    employeeCode: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                }
+            ]
+        });
+    }
+
+    const accountants = await prisma.accountant.findMany({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        },
+        skip: skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const accountantCount = await prisma.accountant.count({
+        where: {
+            companyId: companyId,
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: accountants,
+        pagination: {
+            total: accountantCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(accountantCount / limit),
+        }
+    };
+}
+
+const getAccountOwnerFromDB = async (accountId: string, userId: string) => {
+    const accountant = await prisma.accountant.findUnique({
+        where: {
+            id: accountId,
+            userId: userId
+        }
+    });
+
+    if (!accountant) {
+        throw new Error("Accountant not found");
+    }
+
+    return accountant;
+}
 
 const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, role: Role, payload: IUpdateAccountantPayload) => {
     const isExistAccountant = await prisma.accountant.findUnique({
@@ -86,37 +162,39 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
 };
 
 const deleteCompanyAccountantFromDB = async (companyId: string, accountantId: string) => {
-   const isExistAccountant = await prisma.accountant.findUnique({
-       where: {
-           companyId: companyId,
-           id: accountantId
-       }
-   });
+    const isExistAccountant = await prisma.accountant.findUnique({
+        where: {
+            companyId: companyId,
+            id: accountantId
+        }
+    });
 
-   if (!isExistAccountant) {
-       throw new Error("Accountant not found");
-   }
-   
-   const deleteAccoutant = await prisma.$transaction(async (tx) => {
-       const dAccountant = await tx.accountant.delete({
-           where: {
-               id: accountantId
-           }
-       });
+    if (!isExistAccountant) {
+        throw new Error("Accountant not found");
+    }
 
-       await tx.user.delete({
-           where: {
-               id: dAccountant.userId
-           }
-       });
+    const deleteAccoutant = await prisma.$transaction(async (tx) => {
+        const dAccountant = await tx.accountant.delete({
+            where: {
+                id: accountantId
+            }
+        });
 
-       return dAccountant;
-   });
-   
-   return deleteAccoutant;
+        await tx.user.delete({
+            where: {
+                id: dAccountant.userId
+            }
+        });
+
+        return dAccountant;
+    });
+
+    return deleteAccoutant;
 };
 
 export const accountantService = {
+    getAllOrQueryAccountantFromDB,
+    getAccountOwnerFromDB,
     updateCompanyAccountantInDB,
     deleteCompanyAccountantFromDB,
 };

@@ -10,3 +10,12 @@ export interface IUpdateAccountantPayload {
     joinDate?: Date;
     fiscalYearAccess?: boolean;
 }
+
+export interface IGetAllOrQueryAccountantPayload {
+    search: string | undefined;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
+}

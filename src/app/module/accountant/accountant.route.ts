@@ -5,6 +5,16 @@ import { accountantController } from "./accountant.controller";
 
 const router = Router();
 
+router.get(
+    "/",
+    checkAuthMiddleware(Role.Super_ADMIN),
+    accountantController.getAllOrQueryAccountant
+);
+router.get(
+    "/own-profile", 
+    checkAuthMiddleware(Role.ACCOUNTANT), 
+    accountantController.getAccountantOwnProfile
+);
 router.patch(
     "/update-company-accountant/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),

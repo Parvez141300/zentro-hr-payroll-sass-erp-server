@@ -4,7 +4,32 @@ import { accountantService } from "./accountant.service";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { Role } from "../../../generated/prisma/enums";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
+
+const getAllOrQueryAccountant = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const search = typeof req.query.search === "string" ? req.query.search : "";
+    const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
+    const result = await accountantService.getAllOrQueryAccountantFromDB(companyId, { search, page, limit, skip, sortBy, sortOrder });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Accountants fetched successfully",
+        data: result,
+    });
+});
+
+const getAccountantOwnProfile = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    const result = await accountantService.getAccountOwnerFromDB(user.companyId, user.userId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Accountant fetched successfully",
+        data: result,
+    });
+});
 
 const updateCompanyAccountant = catchAsync(async (req: Request, res: Response) => {
     const { id: accountantId } = req.params;
@@ -33,6 +58,8 @@ const deleteCompanyAccountant = catchAsync(async (req: Request, res: Response) =
 });
 
 export const accountantController = {
+    getAllOrQueryAccountant,
+    getAccountantOwnProfile,
     updateCompanyAccountant,
     deleteCompanyAccountant,
 };
