@@ -98,6 +98,17 @@ const createCompanyEmployee = catchAsync(async (req: Request, res: Response) => 
     });
 });
 
+const deleteUser = catchAsync(async (req: Request, res: Response) => {
+    const { id: userId } = req.params;
+    const result = await userService.deleteUserFromDB(userId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User deleted successfully",
+        data: result,
+    });
+});
+
 export const userController = {
     createCompanyHr,
     createCompanyAccountant,
@@ -106,4 +117,5 @@ export const userController = {
     getAllOrQueryCompanyUsers,
     getSingleCompanyUser,
     getAllOrQueryUsers,
+    deleteUser,
 };

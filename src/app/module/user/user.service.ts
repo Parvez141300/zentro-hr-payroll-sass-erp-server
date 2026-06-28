@@ -508,6 +508,20 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
     return registerEmployee;
 }
 
+const deleteUserFromDB = async (userId: string) => {
+    const user = await prisma.user.delete({
+        where: {
+            id: userId
+        }
+    });
+    
+    if(!user) {
+        throw new Error("User not found to delete");
+    }
+
+    return user;
+}
+
 
 export const userService = {
     createCompanyHrInDB,
@@ -517,4 +531,5 @@ export const userService = {
     getAllOrQueryCompanyUsersFromDB,
     getSingleCompanyUserFromDB,
     getAllOrQueryUsersFromDB,
+    deleteUserFromDB,
 }

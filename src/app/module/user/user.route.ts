@@ -42,4 +42,10 @@ router.post(
     userController.createCompanyEmployee
 );
 
+router.delete(
+    "/delete/:id",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.PLATFORM_SUPER_ADMIN),
+    userController.deleteUser
+);
+
 export const userRoute = router;
