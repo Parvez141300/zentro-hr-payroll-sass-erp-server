@@ -10,5 +10,10 @@ router.patch(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     hrManagerController.updateCompanyHr
 );
+router.delete(
+    "/:id",
+    checkAuthMiddleware(Role.Super_ADMIN),
+    hrManagerController.deleteCompanyHr
+);
 
 export const hrManagerRoute = router;

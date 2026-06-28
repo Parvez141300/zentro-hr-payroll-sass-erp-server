@@ -20,6 +20,19 @@ const updateCompanyHr = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteCompanyHr = catchAsync(async (req: Request, res: Response) => {
+    const { id: hrId } = req.params;
+    const user = req.user;
+    const result = await hrManagerService.deleteCompanyHrFromDB(user.companyId, hrId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Company HR deleted successfully",
+        data: result,
+    });
+});
+
 export const hrManagerController = {
     updateCompanyHr,
+    deleteCompanyHr,
 };

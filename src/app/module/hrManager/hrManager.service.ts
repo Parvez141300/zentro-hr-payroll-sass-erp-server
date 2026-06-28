@@ -85,6 +85,38 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
     }
 }
 
+const deleteCompanyHrFromDB = async (companyId: string, hrId: string) => {
+    const isExistHr = await prisma.hrManager.findUnique({
+        where: {
+            companyId: companyId,
+            id: hrId
+        }
+    });
+
+    if (!isExistHr) {
+        throw new Error("HR Manager not found");
+    }
+
+    const deleteHr = await prisma.$transaction(async (tx) => {
+        const dHr = await tx.hrManager.delete({
+            where: {
+                id: hrId
+            }
+        });
+
+        await tx.user.delete({
+            where: {
+                id: dHr.userId
+            }
+        });
+
+        return dHr;
+    });
+
+    return deleteHr;
+}
+
 export const hrManagerService = {
     updateCompanyHrInDB,
+    deleteCompanyHrFromDB,
 };
