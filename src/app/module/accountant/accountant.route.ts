@@ -10,5 +10,10 @@ router.patch(
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     accountantController.updateCompanyAccountant
 );
+router.delete(
+    "/delete-company-accountant/:id",
+    checkAuthMiddleware(Role.Super_ADMIN),
+    accountantController.deleteCompanyAccountant
+);
 
 export const accountantRoute = router;

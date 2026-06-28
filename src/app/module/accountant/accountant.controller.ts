@@ -20,6 +20,19 @@ const updateCompanyAccountant = catchAsync(async (req: Request, res: Response) =
     });
 });
 
+const deleteCompanyAccountant = catchAsync(async (req: Request, res: Response) => {
+    const { id: accountantId } = req.params;
+    const user = req.user;
+    const result = await accountantService.deleteCompanyAccountantFromDB(user.companyId, accountantId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Company accountant deleted successfully",
+        data: result,
+    });
+});
+
 export const accountantController = {
     updateCompanyAccountant,
+    deleteCompanyAccountant,
 };

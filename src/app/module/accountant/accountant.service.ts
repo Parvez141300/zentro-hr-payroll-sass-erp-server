@@ -85,6 +85,38 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
     }
 };
 
+const deleteCompanyAccountantFromDB = async (companyId: string, accountantId: string) => {
+   const isExistAccountant = await prisma.accountant.findUnique({
+       where: {
+           companyId: companyId,
+           id: accountantId
+       }
+   });
+
+   if (!isExistAccountant) {
+       throw new Error("Accountant not found");
+   }
+   
+   const deleteAccoutant = await prisma.$transaction(async (tx) => {
+       const dAccountant = await tx.accountant.delete({
+           where: {
+               id: accountantId
+           }
+       });
+
+       await tx.user.delete({
+           where: {
+               id: dAccountant.userId
+           }
+       });
+
+       return dAccountant;
+   });
+   
+   return deleteAccoutant;
+};
+
 export const accountantService = {
     updateCompanyAccountantInDB,
+    deleteCompanyAccountantFromDB,
 };
