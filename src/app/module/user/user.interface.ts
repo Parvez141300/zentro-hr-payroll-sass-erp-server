@@ -35,8 +35,6 @@ export interface ICreateCompanyAccountantPayload {
     bankAccount?: string;
 }
 
-
-
 export interface ICreateCompanyDepartmentHeadPayload {
     departmentId: string;
     designationId: string;
@@ -46,15 +44,6 @@ export interface ICreateCompanyDepartmentHeadPayload {
     phone?: string;
     photoUrl?: string;
     joinDate?: Date;
-    officeLocation?: string;
-    linkedinUrl?: string;
-    bio?: string;
-}
-
-export interface IUpdateDepartmentHeadPayload {
-    name?: string;
-    phone?: string;
-    photoUrl?: string;
     officeLocation?: string;
     linkedinUrl?: string;
     bio?: string;
@@ -87,27 +76,6 @@ export interface ICreateCompanyEmployeePayload {
     bankName?: string;
     bankAccount?: string;
 
-    emergencyName?: string;
-    emergencyPhone?: string;
-    emergencyRelation?: string;
-}
-
-export interface IUpdateEmployeePayload {
-    name?: string;
-    phone?: string;
-    photoUrl?: string;
-    dateOfBirth?: Date;
-    gender?: Gender;
-    address?: string;
-    nidNumber?: string;
-    bloodGroup?: string;
-    employmentType?: EmploymentType;
-    basicSalary?: number;
-    houseAllowance?: number;
-    medicalAllowance?: number;
-    transportAllowance?: number;
-    bankName?: string;
-    bankAccount?: string;
     emergencyName?: string;
     emergencyPhone?: string;
     emergencyRelation?: string;

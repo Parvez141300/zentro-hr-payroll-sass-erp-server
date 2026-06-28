@@ -8,6 +8,7 @@ import { userRoute } from "../module/user/user.route";
 import { employeeRoute } from "../module/employee/employee.route";
 import { hrManagerRoute } from "../module/hrManager/hrManager.route";
 import { accountantRoute } from "../module/accountant/accountant.route";
+import { departmentHeadRoute } from "../module/departmentHead/departmentHead.route";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/users", userRoute);
 router.use("/employees", employeeRoute);
 router.use("/hr-managers", hrManagerRoute);
 router.use("/accountants", accountantRoute);
+router.use("/department-heads", departmentHeadRoute);
 
 export const indexRoute = router;
