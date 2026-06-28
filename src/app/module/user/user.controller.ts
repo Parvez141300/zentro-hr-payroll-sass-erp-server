@@ -98,6 +98,18 @@ const createCompanyEmployee = catchAsync(async (req: Request, res: Response) => 
     });
 });
 
+const updateUser = catchAsync(async (req: Request, res: Response) => {
+    const { id: userId } = req.params;
+    const payload = req.body;
+    const result = await userService.updateUserInDB(userId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User updated successfully",
+        data: result,
+    });
+});
+
 const deleteUser = catchAsync(async (req: Request, res: Response) => {
     const { id: userId } = req.params;
     const result = await userService.deleteUserFromDB(userId as string);
@@ -117,5 +129,6 @@ export const userController = {
     getAllOrQueryCompanyUsers,
     getSingleCompanyUser,
     getAllOrQueryUsers,
+    updateUser,
     deleteUser,
 };

@@ -2,7 +2,7 @@ import { HrScope, Role } from "../../../generated/prisma/enums";
 import { UserWhereInput } from "../../../generated/prisma/models";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
-import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IGetAllOrQueryUsersPayload } from "./user.interface";
+import { ICreateCompanyAccountantPayload, ICreateCompanyDepartmentHeadPayload, ICreateCompanyEmployeePayload, ICreateHRManagerPayload, IGetAllOrQueryUsersPayload, IUpdateUserPayload } from "./user.interface";
 import { generateEmployeeCode } from "./user.utils";
 
 const getAllOrQueryUsersFromDB = async (payload: IGetAllOrQueryUsersPayload) => {
@@ -508,6 +508,29 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
     return registerEmployee;
 }
 
+const updateUserInDB = async (userId: string, payload: IUpdateUserPayload) => {
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    });
+
+    if (!isExistUser) {
+        throw new Error("User not found");
+    }
+
+    const user = await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            ...payload
+        }
+    });
+
+    return user;
+}
+
 const deleteUserFromDB = async (userId: string) => {
     const user = await prisma.user.delete({
         where: {
@@ -532,4 +555,5 @@ export const userService = {
     getSingleCompanyUserFromDB,
     getAllOrQueryUsersFromDB,
     deleteUserFromDB,
+    updateUserInDB,
 }

@@ -91,3 +91,10 @@ export interface IGetAllOrQueryUsersPayload {
     isActive: boolean | undefined;
     role: Role | undefined;
 }
+
+export interface IUpdateUserPayload {
+    name?: string;
+    image?: string;
+    role?: Role;
+    isActive?: boolean;
+}
