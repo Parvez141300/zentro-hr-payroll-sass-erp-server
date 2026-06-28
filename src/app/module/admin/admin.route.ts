@@ -24,7 +24,7 @@ router.patch(
 );
 
 router.patch(
-    "/platform-super-admin",
+    "/platform-super-admin/:id",
     checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
     adminController.updatePlatformSuperAdminProfile
 );

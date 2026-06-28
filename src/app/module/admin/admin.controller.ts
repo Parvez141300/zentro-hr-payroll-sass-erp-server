@@ -18,9 +18,9 @@ const updateCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: R
 });
 
 const updatePlatformSuperAdminProfile = catchAsync(async (req: Request, res: Response) => {
-    const user = req.user;
+    const { id: adminId } = req.params;
     const payload = req.body;
-    const result = await adminService.updatePlatformSuperAdminProfileInDB( user.userId as string, payload);
+    const result = await adminService.updatePlatformSuperAdminProfileInDB( adminId as string, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
