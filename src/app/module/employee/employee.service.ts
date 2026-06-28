@@ -59,7 +59,7 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
                 {
                     employeeCode: {
                         contains: search,
-                        mode: "default"
+                        mode: "insensitive"
                     }
                 },
             ]

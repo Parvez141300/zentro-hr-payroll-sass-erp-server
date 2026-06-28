@@ -11,7 +11,16 @@ export interface IUpdateHRManagerPayload {
     bio?: string;
 
     scope?: HrScope;
-    
+
     departmentId?: string;
     designationId?: string;
+}
+
+export interface IGetAllOrQueryHRManagerPayload {
+    search: string | undefined;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
 }
