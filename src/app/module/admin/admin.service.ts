@@ -123,8 +123,33 @@ const getCompanySuperAdminOwnProfileFromDB = async (companyId: string, adminId: 
     return superAdmin;
 }
 
+const getPlatformSuperAdminProfileFromDB = async (adminId: string) => {
+    const isExistAdmin = await prisma.user.findUnique({
+        where: {
+            id: adminId,
+        }
+    });
+
+    if (!isExistAdmin) {
+        throw new Error("Platform Super admin does not exist");
+    }
+
+    const superAdmin = await prisma.platformSuperAdmin.findUnique({
+        where: {
+            userId: adminId,
+        }
+    });
+
+    if (!superAdmin) {
+        throw new Error("Platform Super admin not found");
+    }
+
+    return superAdmin;
+}
+
 export const adminService = {
     getCompanySuperAdminOwnProfileFromDB,
+    getPlatformSuperAdminProfileFromDB,
     updateCompanySuperAdminOwnProfileInDB,
     updatePlatformSuperAdminProfileInDB,
 }

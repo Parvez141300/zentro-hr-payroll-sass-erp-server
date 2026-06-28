@@ -11,6 +11,12 @@ router.get(
     adminController.getCompanySuperAdminOwnProfile
 );
 
+router.get(
+    "/platform-super-admin",
+    checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
+    adminController.getPlatformSuperAdminProfile
+);
+
 router.patch(
     "/super-admin/:id",
     checkAuthMiddleware(Role.Super_ADMIN),
