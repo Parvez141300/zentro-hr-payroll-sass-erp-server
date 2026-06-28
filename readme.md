@@ -142,7 +142,7 @@ Cannot: Add Employees, Manage Payroll, Manage Settings
 
 #### EMPLOYEE — Can:
 
-- View Own Profile
+- View Own Profile ✅
 - View Own Attendance
 - Apply for Leave
 - Download Own Payslip

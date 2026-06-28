@@ -296,14 +296,25 @@ const deleteEmployeeInDB = async (companyId: string, employeeId: string) => {
         throw new Error("Employee not found");
     }
 
-    const employee = await prisma.employee.delete({
-        where: {
-            id: employeeId,
-            companyId: companyId,
-        }
+    const deleteEmployee = await prisma.$transaction(async (tx) => {
+        const dEmployee= await tx.employee.delete({
+            where: {
+                id: employeeId,
+                companyId: companyId,
+            }
+        });
+
+        await tx.user.delete({
+            where: {
+                id: employeeId,
+                companyId: companyId,
+            }
+        });
+
+        return dEmployee;
     });
 
-    return employee;
+    return deleteEmployee;
 }
 
 export const employeeService = {
