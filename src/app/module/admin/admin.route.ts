@@ -17,4 +17,10 @@ router.patch(
     adminController.updateCompanySuperAdminOwnProfile
 );
 
+router.patch(
+    "/platform-super-admin",
+    checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
+    adminController.updatePlatformSuperAdminProfile
+);
+
 export const adminRoute = router;

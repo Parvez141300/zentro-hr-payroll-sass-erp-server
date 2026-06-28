@@ -17,6 +17,18 @@ const updateCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: R
     });
 });
 
+const updatePlatformSuperAdminProfile = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    const payload = req.body;
+    const result = await adminService.updatePlatformSuperAdminProfileInDB( user.userId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Admin profile updated successfully",
+        data: result,
+    });
+})
+
 const getCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
     const result = await adminService.getCompanySuperAdminOwnProfileFromDB(user.companyId, user.userId);
@@ -31,4 +43,5 @@ const getCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: Resp
 export const adminController = {
     updateCompanySuperAdminOwnProfile,
     getCompanySuperAdminOwnProfile,
+    updatePlatformSuperAdminProfile,
 };

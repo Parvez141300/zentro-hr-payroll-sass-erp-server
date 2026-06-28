@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
-import { IUpdateSuperAdminPayload } from "./admin.interface";
+import { IUpdateAdminPayload } from "./admin.interface";
 
-const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId: string, payload: IUpdateSuperAdminPayload) => {
+const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId: string, payload: IUpdateAdminPayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
             id: companyId
@@ -25,6 +25,44 @@ const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId:
 
     const updateAdmin = await prisma.$transaction(async (tx) => {
         const uAdmin = await tx.superAdmin.update({
+            where: {
+                userId: adminId
+            },
+            data: {
+                ...payload,
+            }
+        });
+
+        await tx.user.update({
+            where: {
+                id: adminId
+            },
+            data: {
+                name: payload.name || isExistAdmin.name,
+                image: payload.photoUrl || isExistAdmin.image,
+            }
+        });
+
+        return uAdmin;
+    });
+
+    return updateAdmin;
+}
+
+const updatePlatformSuperAdminProfileInDB = async (adminId: string, payload: IUpdateAdminPayload) => {
+
+    const isExistAdmin = await prisma.user.findUnique({
+        where: {
+            id: adminId,
+        }
+    });
+
+    if (!isExistAdmin) {
+        throw new Error("Admin not found");
+    }
+
+    const updateAdmin = await prisma.$transaction(async (tx) => {
+        const uAdmin = await tx.platformSuperAdmin.update({
             where: {
                 userId: adminId
             },
@@ -88,4 +126,5 @@ const getCompanySuperAdminOwnProfileFromDB = async (companyId: string, adminId: 
 export const adminService = {
     getCompanySuperAdminOwnProfileFromDB,
     updateCompanySuperAdminOwnProfileInDB,
+    updatePlatformSuperAdminProfileInDB,
 }
