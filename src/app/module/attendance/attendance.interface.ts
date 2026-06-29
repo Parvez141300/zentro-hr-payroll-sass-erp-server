@@ -15,3 +15,15 @@ export interface IUpdateAttendancePayload {
     checkOut?: Date;
     note?: string;
 }
+
+export interface IGetAllOrQueryAttendancePayload {
+    startDate?: Date;
+    endDate?: Date;
+    status?: AttendanceStatus;
+    search?: string;
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder?: string;
+}
