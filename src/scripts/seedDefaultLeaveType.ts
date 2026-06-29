@@ -73,6 +73,6 @@ export const createDefaultLeaveTypes = async (companyId: string) => {
     return createLeaveTypes;
 };
 
-const companyId: string = "company-1";
+const companyId: string = "cmqwivtky0000mwuz41j97p0u";
 
 createDefaultLeaveTypes(companyId);
