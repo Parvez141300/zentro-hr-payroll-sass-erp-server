@@ -45,8 +45,21 @@ const updateLeaveType = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteLeaveType = catchAsync(async (req: Request, res: Response) => {
+    const { id: leaveTypeId } = req.params;
+    const user = req.user;
+    const result = await leaveTypeService.deleteLeaveTypeFromDB(user.companyId, leaveTypeId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave type deleted successfully",
+        data: result,
+    });
+});
+
 export const leaveTypeController = {
     createLeaveType,
     getAllOrQueryLeaveTypes,
     updateLeaveType,
+    deleteLeaveType,
 };

@@ -137,8 +137,33 @@ const updateLeaveTypeInDB = async (companyId: string, leaveTypeId: string, paylo
     return updateLeaveType;
 };
 
+const deleteLeaveTypeFromDB = async (companyId: string, leaveTypeId: string) => {
+    const isExistCompany = await prisma.company.findFirstOrThrow({
+        where: {
+            id: companyId
+        }
+    });
+    
+    const isExistLeaveType = await prisma.leaveType.findFirstOrThrow({
+        where: {
+            id: leaveTypeId,
+            companyId: isExistCompany.id
+        }
+    });
+
+    const deleteLeaveType = await prisma.leaveType.delete({
+        where: {
+            id: isExistLeaveType.id,
+            companyId: isExistCompany.id
+        }
+    });
+    
+    return deleteLeaveType;
+};
+
 export const leaveTypeService = {
     createLeaveTypeInDB,
     getAllOrQueryLeaveTypesFromDB,
     updateLeaveTypeInDB,
+    deleteLeaveTypeFromDB,
 };
