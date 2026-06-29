@@ -1,5 +1,6 @@
+import { LeaveTypeWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { ICreateLeaveTypePayload } from "./leaveType.interface";
+import { ICreateLeaveTypePayload, IGetLeaveTypePayload } from "./leaveType.interface";
 
 const createLeaveTypeInDB = async (
     companyId: string,
@@ -43,6 +44,75 @@ const createLeaveTypeInDB = async (
     return leaveType;
 };
 
+const getAllOrQueryLeaveTypesFromDB = async (companyId: string, payload: IGetLeaveTypePayload) => {
+    const { search, page, limit, skip, sortBy, sortOrder, isActive, isPaid } = payload;
+
+    const isExistCompany = await prisma.company.findFirstOrThrow({
+        where: {
+            id: companyId
+        }
+    });
+
+    const addCondition: LeaveTypeWhereInput[] = [];
+
+    if (search) {
+        addCondition.push({
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive"
+                    }
+                },
+            ]
+        });
+    }
+
+    if (isActive) {
+        addCondition.push({
+            isActive: isActive
+        });
+    }
+
+    if (isPaid) {
+        addCondition.push({
+            isPaid: isPaid
+        });
+    }
+
+    const leaveTypes = await prisma.leaveType.findMany({
+        where: {
+            companyId: isExistCompany.id,
+            AND: addCondition
+        },
+        skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder
+        }
+    });
+
+    const leaveTypeCount = await prisma.leaveType.count({
+        where: {
+            companyId: isExistCompany.id,
+            AND: addCondition
+        }
+    });
+
+    return {
+        data: leaveTypes,
+        pagination: {
+            total: leaveTypeCount,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(leaveTypeCount / limit),
+        }
+    }
+};
+
+const updateLeaveTypeInDB = async () => {};
+
 export const leaveTypeService = {
     createLeaveTypeInDB,
+    getAllOrQueryLeaveTypesFromDB,
 };
