@@ -9,6 +9,7 @@
     "dev": "tsx watch ./src/server.ts",
     "seed:platform_super_admin": "tsx ./src/scripts/seedPlatformSuperAdmin.ts",
     "seed:default_subscription_plans_config": "tsx ./src/scripts/seedDefaultSubscriptionPlansConfig.ts",
+    "seed:default_leave_types": "tsx ./src/scripts/seedDefaultLeaveTypes.ts",
     "lint": "eslint ./src/**/*",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",

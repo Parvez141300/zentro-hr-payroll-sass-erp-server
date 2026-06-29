@@ -102,7 +102,7 @@ Zentro is a modern HR and Payroll ERP platform designed to centralize employee m
 - Manage Accountants ✅
 - Manage Department Heads ✅
 - Manage Employees ✅
-- Manage Attendance
+- Manage Attendance ✅
 - Manage Leave Requests
 - Generate & Approve Payroll
 - View All Reports
@@ -114,7 +114,7 @@ Zentro is a modern HR and Payroll ERP platform designed to centralize employee m
 
 - Add/Edit Employees ✅
 - Create/Edit Departments ✅
-- Manage Attendance 
+- Manage Attendance ✅
 - Approve Leave Requests
 - View HR Reports
 
