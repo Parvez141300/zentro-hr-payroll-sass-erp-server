@@ -1,7 +1,7 @@
 import { HrScope, Role } from "../../../generated/prisma/enums";
 import { AttendanceWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IGetAllOrQueryAttendancePayload, IMarkAttendancePayload } from "./attendance.interface";
+import { IGetAllOrQueryAttendancePayload, IMarkAttendancePayload, IUpdateAttendancePayload } from "./attendance.interface";
 
 const markAttendanceInDB = async (companyId: string, userId: string, paylaod: IMarkAttendancePayload) => {
     const { employeeId, date, status, checkIn, checkOut, note } = paylaod;
@@ -286,7 +286,7 @@ const getAttendanceByIdFromDB = async (companyId: string, attendanceId: string) 
     if (!isExistCompany) {
         throw new Error("Company not found");
     }
-    
+
     const attendance = await prisma.attendance.findUnique({
         where: {
             id: attendanceId,
@@ -326,8 +326,78 @@ const getAttendanceByIdFromDB = async (companyId: string, attendanceId: string) 
     return attendance;
 }
 
+const updateAttendanceInDB = async (companyId: string, attendanceId: string, payload: IUpdateAttendancePayload) => {
+    const { date, status, checkIn, checkOut, note } = payload;
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistAttendance = await prisma.attendance.findUnique({
+        where: {
+            id: attendanceId,
+            companyId: companyId
+        }
+    });
+
+    if (!isExistAttendance) {
+        throw new Error("Attendance not found");
+    }
+
+    // late minutes
+    let overtimeHours = 0;
+    let lateMinutes = 0;
+    let earlyExitMinutes = 0;
+
+    if (checkIn) {
+        const scheduleStart = new Date(date || isExistAttendance.date);
+        scheduleStart.setHours(9, 0, 0); // 9:00 AM
+        if (checkIn > scheduleStart) {
+            lateMinutes = Math.floor((new Date(checkIn).getTime() - scheduleStart.getTime()) / (1000 * 60));
+        }
+    }
+    if (checkOut && (isExistAttendance.checkIn || checkIn)) {
+        const checkInTime = isExistAttendance.checkIn || checkIn;
+        if (checkInTime) {
+            const totalHours = Math.floor((new Date(checkOut).getTime() - new Date(checkInTime).getTime()) / (1000 * 60 * 60));
+            if (totalHours > 8) {
+                overtimeHours = totalHours > 8 ? totalHours - 8 : 0;
+            }
+            if (totalHours < 8) {
+                earlyExitMinutes = Math.floor((new Date(isExistAttendance.checkOut ?? checkOut).getTime() - new Date(checkOut).getTime()) / (1000 * 60));
+            }
+        }
+    }
+
+    const updateAttendance = await prisma.attendance.update({
+        where: {
+            companyId: companyId,
+            id: attendanceId,
+        },
+        data: {
+            date: date || isExistAttendance.date,
+            status: status || isExistAttendance.status,
+            checkIn: checkIn || isExistAttendance.checkIn,
+            checkOut: checkOut || isExistAttendance.checkOut,
+            lateMinutes: lateMinutes || isExistAttendance.lateMinutes,
+            earlyExitMinutes: earlyExitMinutes || isExistAttendance.earlyExitMinutes,
+            overtimeHours: overtimeHours || isExistAttendance.overtimeHours,
+            note: note || isExistAttendance.note,
+        }
+    });
+
+    return updateAttendance;
+}
+
 export const attendanceService = {
     markAttendanceInDB,
     getAllOrQueryAttendanceFromDB,
     getAttendanceByIdFromDB,
+    updateAttendanceInDB,
 }

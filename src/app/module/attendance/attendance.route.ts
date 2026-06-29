@@ -20,5 +20,15 @@ router.post(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
     attendanceController.markAttendance
 );
+router.patch(
+    "/:id",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
+    attendanceController.updateAttendance
+);
+// router.delete(
+//     "/:id",
+//     checkAuthMiddleware(Role.Super_ADMIN),
+//     attendanceController.deleteAttendance
+// );
 
 export const attendanceRoute = router;

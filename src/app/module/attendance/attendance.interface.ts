@@ -10,6 +10,7 @@ export interface IMarkAttendancePayload {
 }
 
 export interface IUpdateAttendancePayload {
+    date?: Date;
     status?: AttendanceStatus;
     checkIn?: Date;
     checkOut?: Date;

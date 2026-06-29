@@ -49,8 +49,22 @@ const getAttendanceById = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const updateAttendance = catchAsync(async (req: Request, res: Response) => {
+    const { id: attendanceId } = req.params;
+    const user = req.user;
+    const payload = req.body;
+    const result = await attendanceService.updateAttendanceInDB(user.companyId, attendanceId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Attendance updated successfully",
+        data: result,
+    });
+});
+
 export const attendanceController = {
     markAttendance,
     getAllOrQueryAttendance,
     getAttendanceById,
+    updateAttendance,
 };
