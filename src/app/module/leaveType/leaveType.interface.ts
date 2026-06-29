@@ -5,12 +5,13 @@ export interface ICreateLeaveTypePayload {
     isPaid: boolean;
     isActive: boolean;
 }
+
 export interface IUpdateLeaveTypePayload {
-    name: string;
-    description: string;
-    daysAllowed: number;
-    isPaid: boolean;
-    isActive: boolean;
+    name?: string;
+    description?: string;
+    daysAllowed?: number;
+    isPaid?: boolean;
+    isActive?: boolean;
 }
 
 export interface IGetLeaveTypePayload {

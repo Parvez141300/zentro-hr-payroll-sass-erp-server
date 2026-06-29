@@ -32,7 +32,21 @@ const getAllOrQueryLeaveTypes = catchAsync(async (req: Request, res: Response) =
     });
 });
 
+const updateLeaveType = catchAsync(async (req: Request, res: Response) => {
+    const { id: leaveTypeId } = req.params;
+    const user = req.user;
+    const payload = req.body;
+    const result = await leaveTypeService.updateLeaveTypeInDB(user.companyId, leaveTypeId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave type updated successfully",
+        data: result,
+    });
+});
+
 export const leaveTypeController = {
     createLeaveType,
     getAllOrQueryLeaveTypes,
+    updateLeaveType,
 };

@@ -1,6 +1,6 @@
 import { LeaveTypeWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { ICreateLeaveTypePayload, IGetLeaveTypePayload } from "./leaveType.interface";
+import { ICreateLeaveTypePayload, IGetLeaveTypePayload, IUpdateLeaveTypePayload } from "./leaveType.interface";
 
 const createLeaveTypeInDB = async (
     companyId: string,
@@ -110,9 +110,35 @@ const getAllOrQueryLeaveTypesFromDB = async (companyId: string, payload: IGetLea
     }
 };
 
-const updateLeaveTypeInDB = async () => {};
+const updateLeaveTypeInDB = async (companyId: string, leaveTypeId: string, payload: IUpdateLeaveTypePayload) => {
+    const isExistCompany = await prisma.company.findFirstOrThrow({
+        where: {
+            id: companyId
+        }
+    });
+    
+    const isExistLeaveType = await prisma.leaveType.findFirstOrThrow({
+        where: {
+            id: leaveTypeId,
+            companyId: isExistCompany.id
+        }
+    });
+
+    const updateLeaveType = await prisma.leaveType.update({
+        where: {
+            id: isExistLeaveType.id,
+            companyId: isExistCompany.id
+        },
+        data: {
+            ...payload
+        }
+    });
+    
+    return updateLeaveType;
+};
 
 export const leaveTypeService = {
     createLeaveTypeInDB,
     getAllOrQueryLeaveTypesFromDB,
+    updateLeaveTypeInDB,
 };
