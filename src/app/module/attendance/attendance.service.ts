@@ -28,12 +28,12 @@ const markAttendanceInDB = async (companyId: string, userId: string, paylaod: IM
         const scheduleStart = new Date(date);
         scheduleStart.setHours(9, 0, 0); // 9:00 AM
         if (checkIn > scheduleStart) {
-            lateMinutes = Math.floor((checkIn.getTime() - scheduleStart.getTime()) / (1000 * 60));
+            lateMinutes = Math.floor((new Date(checkIn).getTime() - scheduleStart.getTime()) / (1000 * 60));
         }
     }
 
     if (checkIn && checkOut) {
-        const totalHours = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60));
+        const totalHours = Math.floor((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60));
         if (totalHours > 8) {
             overtimeHours = totalHours - 8;
         }
