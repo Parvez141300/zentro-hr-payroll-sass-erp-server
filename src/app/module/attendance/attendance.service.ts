@@ -395,9 +395,42 @@ const updateAttendanceInDB = async (companyId: string, attendanceId: string, pay
     return updateAttendance;
 }
 
+const deleteAttendanceFromDB = async (companyId: string, attendanceId: string) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistAttendance = await prisma.attendance.findUnique({
+        where: {
+            id: attendanceId,
+            companyId: companyId
+        }
+    });
+
+    if (!isExistAttendance) {
+        throw new Error("Attendance not found");
+    }
+
+    const deleteAttendance = await prisma.attendance.delete({
+        where: {
+            id: attendanceId,
+            companyId: companyId
+        }
+    });
+
+    return deleteAttendance;
+}
+
 export const attendanceService = {
     markAttendanceInDB,
     getAllOrQueryAttendanceFromDB,
     getAttendanceByIdFromDB,
     updateAttendanceInDB,
+    deleteAttendanceFromDB,
 }

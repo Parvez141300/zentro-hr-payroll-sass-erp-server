@@ -325,11 +325,11 @@ Employee হলো সাধারণ কর্মচারী। তার prof
 
 ### 🔐 Module 1: Authentication
 
-- Login with email & password (Better Auth)
-- JWT session management
+- Login with email & password (Better Auth) ✅
+- JWT session management ✅
 - Role-based redirect after login
 - Password reset via email
-- Protected routes by role
+- Protected routes by role ✅
 
 **Pages:**
 
@@ -359,8 +359,8 @@ Employee হলো সাধারণ কর্মচারী। তার prof
 
 ### 🏢 Module 3: Department & Designation Management
 
-- Create, edit, delete departments
-- Assign department head
+- Create, edit, delete departments and designations ✅
+- Assign department head 
 - Create designations under each department
 - View employees per department
 

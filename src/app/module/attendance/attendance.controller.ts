@@ -62,9 +62,22 @@ const updateAttendance = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteAttendance = catchAsync(async (req: Request, res: Response) => {
+    const { id: attendanceId } = req.params;
+    const user = req.user;
+    const result = await attendanceService.deleteAttendanceFromDB(user.companyId, attendanceId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Attendance deleted successfully",
+        data: result,
+    });
+});
+
 export const attendanceController = {
     markAttendance,
     getAllOrQueryAttendance,
     getAttendanceById,
     updateAttendance,
+    deleteAttendance,
 };
