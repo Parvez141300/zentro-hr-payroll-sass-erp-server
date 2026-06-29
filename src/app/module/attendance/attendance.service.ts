@@ -61,8 +61,6 @@ const markAttendanceInDB = async (companyId: string, userId: string, paylaod: IM
     return attendance;
 }
 
-// services/attendance.service.ts
-
 const getAllOrQueryAttendanceFromDB = async (
     companyId: string,
     userId: string,
@@ -278,7 +276,58 @@ const getAllOrQueryAttendanceFromDB = async (
     };
 };
 
+const getAttendanceByIdFromDB = async (companyId: string, attendanceId: string) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+    
+    const attendance = await prisma.attendance.findUnique({
+        where: {
+            id: attendanceId,
+            companyId: companyId
+        },
+        include: {
+            employee: {
+                include: {
+                    department: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    },
+                    designation: {
+                        select: {
+                            id: true,
+                            title: true
+                        }
+                    },
+                    user: {
+                        select: {
+                            id: true,
+                            email: true,
+                            isActive: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!attendance) {
+        throw new Error("Attendance not found");
+    }
+
+    return attendance;
+}
+
 export const attendanceService = {
     markAttendanceInDB,
     getAllOrQueryAttendanceFromDB,
+    getAttendanceByIdFromDB,
 }

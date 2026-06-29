@@ -10,6 +10,11 @@ router.get(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     attendanceController.getAllOrQueryAttendance
 );
+router.get(
+    "/:id", 
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE), 
+    attendanceController.getAttendanceById
+);
 router.post(
     "/",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
