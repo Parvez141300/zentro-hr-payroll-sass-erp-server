@@ -576,9 +576,42 @@ const updateLeaveInDB = async (companyId: string, userId: string, leaveId: strin
     return updatedLeave;
 };
 
+const deleteLeaveFromDB = async (companyId: string, leaveId: string) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistLeave = await prisma.leave.findUnique({
+        where: {
+            id: leaveId,
+            companyId: companyId
+        }
+    });
+
+    if (!isExistLeave) {
+        throw new Error("Leave not found");
+    }
+
+    const deleteLeave = prisma.leave.delete({
+        where: {
+            id: leaveId,
+            companyId: companyId
+        }
+    });
+
+    return deleteLeave;
+};
+
 export const leaveService = {
     applyForLeaveInDB,
     getAllOrQueryLeavesFromDB,
     employeeLeaveUpdateInDB,
     updateLeaveInDB,
+    deleteLeaveFromDB,
 }

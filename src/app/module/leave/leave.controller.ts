@@ -66,9 +66,22 @@ const updateLeave = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteLeave = catchAsync(async (req: Request, res: Response) => {
+    const { id: leaveId } = req.params;
+    const user = req.user;
+    const result = await leaveService.deleteLeaveFromDB(user.companyId, leaveId as string);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave deleted successfully",
+        data: result,
+    });
+});
+
 export const leaveController = {
     applyForLeave,
     getAllOrQueryLeaves,
     employeeLeaveUpdate,
     updateLeave,
+    deleteLeave,
 };

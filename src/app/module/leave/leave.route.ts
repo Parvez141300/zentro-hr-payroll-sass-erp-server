@@ -25,5 +25,10 @@ router.patch(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
     leaveController.updateLeave
 );
+router.delete(
+    "/:id",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
+    leaveController.deleteLeave
+);
 
 export const leaveRoute = router;
