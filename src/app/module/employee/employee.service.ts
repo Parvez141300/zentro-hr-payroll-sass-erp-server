@@ -1,5 +1,5 @@
-import { DepartmentHead } from "../../../generated/prisma/client";
-import { Role } from "../../../generated/prisma/enums";
+import { DepartmentHead, HrManager } from "../../../generated/prisma/client";
+import { HrScope, Role } from "../../../generated/prisma/enums";
 import { EmployeeWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryEmployeePayload, IUpdateEmployeePayload } from "./employee.interface";
@@ -21,6 +21,7 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
     const addCondition: EmployeeWhereInput[] = [];
 
     let departmentHeadData: DepartmentHead | null = null;
+    let hrManagerData: HrManager | null = null;
 
     if (role === Role.DEPARTMENT_HEAD) {
         const isExistsDepartmentHead = await prisma.user.findUnique({
@@ -39,6 +40,25 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
                 userId: isExistsDepartmentHead.id
             }
         });
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const isExistsHrManager = await prisma.user.findUnique({
+            where: {
+                email: email
+            }
+        });
+
+        if (!isExistsHrManager) {
+            throw new Error("HR Manager not found");
+        }
+
+        hrManagerData = await prisma.hrManager.findUnique({
+            where: {
+                companyId: companyId,
+                userId: isExistsHrManager.id
+            }
+        })
     }
 
     if (search) {
@@ -78,13 +98,13 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
         });
     }
 
-    if(departmentId) {
+    if (departmentId) {
         addCondition.push({
             departmentId: departmentId
         });
     }
 
-    if(designationId) {
+    if (designationId) {
         addCondition.push({
             designationId: designationId
         });
@@ -118,6 +138,31 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             }
         });
     }
+    else if (role === Role.HR_MANAGER && hrManagerData?.scope === HrScope.DEPARTMENT_SPECIFIC && hrManagerData?.departmentId) {
+        employees = await prisma.employee.findMany({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+                departmentId: hrManagerData?.departmentId,
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                [sortBy]: sortOrder
+            },
+            include: {
+                user: true,
+            }
+        });
+
+        employeeCount = await prisma.employee.count({
+            where: {
+                companyId: companyId,
+                AND: addCondition,
+                departmentId: hrManagerData?.departmentId,
+            }
+        });
+    }
     else {
         employees = await prisma.employee.findMany({
             where: {
@@ -141,8 +186,6 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             }
         });
     }
-
-
 
     return {
         data: employees,
@@ -311,7 +354,7 @@ const deleteEmployeeInDB = async (companyId: string, employeeId: string) => {
     }
 
     const deleteEmployee = await prisma.$transaction(async (tx) => {
-        const dEmployee= await tx.employee.delete({
+        const dEmployee = await tx.employee.delete({
             where: {
                 id: employeeId,
                 companyId: companyId,

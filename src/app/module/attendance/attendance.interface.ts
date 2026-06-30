@@ -18,13 +18,15 @@ export interface IUpdateAttendancePayload {
 }
 
 export interface IGetAllOrQueryAttendancePayload {
-    startDate?: Date;
-    endDate?: Date;
-    status?: AttendanceStatus;
     search?: string;
     page: number;
     limit: number;
     skip: number;
     sortBy: string;
+    startDate?: Date;
+    endDate?: Date;
+    status?: AttendanceStatus;
     sortOrder?: string;
+    departmentId: string | undefined;
+    designationId: string | undefined;
 }
