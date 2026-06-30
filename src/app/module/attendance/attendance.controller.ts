@@ -25,10 +25,12 @@ const getAllOrQueryAttendance = catchAsync(async (req: Request, res: Response) =
     const endDate = typeof req.query.endDate === "string" ? new Date(req.query.endDate) : undefined;
     const attendanceStatus = typeof req.query.status === "string" ? (req.query.status as AttendanceStatus) : undefined;
     const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
+    const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
+    const designationId = typeof req.query.designationId === "string" ? req.query.designationId : undefined;
 
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
 
-    const result = await attendanceService.getAllOrQueryAttendanceFromDB(user.companyId, user.userId, role as Role, { page, limit, skip, sortBy, sortOrder, startDate, endDate, search, status: attendanceStatus });
+    const result = await attendanceService.getAllOrQueryAttendanceFromDB(user.companyId, user.userId, role as Role, { page, limit, skip, sortBy, sortOrder, startDate, endDate, search, status: attendanceStatus, departmentId, designationId });
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
