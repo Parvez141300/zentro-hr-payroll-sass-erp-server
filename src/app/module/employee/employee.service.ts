@@ -98,18 +98,6 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
         });
     }
 
-    if (departmentId) {
-        addCondition.push({
-            departmentId: departmentId
-        });
-    }
-
-    if (designationId) {
-        addCondition.push({
-            designationId: designationId
-        });
-    }
-
     let employees;
     let employeeCount: number;
 
@@ -164,6 +152,18 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
         });
     }
     else {
+        if (departmentId) {
+            addCondition.push({
+                departmentId: departmentId
+            });
+        }
+
+        if (designationId) {
+            addCondition.push({
+                designationId: designationId
+            });
+        }
+
         employees = await prisma.employee.findMany({
             where: {
                 companyId: companyId,
