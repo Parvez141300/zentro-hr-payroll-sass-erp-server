@@ -53,8 +53,22 @@ const employeeLeaveUpdate = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const updateLeave = catchAsync(async (req: Request, res: Response) => {
+    const { id: leaveId } = req.params;
+    const user = req.user;
+    const payload = req.body;
+    const result = await leaveService.updateLeaveInDB(user.companyId, user.userId, leaveId as string, user.role as Role, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave updated successfully",
+        data: result,
+    });
+});
+
 export const leaveController = {
     applyForLeave,
     getAllOrQueryLeaves,
     employeeLeaveUpdate,
+    updateLeave,
 };

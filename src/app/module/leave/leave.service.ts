@@ -1,8 +1,8 @@
 import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/client";
 import { HrScope, LeaveStatus, Role } from "../../../generated/prisma/enums";
-import { LeaveWhereInput } from "../../../generated/prisma/models";
+import { LeaveUpdateInput, LeaveWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeavesPayload } from "./leave.interface"
+import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeavesPayload, IUpdateLeavePayload } from "./leave.interface"
 import { totalDaysForLeaveCalculation } from "./leave.utils";
 
 const applyForLeaveInDB = async (companyId: string, userId: string, payload: IApplyForLeavePayload) => {
@@ -382,7 +382,7 @@ const getAllOrQueryLeavesFromDB = async (
     };
 };
 
-const employeeLeaveUpdateInDB = async (companyId: string ,leaveId: string, payload: IEmployeeLeaveUpdatePayload) => {
+const employeeLeaveUpdateInDB = async (companyId: string, leaveId: string, payload: IEmployeeLeaveUpdatePayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
             id: companyId
@@ -406,7 +406,7 @@ const employeeLeaveUpdateInDB = async (companyId: string ,leaveId: string, paylo
         throw new Error("Leave not found");
     }
 
-    if(payload.status && payload.status !== LeaveStatus.CANCELLED){
+    if (payload.status && payload.status !== LeaveStatus.CANCELLED) {
         throw new Error("Only cancelled leave can be updated by employee");
     }
 
@@ -425,8 +425,160 @@ const employeeLeaveUpdateInDB = async (companyId: string ,leaveId: string, paylo
     return updateLeave;
 };
 
+const updateLeaveInDB = async (companyId: string, userId: string, leaveId: string, role: Role, payload: IUpdateLeavePayload) => {
+    const {
+        status,
+        reviewNote,
+        rejectedReason
+    } = payload;
+
+    const isExistCompany = await prisma.company.findUnique({
+        where: { id: companyId }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistLeave = await prisma.leave.findFirst({
+        where: {
+            id: leaveId,
+            companyId: companyId,
+        },
+        include: {
+            employee: {
+                include: {
+                    department: true,
+                    user: true
+                }
+            },
+            leaveType: true
+        }
+    });
+
+    if (!isExistLeave) {
+        throw new Error("Leave not found");
+    }
+
+    // ❌ Employee cannot update leave
+    if (role === Role.EMPLOYEE) {
+        throw new Error("Employees cannot update leave status");
+    }
+
+    // 🔹 DEPARTMENT_HEAD: Can only update leaves from their department
+    if (role === Role.DEPARTMENT_HEAD) {
+        const departmentHead = await prisma.departmentHead.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!departmentHead) {
+            throw new Error("Department Head not found");
+        }
+
+        const allowedDepartmentId = departmentHead.departmentId;
+
+        // Check if this leave belongs to their department
+        if (isExistLeave.employee.departmentId !== allowedDepartmentId) {
+            throw new Error("You can only update leave requests from your own department");
+        }
+    }
+
+    // 🔹 HR_MANAGER: Can update based on scope
+    else if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!hrManager) {
+            throw new Error("HR Manager not found");
+        }
+
+        // Department-specific HR: Only their department
+        if (hrManager.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
+            const allowedDepartmentId = hrManager.departmentId;
+
+            if (isExistLeave.employee.departmentId !== allowedDepartmentId) {
+                throw new Error("You can only update leave requests from your assigned department");
+            }
+        }
+        // COMPANY_WIDE HR: Can update all departments (allowedDepartmentId stays null)
+    }
+
+    // 🔹 SUPER_ADMIN: Can update anything (allowedDepartmentId stays null)
+
+    const updateData: LeaveUpdateInput = {
+        reviewedById: userId,
+    };
+
+    // Update status
+    if (status) {
+        updateData.status = status;
+    }
+
+    // Update review note
+    if (reviewNote) {
+        updateData.reviewNote = reviewNote;
+    }
+
+    // Update rejection reason
+    if (rejectedReason) {
+        updateData.rejectedReason = rejectedReason;
+    }
+
+    // Update timestamps based on status
+    if (status === LeaveStatus.APPROVED_BY_HEAD) {
+        updateData.approvedByHeadAt = new Date();
+        updateData.approvedByHRAt = null;
+        updateData.rejectedAt = null;
+        updateData.rejectedReason = null;
+    }
+
+    if (status === LeaveStatus.APPROVED) {
+        updateData.approvedByHRAt = new Date();
+        updateData.rejectedAt = null;
+        updateData.rejectedReason = null;
+    }
+
+    if (status === LeaveStatus.REJECTED) {
+        updateData.rejectedAt = new Date();
+        updateData.approvedByHeadAt = null;
+        updateData.approvedByHRAt = null;
+    }
+
+    if (status === LeaveStatus.PENDING) {
+        updateData.approvedByHeadAt = null;
+        updateData.approvedByHRAt = null;
+        updateData.rejectedAt = null;
+        updateData.rejectedReason = null;
+    }
+
+    if (status === LeaveStatus.CANCELLED) {
+        updateData.approvedByHeadAt = null;
+        updateData.approvedByHRAt = null;
+        updateData.rejectedAt = null;
+        updateData.rejectedReason = null;
+    }
+
+    const updatedLeave = await prisma.leave.update({
+        where: { id: leaveId },
+        data: updateData,
+        include: {
+            employee: {
+                include: {
+                    department: true,
+                    user: true
+                }
+            },
+            leaveType: true
+        }
+    });
+
+    return updatedLeave;
+};
+
 export const leaveService = {
     applyForLeaveInDB,
     getAllOrQueryLeavesFromDB,
     employeeLeaveUpdateInDB,
+    updateLeaveInDB,
 }

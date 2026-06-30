@@ -31,3 +31,12 @@ export interface IEmployeeLeaveUpdatePayload {
     attachmentUrl?: string;
     status?: LeaveStatus;
 }
+
+export interface IUpdateLeavePayload {
+    status: LeaveStatus;
+    reviewNote?: string;
+    approvedByHeadAt?: Date;
+    approvedByHRAt?: Date;
+    rejectedAt?: Date;
+    rejectedReason?: string;
+}

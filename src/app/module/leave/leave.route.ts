@@ -20,5 +20,10 @@ router.patch(
     checkAuthMiddleware(Role.EMPLOYEE),
     leaveController.employeeLeaveUpdate
 );
+router.patch(
+    "/:id",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
+    leaveController.updateLeave
+);
 
 export const leaveRoute = router;
