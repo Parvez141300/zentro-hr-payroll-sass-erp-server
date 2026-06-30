@@ -12,6 +12,7 @@ import { departmentHeadRoute } from "../module/departmentHead/departmentHead.rou
 import { adminRoute } from "../module/admin/admin.route";
 import { attendanceRoute } from "../module/attendance/attendance.route";
 import { leaveTypeRoute } from "../module/leaveType/leaveType.route";
+import { leaveRoute } from "../module/leave/leave.route";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/department-heads", departmentHeadRoute);
 router.use("/admins", adminRoute);
 router.use("/attendances", attendanceRoute);
 router.use("/leave-types", leaveTypeRoute);
+router.use("/leaves", leaveRoute);
 
 export const indexRoute = router;
