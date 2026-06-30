@@ -22,3 +22,12 @@ export interface IGetAllOrQueryLeavesPayload {
     status: LeaveStatus | undefined,
     leaveTypeId: string | undefined,
 }
+
+export interface IEmployeeLeaveUpdatePayload {
+    leaveTypeId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    reason?: string;
+    attachmentUrl?: string;
+    status?: LeaveStatus;
+}

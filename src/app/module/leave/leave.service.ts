@@ -1,8 +1,8 @@
 import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/client";
-import { HrScope, Role } from "../../../generated/prisma/enums";
+import { HrScope, LeaveStatus, Role } from "../../../generated/prisma/enums";
 import { LeaveWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IApplyForLeavePayload, IGetAllOrQueryLeavesPayload } from "./leave.interface"
+import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeavesPayload } from "./leave.interface"
 import { totalDaysForLeaveCalculation } from "./leave.utils";
 
 const applyForLeaveInDB = async (companyId: string, userId: string, payload: IApplyForLeavePayload) => {
@@ -61,8 +61,6 @@ const applyForLeaveInDB = async (companyId: string, userId: string, payload: IAp
 
     return leave;
 }
-
-// services/leave.service.ts
 
 const getAllOrQueryLeavesFromDB = async (
     companyId: string,
@@ -384,7 +382,51 @@ const getAllOrQueryLeavesFromDB = async (
     };
 };
 
+const employeeLeaveUpdateInDB = async (companyId: string ,leaveId: string, payload: IEmployeeLeaveUpdatePayload) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
+
+    const isExistLeave = await prisma.leave.findUnique({
+        where: {
+            id: leaveId,
+            employee: {
+                companyId: companyId
+            },
+        },
+    });
+
+    if (!isExistLeave) {
+        throw new Error("Leave not found");
+    }
+
+    if(payload.status && payload.status !== LeaveStatus.CANCELLED){
+        throw new Error("Only cancelled leave can be updated by employee");
+    }
+
+    const updateLeave = await prisma.leave.update({
+        where: {
+            id: leaveId,
+            employee: {
+                companyId: companyId
+            },
+        },
+        data: {
+            ...payload,
+        },
+    });
+
+    return updateLeave;
+};
+
 export const leaveService = {
     applyForLeaveInDB,
     getAllOrQueryLeavesFromDB,
+    employeeLeaveUpdateInDB,
 }

@@ -40,7 +40,21 @@ const getAllOrQueryLeaves = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const employeeLeaveUpdate = catchAsync(async (req: Request, res: Response) => {
+    const { id: leaveId } = req.params;
+    const user = req.user;
+    const payload = req.body;
+    const result = await leaveService.employeeLeaveUpdateInDB(user.companyId, leaveId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave updated successfully",
+        data: result,
+    });
+});
+
 export const leaveController = {
     applyForLeave,
     getAllOrQueryLeaves,
+    employeeLeaveUpdate,
 };
