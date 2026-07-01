@@ -3,6 +3,8 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { Role } from "../../generated/prisma/enums";
 import { envVars } from "../utils/env";
+import { convertMilisecondToSecond } from "../utils/convertMilisecondToSecond";
+import ms, { StringValue } from "ms";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -57,6 +59,14 @@ export const auth = betterAuth({
                     path: "/",
                 }
             },
+        }
+    },
+    session: {
+        expiresIn: convertMilisecondToSecond(ms(envVars.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as StringValue)),
+        updateAge: convertMilisecondToSecond(ms(envVars.BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE as StringValue)),
+        cookieCache: {
+            enabled: true,
+            maxAge: convertMilisecondToSecond(ms(envVars.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as StringValue)),
         }
     }
 });

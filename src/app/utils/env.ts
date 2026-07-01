@@ -15,6 +15,8 @@ interface IEnvVarialbleConfig {
     JWT_TOKEN_SECRET: string;
     JWT_ACCESS_TOKEN_EXPIRATION_TIME: string;
     JWT_REFRESH_TOKEN_EXPIRATION_TIME: string;
+    BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: string;
+    BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: string;
 }
 
 const loadEnvVariables = (): IEnvVarialbleConfig => {
@@ -31,6 +33,8 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         "JWT_TOKEN_SECRET",
         "JWT_ACCESS_TOKEN_EXPIRATION_TIME",
         "JWT_REFRESH_TOKEN_EXPIRATION_TIME",
+        "BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN",
+        "BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE",
     ];
 
     requireEnvVariables.forEach((envVariable) => {
@@ -51,7 +55,9 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         FRONTEND_URL: process.env.FRONTEND_URL as string,
         JWT_TOKEN_SECRET: process.env.JWT_TOKEN_SECRET as string,
         JWT_ACCESS_TOKEN_EXPIRATION_TIME: process.env.JWT_ACCESS_TOKEN_EXPIRATION_TIME as string,
-        JWT_REFRESH_TOKEN_EXPIRATION_TIME: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME as string
+        JWT_REFRESH_TOKEN_EXPIRATION_TIME: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME as string,
+        BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: process.env.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as string,
+        BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: process.env.BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE as string,
     }
 }
 
