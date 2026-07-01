@@ -141,6 +141,20 @@ const loginUserInDB = async (payload: ILoginUserPayload) => {
   return { ...loginData, accessToken, refreshToken };
 }
 
+const logoutUserInDB = async (sessionToken: string) => {
+  const userLogout = await auth.api.signOut({
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`
+    }),
+  });
+
+  if (!userLogout.success) {
+    throw new Error("User not logged out");
+  }
+
+  return userLogout.success;
+}
+
 const getNewTokenFromDB = async (sessionToken: string, refreshToken: string) => {
   const isExistSessionToken = await prisma.session.findUnique({
     where: {
@@ -202,4 +216,5 @@ export const authService = {
   registerSuperAdminInDB,
   loginUserInDB,
   getNewTokenFromDB,
+  logoutUserInDB,
 }

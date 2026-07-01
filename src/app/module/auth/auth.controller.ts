@@ -64,8 +64,20 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const logoutUser = catchAsync(async (req: Request, res: Response) => {
+    const sessionToken = req.cookies["better-auth-session-token"];
+    const result = await authService.logoutUserInDB(sessionToken);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User logged out successfully",
+        data: result,
+    });
+});
+
 export const authController = {
     registerSuperAdmin,
     loginUser,
     getNewToken,
+    logoutUser,
 };
