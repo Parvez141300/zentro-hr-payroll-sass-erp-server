@@ -259,10 +259,21 @@ const changePassowrdInDB = async (sessionToken: string, payload: IChangePassword
   return { ...result, accessToken, refreshToken };
 }
 
+const getLoggedInUserInfoFromDB = async (accessToken: string) => {
+  const userInfo = jwtUtils.verifyToken(accessToken, envVars.JWT_TOKEN_SECRET);
+
+  if (!userInfo.success && userInfo.error) {
+    throw new Error("Access token is invalid");
+  }
+
+  return userInfo.data;
+}
+
 export const authService = {
   registerSuperAdminInDB,
   loginUserInDB,
   getNewTokenFromDB,
   logoutUserInDB,
   changePassowrdInDB,
+  getLoggedInUserInfoFromDB,
 }

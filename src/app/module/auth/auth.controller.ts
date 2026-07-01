@@ -124,10 +124,22 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getLoggedInUserInfo = catchAsync(async (req: Request, res: Response) => {
+    const accessToken = req.cookies["accessToken"];
+    const result = await authService.getLoggedInUserInfoFromDB(accessToken);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User info fetched successfully",
+        data: result,
+    });
+});
+
 export const authController = {
     registerSuperAdmin,
     loginUser,
     getNewToken,
     logoutUser,
     changePassword,
+    getLoggedInUserInfo,
 };
