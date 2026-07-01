@@ -5,7 +5,7 @@ import { prisma } from "../../lib/prisma";
 import { envVars } from "../../utils/env";
 import { jwtUtils } from "../../utils/jwt";
 import { tokenUtils } from "../../utils/token";
-import { ILoginUserPayload, IRegisterSuperAdminPayload } from "./auth.interface"
+import { IChangePasswordPayload, ILoginUserPayload, IRegisterSuperAdminPayload } from "./auth.interface"
 import ms, { StringValue } from "ms";
 
 const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
@@ -212,9 +212,57 @@ const getNewTokenFromDB = async (sessionToken: string, refreshToken: string) => 
   };
 }
 
+const changePassowrdInDB = async (sessionToken: string, payload: IChangePasswordPayload) => {
+  const { currentPassword, newPassword } = payload;
+
+  const isExistSessionToken = await prisma.session.findUnique({
+    where: {
+      token: sessionToken,
+    }
+  });
+
+  if (!isExistSessionToken) {
+    throw new Error("Session token not found");
+  }
+
+  const result = await auth.api.changePassword({
+    body: {
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      revokeOtherSessions: true,
+    },
+    headers: new Headers({
+      Authorization: `Bearer ${sessionToken}`
+    })
+  });
+
+  const accessToken = tokenUtils.getAccessToken({
+    companyId: result.user.companyId,
+    userId: result.user.id,
+    name: result.user.name,
+    email: result.user.email,
+    role: result.user.role,
+    isActive: result.user.isActive,
+    isDeleted: result.user.isDeleted,
+  });
+
+  const refreshToken = tokenUtils.getRefreshToken({
+    companyId: result.user.companyId,
+    userId: result.user.id,
+    name: result.user.name,
+    email: result.user.email,
+    role: result.user.role,
+    isActive: result.user.isActive,
+    isDeleted: result.user.isDeleted,
+  });
+
+  return { ...result, accessToken, refreshToken };
+}
+
 export const authService = {
   registerSuperAdminInDB,
   loginUserInDB,
   getNewTokenFromDB,
   logoutUserInDB,
+  changePassowrdInDB,
 }

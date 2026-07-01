@@ -75,9 +75,28 @@ const logoutUser = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+    const sessionToken = req.cookies["better-auth-session-token"];
+    const payload = req.body;
+    const result = await authService.changePassowrdInDB(sessionToken, payload);
+
+    const { accessToken, refreshToken, token } = result;
+    tokenUtils.setAccessTokenInCookie(res, accessToken);
+    tokenUtils.setRefreshTokenInCookie(res, refreshToken);
+    tokenUtils.setBetterAuthSessionTokenInCookie(res, token as string);
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Password changed successfully",
+        data: result,
+    });
+});
+
 export const authController = {
     registerSuperAdmin,
     loginUser,
     getNewToken,
     logoutUser,
+    changePassword,
 };
