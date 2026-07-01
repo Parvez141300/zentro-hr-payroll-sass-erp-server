@@ -13,6 +13,7 @@ import { adminRoute } from "../module/admin/admin.route";
 import { attendanceRoute } from "../module/attendance/attendance.route";
 import { leaveTypeRoute } from "../module/leaveType/leaveType.route";
 import { leaveRoute } from "../module/leave/leave.route";
+import { payrollRoute } from "../module/payroll/payroll.route";
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use("/admins", adminRoute);
 router.use("/attendances", attendanceRoute);
 router.use("/leave-types", leaveTypeRoute);
 router.use("/leaves", leaveRoute);
+router.use("/payrolls", payrollRoute);
 
 export const indexRoute = router;
