@@ -1,8 +1,12 @@
+import { JwtPayload } from "jsonwebtoken";
 import { Role, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+import { envVars } from "../../utils/env";
+import { jwtUtils } from "../../utils/jwt";
 import { tokenUtils } from "../../utils/token";
 import { ILoginUserPayload, IRegisterSuperAdminPayload } from "./auth.interface"
+import ms, { StringValue } from "ms";
 
 const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
   const { name, companyName, email, password, phone, address } = payload;
@@ -137,7 +141,65 @@ const loginUserInDB = async (payload: ILoginUserPayload) => {
   return { ...loginData, accessToken, refreshToken };
 }
 
+const getNewTokenFromDB = async (sessionToken: string, refreshToken: string) => {
+  const isExistSessionToken = await prisma.session.findUnique({
+    where: {
+      token: sessionToken,
+    }
+  });
+
+  if (!isExistSessionToken) {
+    throw new Error("Session token not found");
+  }
+
+  const verifyRefreshToken = jwtUtils.verifyToken(refreshToken, envVars.JWT_TOKEN_SECRET);
+
+  if (!verifyRefreshToken.success && verifyRefreshToken.error) {
+    throw new Error("Refresh token is invalid");
+  }
+
+  const user = verifyRefreshToken.data as JwtPayload;
+
+  const accessToken = tokenUtils.getAccessToken({
+    companyId: user.companyId,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+    isDeleted: user.isDeleted,
+  });
+
+  const newRefreshToken = tokenUtils.getRefreshToken({
+    companyId: user.companyId,
+    userId: user.userId,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+    isDeleted: user.isDeleted,
+  });
+
+  const { token } = await prisma.session.update({
+    where: {
+      token: sessionToken,
+    },
+    data: {
+      token: sessionToken,
+      expiresAt: new Date(Date.now() + ms(envVars.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as StringValue)),
+      updatedAt: new Date(),
+    }
+  });
+
+  return {
+    sessionToken: token,
+    accessToken: accessToken,
+    refreshToken: newRefreshToken,
+  };
+}
+
 export const authService = {
   registerSuperAdminInDB,
   loginUserInDB,
+  getNewTokenFromDB,
 }

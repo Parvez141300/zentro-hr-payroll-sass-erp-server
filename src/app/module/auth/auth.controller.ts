@@ -19,8 +19,8 @@ const registerSuperAdmin = catchAsync(async (req: Request, res: Response) => {
 const loginUser = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
     const result = await authService.loginUserInDB(payload);
-    const {accessToken, refreshToken, token, ...rest} = result;
-    
+    const { accessToken, refreshToken, token, ...rest } = result;
+
     tokenUtils.setAccessTokenInCookie(res, accessToken);
     tokenUtils.setRefreshTokenInCookie(res, refreshToken);
     tokenUtils.setBetterAuthSessionTokenInCookie(res, token);
@@ -38,7 +38,34 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getNewToken = catchAsync(async (req: Request, res: Response) => {
+    const sessionToken = req.cookies["better-auth-session-token"];
+    const refreshToken = req.cookies["refreshToken"];
+
+    if (!refreshToken) {
+        throw new Error("Refresh token is missing");
+    }
+
+    const { accessToken, refreshToken: newRefreshToken, sessionToken: token } = await authService.getNewTokenFromDB(sessionToken, refreshToken);
+
+    tokenUtils.setAccessTokenInCookie(res, accessToken);
+    tokenUtils.setRefreshTokenInCookie(res, newRefreshToken);
+    tokenUtils.setBetterAuthSessionTokenInCookie(res, token);
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Token refreshed successfully",
+        data: {
+            token: token,
+            accessToken: accessToken,
+            refreshToken: newRefreshToken,
+        }
+    });
+});
+
 export const authController = {
     registerSuperAdmin,
     loginUser,
+    getNewToken,
 };
