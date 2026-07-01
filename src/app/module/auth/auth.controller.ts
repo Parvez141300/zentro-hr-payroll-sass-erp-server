@@ -4,6 +4,8 @@ import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { authService } from "./auth.service";
 import { tokenUtils } from "../../utils/token";
+import { cookieUtils } from "../../utils/cookie";
+import { envVars } from "../../utils/env";
 
 const registerSuperAdmin = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;
@@ -39,7 +41,7 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getNewToken = catchAsync(async (req: Request, res: Response) => {
-    const sessionToken = req.cookies["better-auth-session-token"];
+    const sessionToken = req.cookies["better-auth.session_token"];
     const refreshToken = req.cookies["refreshToken"];
 
     if (!refreshToken) {
@@ -65,8 +67,37 @@ const getNewToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logoutUser = catchAsync(async (req: Request, res: Response) => {
-    const sessionToken = req.cookies["better-auth-session-token"];
+    const sessionToken = req.cookies["better-auth.session_token"];
     const result = await authService.logoutUserInDB(sessionToken);
+
+    cookieUtils.clearCookie(
+        res,
+        "accessToken",
+        {
+            httpOnly: true,
+            secure: envVars.NODE_ENV === "production",
+            sameSite: "none",
+        }
+    );
+    cookieUtils.clearCookie(
+        res,
+        "refreshToken",
+        {
+            httpOnly: true,
+            secure: envVars.NODE_ENV === "production",
+            sameSite: "none",
+        }
+    );
+    cookieUtils.clearCookie(
+        res,
+        "better-auth.session_token",
+        {
+            httpOnly: true,
+            secure: envVars.NODE_ENV === "production",
+            sameSite: "none",
+        }
+    );
+
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -76,7 +107,7 @@ const logoutUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
-    const sessionToken = req.cookies["better-auth-session-token"];
+    const sessionToken = req.cookies["better-auth.session_token"];
     const payload = req.body;
     const result = await authService.changePassowrdInDB(sessionToken, payload);
 
