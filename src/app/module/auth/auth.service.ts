@@ -269,6 +269,62 @@ const getLoggedInUserInfoFromDB = async (accessToken: string) => {
   return userInfo.data;
 }
 
+const forgetPasswordInBetterAuth = async (email: string) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      email: email,
+    }
+  });
+
+  if (!isUserExist) {
+    throw new Error("User not found");
+  }
+
+  if (!isUserExist.isActive) {
+    throw new Error("User is inactive");
+  }
+
+  if (isUserExist.isDeleted) {
+    throw new Error("User is deleted");
+  }
+
+  const data = await auth.api.requestPasswordResetEmailOTP({
+    body: {
+      email: email, // required
+    },
+  });
+
+  return data;
+}
+
+const resetPasswordInBetterAuth = async (email: string, otp: string, newPassword: string) => {
+  const isUserExist = await prisma.user.findUnique({
+    where: {
+      email: email,
+    }
+  });
+
+  if (!isUserExist) {
+    throw new Error("User not found");
+  }
+
+  const result = await auth.api.resetPasswordEmailOTP({
+    body: {
+      email: email, // required
+      otp: otp, // required
+      password: newPassword, // required
+    },
+  });
+
+  await prisma.session.deleteMany({
+    where: {
+      userId: isUserExist.id,
+    }
+  });
+
+  return result;
+}
+
 export const authService = {
   registerSuperAdminInDB,
   loginUserInDB,
@@ -276,4 +332,6 @@ export const authService = {
   logoutUserInDB,
   changePassowrdInDB,
   getLoggedInUserInfoFromDB,
+  forgetPasswordInBetterAuth,
+  resetPasswordInBetterAuth,
 }

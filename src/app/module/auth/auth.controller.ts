@@ -124,6 +124,28 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const forgetPassword = catchAsync(async (req: Request, res: Response) => {
+    const { email } = req.body;
+    const result = await authService.forgetPasswordInBetterAuth(email);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Password reset email sent successfully",
+        data: result,
+    });
+});
+
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+    const { email, otp, newPassword } = req.body;
+    const result = await authService.resetPasswordInBetterAuth(email, otp, newPassword);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Password reset successfully",
+        data: result,
+    });
+});
+
 const getLoggedInUserInfo = catchAsync(async (req: Request, res: Response) => {
     const accessToken = req.cookies["accessToken"];
     const result = await authService.getLoggedInUserInfoFromDB(accessToken);
@@ -142,4 +164,6 @@ export const authController = {
     logoutUser,
     changePassword,
     getLoggedInUserInfo,
+    forgetPassword,
+    resetPassword,
 };

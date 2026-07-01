@@ -5,6 +5,7 @@ import { Role } from "../../generated/prisma/enums";
 import { envVars } from "../utils/env";
 import { convertMilisecondToSecond } from "../utils/convertMilisecondToSecond";
 import ms, { StringValue } from "ms";
+import { bearer, emailOTP } from "better-auth/plugins";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -68,5 +69,18 @@ export const auth = betterAuth({
             enabled: true,
             maxAge: convertMilisecondToSecond(ms(envVars.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as StringValue)),
         }
-    }
+    },
+    plugins: [
+        bearer(),
+        emailOTP({
+            overrideDefaultEmailVerification: true,
+            async sendVerificationOTP({ email, otp, type }) {
+                if (type === "forget-password") {
+                    return
+                }
+            },
+            otpLength: 6, // otp length, default is 6
+            expiresIn: 60 * 2, // otp expires in seconds, default is 120 (2 minutes)
+        }),
+    ],
 });

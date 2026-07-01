@@ -9,5 +9,7 @@ router.post("/refresh-token", authController.getNewToken);
 router.post("/logout", authController.logoutUser);
 router.post("/change-password", authController.changePassword);
 router.get("/me", authController.getLoggedInUserInfo);
+router.post("/forget-password", authController.forgetPassword);
+router.post("/reset-password", authController.resetPassword);
 
 export const authRoute = router;
