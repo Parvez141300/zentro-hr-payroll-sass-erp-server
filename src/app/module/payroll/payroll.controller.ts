@@ -41,7 +41,34 @@ const getAllOrQueryPayrolls = catchAsync(async (req: Request, res: Response) => 
     });
 });
 
+const updatePayrollInDB = catchAsync(async (req: Request, res: Response) => {
+    const { companyId } = req.user;
+    const { id: payrollId } = req.params;
+    const payload = req.body;
+    const result = await payrollService.updatePayrollInDB(companyId, payrollId as string, payload);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Payroll updated successfully",
+        data: result,
+    });
+});
+
+const getPayslipData = catchAsync(async (req: Request, res: Response) => {
+    const { companyId, userId, role } = req.user;
+    const { id: payrollId } = req.params;
+    const result = await payrollService.getPayslipDataFromDB(companyId, userId, payrollId as string, role as Role);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Payslip data fetched successfully",
+        data: result,
+    });
+});
+
 export const payrollController = {
     generatePayroll,
     getAllOrQueryPayrolls,
+    updatePayrollInDB,
+    getPayslipData,
 };

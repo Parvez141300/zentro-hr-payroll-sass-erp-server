@@ -2,7 +2,7 @@ import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/c
 import { PayrollStatus, Role, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { PayrollWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IGeneratePayrollPayload, IGetAllOrQueryPayrollsPayload } from "./payroll.interface";
+import { IGeneratePayrollPayload, IGetAllOrQueryPayrollsPayload, IPayslipData, IUpdatePayrollPayload } from "./payroll.interface";
 import { calculateSalaryPayroll } from "./payroll.utils";
 
 const generatePayrollInDB = async (companyId: string, userId: string, payload: IGeneratePayrollPayload) => {
@@ -416,7 +416,165 @@ const getAllOrQueryPayrollsFromDB = async (
     };
 };
 
+const updatePayrollInDB = async (
+    companyId: string,
+    payrollId: string,
+    payload: IUpdatePayrollPayload,
+) => {
+    const {
+        basicSalary,
+        houseAllowance,
+        medicalAllowance,
+        transportAllowance,
+        overtimePay,
+        taxDeduction,
+        pfDeduction,
+        otherDeductions,
+        status
+    } = payload;
+
+    const isExistPayroll = await prisma.payroll.findFirst({
+        where: {
+            id: payrollId,
+            companyId
+        },
+        include: {
+            employee: true
+        }
+    });
+
+    if (!isExistPayroll) {
+        throw new Error("Payroll not found");
+    }
+
+    // Cannot update if already paid
+    if (isExistPayroll.status === 'PAID') {
+        throw new Error("Cannot update a paid payroll");
+    }
+
+    // Calculate new values
+    const newBasicSalary = basicSalary ?? isExistPayroll.basicSalary;
+    const newHouseAllowance = houseAllowance ?? isExistPayroll.houseAllowance;
+    const newMedicalAllowance = medicalAllowance ?? isExistPayroll.medicalAllowance;
+    const newTransportAllowance = transportAllowance ?? isExistPayroll.transportAllowance;
+    const newOvertimePay = overtimePay ?? isExistPayroll.overtimePay;
+    const newTaxDeduction = taxDeduction ?? isExistPayroll.taxDeduction;
+    const newPfDeduction = pfDeduction ?? isExistPayroll.pfDeduction;
+    const newOtherDeductions = otherDeductions ?? isExistPayroll.otherDeductions;
+
+    const grossSalary = newBasicSalary + newHouseAllowance + newMedicalAllowance +
+        newTransportAllowance + newOvertimePay;
+    const totalDeductions = newTaxDeduction + newPfDeduction + newOtherDeductions;
+    const netSalary = grossSalary - totalDeductions;
+
+    const updated = await prisma.payroll.update({
+        where: { id: payrollId },
+        data: {
+            basicSalary: newBasicSalary,
+            houseAllowance: newHouseAllowance,
+            medicalAllowance: newMedicalAllowance,
+            transportAllowance: newTransportAllowance,
+            overtimePay: newOvertimePay,
+            grossSalary,
+            taxDeduction: newTaxDeduction,
+            pfDeduction: newPfDeduction,
+            otherDeductions: newOtherDeductions,
+            totalDeductions,
+            netSalary,
+            status: status || isExistPayroll.status,
+        },
+    });
+
+    return updated;
+};
+
+const getPayslipDataFromDB = async (
+    payrollId: string,
+    companyId: string,
+    userId: string,
+    role: Role
+) => {
+    const payroll = await prisma.payroll.findFirst({
+        where: {
+            id: payrollId,
+            companyId
+        },
+        include: {
+            employee: {
+                include: {
+                    department: true,
+                    designation: true,
+                    user: true
+                }
+            }
+        }
+    });
+
+    if (!payroll) {
+        throw new Error("Payroll not found");
+    }
+
+    // Check permission for EMPLOYEE
+    if (role === Role.EMPLOYEE) {
+        const employee = await prisma.employee.findUnique({
+            where: { userId }
+        });
+        if (payroll.employeeId !== employee?.id) {
+            throw new Error("You can only view your own payslip");
+        }
+    }
+
+    // Check permission for DEPARTMENT_HEAD
+    if (role === Role.DEPARTMENT_HEAD) {
+        const deptHead = await prisma.departmentHead.findUnique({
+            where: { userId }
+        });
+        if (payroll.employee.departmentId !== deptHead?.departmentId) {
+            throw new Error("You can only view payslip for your department");
+        }
+    }
+
+    // Check permission for HR_MANAGER
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId }
+        });
+        if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' &&
+            hrManager.departmentId &&
+            payroll.employee.departmentId !== hrManager.departmentId) {
+            throw new Error("You can only view payslip for your assigned department");
+        }
+    }
+
+    const payslipData: IPayslipData = {
+        employeeName: payroll.employee.user.name,
+        employeeCode: payroll.employee.employeeCode || 'N/A',
+        department: payroll.employee.department?.name || 'N/A',
+        designation: payroll.employee.designation?.title || 'N/A',
+        month: payroll.month,
+        year: payroll.year,
+        basicSalary: payroll.basicSalary,
+        houseAllowance: payroll.houseAllowance,
+        medicalAllowance: payroll.medicalAllowance,
+        transportAllowance: payroll.transportAllowance,
+        overtimePay: payroll.overtimePay,
+        grossSalary: payroll.grossSalary,
+        taxDeduction: payroll.taxDeduction,
+        pfDeduction: payroll.pfDeduction,
+        otherDeductions: payroll.otherDeductions,
+        totalDeductions: payroll.totalDeductions,
+        netSalary: payroll.netSalary,
+        status: payroll.status,
+        paidAt: payroll.paidAt || undefined,
+        generatedAt: payroll.createdAt
+    };
+
+    return payslipData;
+};
+
 export const payrollService = {
     generatePayrollInDB,
     getAllOrQueryPayrollsFromDB,
+    updatePayrollInDB,
+    getPayslipDataFromDB,
 }
