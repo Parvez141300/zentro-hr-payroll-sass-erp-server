@@ -4,8 +4,13 @@ import { indexRoute } from "./app/routes";
 import { notFoundMiddleware } from "./app/middleware/notFound";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import cookieParser from "cookie-parser";
+import path from "path";
 
 export const app: Application = express();
+
+// view engine
+app.set("view engine", "ejs");
+app.set("views", path.resolve(process.cwd(), "src/app/templates"));
 
 // Enable URL-encoded form data parsing
 app.use(express.urlencoded({ extended: true }));
