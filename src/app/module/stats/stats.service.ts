@@ -1,0 +1,267 @@
+import { AttendanceStatus, EmployeeStatus, HrScope, LeaveStatus, PayrollStatus, Role } from "../../../generated/prisma/enums";
+import { AttendanceWhereInput, DepartmentWhereInput, EmployeeWhereInput, LeaveWhereInput, PayrollWhereInput } from "../../../generated/prisma/models";
+import { prisma } from "../../lib/prisma";
+import { IGetDashboardStatsPayload } from "./stats.interface";
+
+const getDashboardStatsFromDB = async (
+    companyId: string,
+    userId: string,
+    role: Role,
+    payload?: IGetDashboardStatsPayload
+) => {
+    const today = new Date();
+
+    // 1. ATTENDANCE DATE
+    // If date provided, use that date, otherwise use current month
+    let attendanceStartDate: Date;
+    let attendanceEndDate: Date;
+
+    if (payload?.attendanceDate) {
+        // Use the provided date
+        const providedDate = new Date(payload.attendanceDate);
+        attendanceStartDate = new Date(providedDate.getFullYear(), providedDate.getMonth(), 1);
+        attendanceEndDate = new Date(providedDate.getFullYear(), providedDate.getMonth() + 1, 0);
+    } else {
+        // Default: current month
+        attendanceStartDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        attendanceEndDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+
+    // 2. PAYROLL DATE
+    // If payroll month/year provided, use those, otherwise use current month
+    let payrollMonth: number;
+    let payrollYear: number;
+
+    if (payload?.payrollMonth && payload?.payrollYear) {
+        payrollMonth = payload.payrollMonth;
+        payrollYear = payload.payrollYear;
+    } else {
+        // Default: current month
+        payrollMonth = today.getMonth() + 1;
+        payrollYear = today.getFullYear();
+    }
+
+    // 3. GET ROLE-SPECIFIC EMPLOYEES & DEPARTMENTS
+
+    const employeeIds: string[] = [];
+    const departmentIds: string[] = [];
+
+    if (role === Role.EMPLOYEE) {
+        const employee = await prisma.employee.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!employee) {
+            throw new Error("Employee not found");
+        }
+
+        employeeIds.push(employee.id);
+    }
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const departmentHead = await prisma.departmentHead.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!departmentHead) {
+            throw new Error("Department head not found");
+        }
+
+        departmentIds.push(departmentHead.id);
+        const employees = await prisma.employee.findMany({
+            where: {
+                departmentId: departmentHead.departmentId,
+            }
+        });
+
+        employeeIds.push(...employees.map((emp) => emp.id));
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!hrManager) {
+            throw new Error("HR Manager not found");
+        }
+
+        if (hrManager.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
+            departmentIds.push(hrManager.departmentId);
+            const employees = await prisma.employee.findMany({
+                where: {
+                    departmentId: hrManager.departmentId,
+                }
+            });
+
+            employeeIds.push(...employees.map((emp) => emp.id));
+        }
+    }
+
+    // 4. TOTAL EMPLOYEES
+
+    const employeeWhere: EmployeeWhereInput = {
+        companyId: companyId,
+        status: EmployeeStatus.ACTIVE,
+    };
+
+    if (employeeIds.length > 0) {
+        employeeWhere.id = { in: employeeIds };
+    }
+
+    const totalEmployees = await prisma.employee.count({
+        where: employeeWhere
+    });
+
+    // 5. TOTAL DEPARTMENTS
+
+    const departmentWhere: DepartmentWhereInput = {
+        companyId: companyId,
+    };
+
+    if (departmentIds.length > 0) {
+        departmentWhere.id = { in: departmentIds };
+    }
+
+    const totalDepartments = await prisma.department.count({
+        where: departmentWhere
+    });
+
+    // 6. ATTENDANCE SUMMARY (with date filter)
+
+    const attendanceWhere: AttendanceWhereInput = {
+        companyId: companyId,
+        date: {
+            gte: attendanceStartDate,
+            lte: attendanceEndDate
+        }
+    };
+
+    if (employeeIds.length > 0) {
+        attendanceWhere.employeeId = { in: employeeIds };
+    }
+
+    const attendances = await prisma.attendance.groupBy({
+        by: ["status"],
+        where: attendanceWhere,
+        _count: {
+            id: true
+        }
+    });
+
+    const attendanceSummary = {
+        present: 0,
+        late: 0,
+        absent: 0,
+        halfDay: 0,
+        rate: 0,
+    };
+
+    attendances.forEach((attendance) => {
+        if (attendance.status === AttendanceStatus.PRESENT) {
+            attendanceSummary.present = attendance._count.id;
+        } else if (attendance.status === AttendanceStatus.LATE) {
+            attendanceSummary.late = attendance._count.id;
+        } else if (attendance.status === AttendanceStatus.ABSENT) {
+            attendanceSummary.absent = attendance._count.id;
+        } else if (attendance.status === AttendanceStatus.HALF_DAY) {
+            attendanceSummary.halfDay = attendance._count.id;
+        }
+    });
+
+    const totalAttendance = attendanceSummary.present + attendanceSummary.late +
+        attendanceSummary.absent + attendanceSummary.halfDay;
+
+    attendanceSummary.rate = totalAttendance > 0
+        ? ((attendanceSummary.present + attendanceSummary.late + attendanceSummary.halfDay) / totalAttendance) * 100
+        : 0;
+
+    // 7. LEAVE SUMMARY
+
+    const leaveWhere: LeaveWhereInput = { companyId: companyId };
+
+    if (employeeIds.length > 0) {
+        leaveWhere.employeeId = { in: employeeIds };
+    }
+
+    const leaves = await prisma.leave.groupBy({
+        by: ["status"],
+        where: leaveWhere,
+        _count: {
+            id: true
+        }
+    });
+
+    const leaveSummary = {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        total: 0
+    };
+
+    leaves.forEach((leave) => {
+        if (leave.status === LeaveStatus.PENDING) {
+            leaveSummary.pending = leave._count.id;
+        } else if (leave.status === LeaveStatus.APPROVED_BY_HEAD) {
+            leaveSummary.approved += leave._count.id;
+        } else if (leave.status === LeaveStatus.APPROVED) {
+            leaveSummary.approved += leave._count.id;
+        } else if (leave.status === LeaveStatus.REJECTED) {
+            leaveSummary.rejected = leave._count.id;
+        }
+    });
+
+    leaveSummary.total = leaveSummary.pending + leaveSummary.approved + leaveSummary.rejected;
+
+    // 8. PAYROLL SUMMARY (with date filter)
+
+    let payrollSummary = {
+        totalGross: 0,
+        totalNet: 0,
+        totalEmployees: 0,
+    };
+
+    if (role === Role.Super_ADMIN || role === Role.ACCOUNTANT || role === Role.HR_MANAGER) {
+        const payrollWhere: PayrollWhereInput = {
+            companyId: companyId,
+            month: payrollMonth,
+            year: payrollYear,
+            status: {
+                not: PayrollStatus.CANCELLED,
+            }
+        };
+
+        if (employeeIds.length > 0) {
+            payrollWhere.employeeId = { in: employeeIds };
+        }
+
+        const payrollData = await prisma.payroll.aggregate({
+            where: payrollWhere,
+            _sum: {
+                grossSalary: true,
+                netSalary: true,
+            },
+            _count: true,
+        });
+
+        payrollSummary = {
+            totalGross: payrollData._sum.grossSalary || 0,
+            totalNet: payrollData._sum.netSalary || 0,
+            totalEmployees: payrollData._count || 0,
+        };
+    }
+
+    // 9. RETURN RESPONSE
+
+    return {
+        totalEmployees,
+        totalDepartments,
+        totalAttendance: attendanceSummary,
+        totalLeaves: leaveSummary,
+        payroll: payrollSummary,
+    };
+};
+
+export const statsService = {
+    getDashboardStatsFromDB,
+}
