@@ -5,6 +5,7 @@ import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
+// this route is combined with department, attendance, leave, payroll
 router.get(
     "/dashboard/stats",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE, Role.ACCOUNTANT),
