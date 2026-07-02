@@ -17,6 +17,13 @@ interface IEnvVarialbleConfig {
     JWT_REFRESH_TOKEN_EXPIRATION_TIME: string;
     BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: string;
     BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: string;
+    EMAIL_SENDER: {
+        SMTP_HOST: string;
+        SMTP_PORT: string;
+        SMTP_USER: string;
+        SMTP_PASSWORD: string;
+        SMTP_FROM: string;
+    };
 }
 
 const loadEnvVariables = (): IEnvVarialbleConfig => {
@@ -35,6 +42,11 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         "JWT_REFRESH_TOKEN_EXPIRATION_TIME",
         "BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN",
         "BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE",
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "SMTP_PASSWORD",
+        "SMTP_FROM",
     ];
 
     requireEnvVariables.forEach((envVariable) => {
@@ -58,6 +70,13 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         JWT_REFRESH_TOKEN_EXPIRATION_TIME: process.env.JWT_REFRESH_TOKEN_EXPIRATION_TIME as string,
         BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN: process.env.BETTER_AUTH_SESSION_TOKEN_EXPIRES_IN as string,
         BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE: process.env.BETTER_AUTH_SESSION_TOKEN_UPDATE_AGE as string,
+        EMAIL_SENDER: {
+            SMTP_HOST: process.env.SMTP_HOST as string,
+            SMTP_PORT: process.env.SMTP_PORT as string,
+            SMTP_USER: process.env.SMTP_USER as string,
+            SMTP_PASSWORD: process.env.SMTP_PASSWORD as string,
+            SMTP_FROM: process.env.SMTP_FROM as string,
+        },
     }
 }
 

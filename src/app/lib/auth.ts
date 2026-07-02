@@ -6,6 +6,7 @@ import { envVars } from "../utils/env";
 import { convertMilisecondToSecond } from "../utils/convertMilisecondToSecond";
 import ms, { StringValue } from "ms";
 import { bearer, emailOTP } from "better-auth/plugins";
+import { sendEmail } from "../utils/sendEmail";
 // If your Prisma file is located elsewhere, you can change the path
 
 export const auth = betterAuth({
@@ -76,7 +77,22 @@ export const auth = betterAuth({
             overrideDefaultEmailVerification: true,
             async sendVerificationOTP({ email, otp, type }) {
                 if (type === "forget-password") {
-                    return
+                    const user = await prisma.user.findUnique({
+                        where: {
+                            email: email,
+                        }
+                    });
+                    if(user){
+                        sendEmail({
+                            to: user.email,
+                            subject: "Reset Password",
+                            templateName: "otp",
+                            templateData: {
+                                name: user.name,
+                                otp: otp,
+                            }
+                        });
+                    }
                 }
             },
             otpLength: 6, // otp length, default is 6
