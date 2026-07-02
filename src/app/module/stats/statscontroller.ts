@@ -70,10 +70,21 @@ const getPayrollStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getPlatformOverviewStats = catchAsync(async (req: Request, res: Response) => {
+    const result = await statsService.getPlatformOverviewStatsFromDB();
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Platform overview stats fetched successfully",
+        data: result,
+    });
+});
+
 export const statsController = {
     getDashboardStats,
     getDepartmentStats,
     getAttendanceStats,
     getLeaveStats,
     getPayrollStats,
+    getPlatformOverviewStats,
 };

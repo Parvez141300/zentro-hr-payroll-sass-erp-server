@@ -33,4 +33,9 @@ router.get("/payroll/stats",
     statsController.getPayrollStats
 );
 
+router.get("/platform-overview-stats",
+    checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
+    statsController.getPlatformOverviewStats
+);
+
 export const statsRoute = router;

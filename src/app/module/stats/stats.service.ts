@@ -798,10 +798,99 @@ const getPayrollStatsFromDB = async (
     };
 };
 
+const getPlatformOverviewStatsFromDB = async () => {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    // Total companies
+    const totalCompanies = await prisma.company.count();
+
+    // Active companies (subscription active or trial)
+    const activeCompanies = await prisma.company.count({
+        where: {
+            subscriptionStatus: {
+                in: ['ACTIVE', 'TRIAL']
+            }
+        }
+    });
+
+    // Total employees across all companies
+    const totalEmployees = await prisma.employee.count();
+
+    // New companies this month
+    const newCompaniesThisMonth = await prisma.company.count({
+        where: {
+            createdAt: {
+                gte: startOfMonth,
+                lte: endOfMonth
+            }
+        }
+    });
+
+    // Total revenue (from successful payments)
+    const revenueData = await prisma.payment.aggregate({
+        where: {
+            status: 'SUCCESS'
+        },
+        _sum: {
+            amountUSD: true,
+            amountBDT: true
+        }
+    });
+
+    // Monthly revenue (this month)
+    const monthlyRevenue = await prisma.payment.aggregate({
+        where: {
+            status: 'SUCCESS',
+            paidAt: {
+                gte: startOfMonth,
+                lte: endOfMonth
+            }
+        },
+        _sum: {
+            amountUSD: true,
+            amountBDT: true
+        }
+    });
+
+    // Total subscription plans distribution
+    const planDistribution = await prisma.company.groupBy({
+        by: ['subscriptionPlan'],
+        _count: true
+    });
+
+    // Subscription status distribution
+    const statusDistribution = await prisma.company.groupBy({
+        by: ['subscriptionStatus'],
+        _count: true
+    });
+
+    return {
+        overview: {
+            totalCompanies,
+            activeCompanies,
+            totalEmployees,
+            newCompaniesThisMonth
+        },
+        revenue: {
+            totalRevenueUSD: revenueData._sum.amountUSD || 0,
+            totalRevenueBDT: revenueData._sum.amountBDT || 0,
+            monthlyRevenueUSD: monthlyRevenue._sum.amountUSD || 0,
+            monthlyRevenueBDT: monthlyRevenue._sum.amountBDT || 0
+        },
+        subscriptions: {
+            byPlan: planDistribution,
+            byStatus: statusDistribution
+        }
+    };
+};
+
 export const statsService = {
     getDashboardStatsFromDB,
     getDepartmentStatsFromDB,
     getAttendanceStatsFromDB,
     getLeaveStatsFromDB,
     getPayrollStatsFromDB,
+    getPlatformOverviewStatsFromDB,
 }
