@@ -1,4 +1,4 @@
-import { AttendanceStatus, EmployeeStatus, HrScope, LeaveStatus, PayrollStatus, Role } from "../../../generated/prisma/enums";
+import { AttendanceStatus, EmployeeStatus, Gender, HrScope, LeaveStatus, PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { AttendanceWhereInput, DepartmentWhereInput, EmployeeWhereInput, LeaveWhereInput, PayrollWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IGetDashboardStatsPayload } from "./stats.interface";
@@ -262,6 +262,226 @@ const getDashboardStatsFromDB = async (
     };
 };
 
+const getDepartmentStatsFromDB = async (
+    companyId: string,
+    userId: string,
+    role: Role,
+    departmentId?: string
+) => {
+    // Get departments based on role
+    const departmentFilter: DepartmentWhereInput = { companyId };
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const deptHead = await prisma.departmentHead.findUnique({
+            where: { userId }
+        });
+        if (deptHead?.departmentId) {
+            departmentFilter.id = deptHead.departmentId;
+        }
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId }
+        });
+        if (hrManager?.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
+            departmentFilter.id = hrManager.departmentId;
+        }
+    }
+
+    if (departmentId) {
+        departmentFilter.id = departmentId;
+    }
+
+    const departments = await prisma.department.findMany({
+        where: departmentFilter,
+        include: {
+            employees: {
+                include: {
+                    user: true
+                }
+            }
+        }
+    });
+
+    const totalEmployees = departments.reduce((sum, dept) => sum + dept.employees.length, 0);
+
+    const report = departments.map(dept => {
+        const employees = dept.employees;
+        const male = employees.filter(e => e.gender === Gender.MALE).length;
+        const female = employees.filter(e => e.gender === Gender.FEMALE).length;
+        const other = employees.filter(e => e.gender === Gender.OTHER).length;
+        const active = employees.filter(e => e.status === 'ACTIVE').length;
+        const inactive = employees.filter(e => e.status !== 'ACTIVE').length;
+
+        return {
+            departmentId: dept.id,
+            departmentName: dept.name,
+            male,
+            female,
+            other,
+            active,
+            inactive,
+        };
+    });
+
+    return {
+        data: report,
+        totalEmployees,
+        totalDepartments: report.length
+    };
+};
+
+const getAttendanceStatsFromDB = async (
+    companyId: string,
+    userId: string,
+    role: Role,
+    month?: number,
+    year?: number
+) => {
+    const today = new Date();
+
+    let startDate: Date;
+    let endDate: Date;
+
+    if(month && year){
+        startDate = new Date(year, month - 1, 1);
+    endDate = new Date(year, month, 0);
+    }
+    else {
+        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+
+    
+
+    // Get employees based on role
+    let employeeIds: string[] = [];
+
+    if (role === Role.EMPLOYEE) {
+        const employee = await prisma.employee.findUnique({
+            where: { userId }
+        });
+        if (employee) employeeIds = [employee.id];
+    }
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const deptHead = await prisma.departmentHead.findUnique({
+            where: { userId }
+        });
+        if (deptHead?.departmentId) {
+            const employees = await prisma.employee.findMany({
+                where: { departmentId: deptHead.departmentId },
+                select: { id: true }
+            });
+            employeeIds = employees.map(e => e.id);
+        }
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId }
+        });
+        if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' && hrManager.departmentId) {
+            const employees = await prisma.employee.findMany({
+                where: { departmentId: hrManager.departmentId },
+                select: { id: true }
+            });
+            employeeIds = employees.map(e => e.id);
+        }
+    }
+
+    // Get attendance data
+    const attendanceWhere: AttendanceWhereInput = {
+        companyId,
+        date: {
+            gte: startDate,
+            lte: endDate
+        }
+    };
+    if (employeeIds.length > 0) {
+        attendanceWhere.employeeId = { in: employeeIds };
+    }
+
+    const attendance = await prisma.attendance.groupBy({
+        by: ['status'],
+        where: attendanceWhere,
+        _count: true
+    });
+
+    const summary = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        halfDay: 0
+    };
+
+    let totalRecords = 0;
+
+    attendance.forEach(record => {
+        switch (record.status) {
+            case AttendanceStatus.PRESENT: summary.present = record._count; break;
+            case AttendanceStatus.ABSENT: summary.absent = record._count; break;
+            case AttendanceStatus.LATE: summary.late = record._count; break;
+            case AttendanceStatus.HALF_DAY: summary.halfDay = record._count; break;
+        }
+        totalRecords += record._count;
+    });
+
+    const totalPresentDays = summary.present + summary.late + summary.halfDay;
+    const attendanceRate = totalRecords > 0 ? (totalPresentDays / totalRecords * 100) : 0;
+
+    // Department wise breakdown
+    const deptAttendance = await prisma.attendance.groupBy({
+        by: ['employeeId', 'status'],
+        where: attendanceWhere,
+        _count: true
+    });
+
+    const departmentWiseMap = new Map();
+
+    for (const record of deptAttendance) {
+        const employee = await prisma.employee.findUnique({
+            where: { id: record.employeeId },
+            include: { department: true }
+        });
+
+        if (employee?.department?.name) {
+            const deptName = employee.department.name;
+            if (!departmentWiseMap.has(deptName)) {
+                departmentWiseMap.set(deptName, { total: 0, present: 0 });
+            }
+            const deptData = departmentWiseMap.get(deptName);
+            deptData.total += record._count;
+            if (record.status === 'PRESENT' || record.status === 'LATE' || record.status === 'HALF_DAY') {
+                deptData.present += record._count;
+            }
+        }
+    }
+
+    const departmentWise = Array.from(departmentWiseMap.entries()).map(([deptName, data]) => ({
+        departmentName: deptName,
+        total: data.total,
+        present: data.present,
+        rate: data.total > 0 ? (data.present / data.total * 100) : 0
+    }));
+
+    return {
+        startDate,
+        endDate,
+        totalEmployees: employeeIds.length > 0 ? employeeIds.length : await prisma.employee.count({ where: { companyId } }),
+        present: summary.present,
+        absent: summary.absent,
+        late: summary.late,
+        halfDay: summary.halfDay,
+        attendanceRate,
+        departmentWise
+    };
+};
+
+
 export const statsService = {
     getDashboardStatsFromDB,
+    getDepartmentStatsFromDB,
+    getAttendanceStatsFromDB,
 }
