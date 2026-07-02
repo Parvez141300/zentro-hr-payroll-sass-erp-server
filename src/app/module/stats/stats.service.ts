@@ -344,16 +344,16 @@ const getAttendanceStatsFromDB = async (
     let startDate: Date;
     let endDate: Date;
 
-    if(month && year){
+    if (month && year) {
         startDate = new Date(year, month - 1, 1);
-    endDate = new Date(year, month, 0);
+        endDate = new Date(year, month, 0);
     }
     else {
         startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         endDate = new Date(today.getFullYear(), today.getMonth(), 0);
     }
 
-    
+
 
     // Get employees based on role
     let employeeIds: string[] = [];
@@ -479,9 +479,131 @@ const getAttendanceStatsFromDB = async (
     };
 };
 
+const getLeaveStatsFromDB = async (
+    companyId: string,
+    userId: string,
+    role: Role
+) => {
+    // Get employees based on role
+    let employeeIds: string[] = [];
+
+    if (role === Role.EMPLOYEE) {
+        const employee = await prisma.employee.findUnique({
+            where: { userId }
+        });
+        if (employee) employeeIds = [employee.id];
+    }
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const deptHead = await prisma.departmentHead.findUnique({
+            where: { userId }
+        });
+        if (deptHead?.departmentId) {
+            const employees = await prisma.employee.findMany({
+                where: { departmentId: deptHead.departmentId },
+                select: { id: true }
+            });
+            employeeIds = employees.map(e => e.id);
+        }
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId }
+        });
+        if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' && hrManager.departmentId) {
+            const employees = await prisma.employee.findMany({
+                where: { departmentId: hrManager.departmentId },
+                select: { id: true }
+            });
+            employeeIds = employees.map(e => e.id);
+        }
+    }
+
+    // Get all leave types for the company
+    const leaveTypes = await prisma.leaveType.findMany({
+        where: { companyId, isActive: true }
+    });
+
+    const report = [];
+
+    for (const leaveType of leaveTypes) {
+        const leaveWhere: LeaveWhereInput = {
+            companyId,
+            leaveTypeId: leaveType.id
+        };
+        if (employeeIds.length > 0) {
+            leaveWhere.employeeId = { in: employeeIds };
+        }
+
+        const leaves = await prisma.leave.groupBy({
+            by: ['status'],
+            where: leaveWhere,
+            _count: true
+        });
+
+        let approved = 0, rejected = 0, pending = 0;
+
+        for (const record of leaves) {
+            switch (record.status) {
+                case LeaveStatus.APPROVED:
+                    approved = record._count;
+                    break;
+                case LeaveStatus.REJECTED:
+                    rejected = record._count;
+                    break;
+                case LeaveStatus.APPROVED_BY_HEAD:
+                case LeaveStatus.PENDING:
+                    pending += record._count;
+                    break;
+            }
+        }
+
+        // Get total days
+        const daysData = await prisma.leave.aggregate({
+            where: leaveWhere,
+            _sum: { totalDays: true }
+        });
+        const totalDays = daysData._sum.totalDays || 0;
+
+        // Get used days (approved only)
+        const usedData = await prisma.leave.aggregate({
+            where: {
+                ...leaveWhere,
+                status: 'APPROVED'
+            },
+            _sum: { totalDays: true }
+        });
+        const usedDays = usedData._sum.totalDays || 0;
+
+        report.push({
+            leaveTypeId: leaveType.id,
+            leaveTypeName: leaveType.name,
+            totalRequested: leaves.reduce((sum, l) => sum + l._count, 0),
+            approved,
+            rejected,
+            pending,
+            totalDays,
+            usedDays,
+            remainingDays: leaveType.daysAllowed - usedDays
+        });
+    }
+
+    return {
+        data: report,
+        summary: {
+            totalLeaveTypes: report.length,
+            totalRequests: report.reduce((sum, r) => sum + r.totalRequested, 0),
+            totalApproved: report.reduce((sum, r) => sum + r.approved, 0),
+            totalRejected: report.reduce((sum, r) => sum + r.rejected, 0),
+            totalPending: report.reduce((sum, r) => sum + r.pending, 0)
+        }
+    };
+};
 
 export const statsService = {
     getDashboardStatsFromDB,
     getDepartmentStatsFromDB,
     getAttendanceStatsFromDB,
+    getLeaveStatsFromDB,
 }

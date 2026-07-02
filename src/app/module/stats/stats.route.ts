@@ -23,4 +23,9 @@ router.get(
     statsController.getAttendanceStats
 );
 
+router.get("/leave/stats",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
+    statsController.getLeaveStats
+);
+
 export const statsRoute = router;

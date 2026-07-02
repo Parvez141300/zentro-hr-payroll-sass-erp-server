@@ -42,8 +42,20 @@ const getAttendanceStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getLeaveStats = catchAsync(async (req: Request, res: Response) => {
+    const { companyId, userId, role } = req.user;
+    const result = await statsService.getLeaveStatsFromDB(companyId, userId, role as Role);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Leave stats fetched successfully",
+        data: result,
+    });
+});
+
 export const statsController = {
     getDashboardStats,
     getDepartmentStats,
     getAttendanceStats,
+    getLeaveStats,
 };
