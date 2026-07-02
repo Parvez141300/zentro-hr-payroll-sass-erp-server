@@ -28,4 +28,9 @@ router.get("/leave/stats",
     statsController.getLeaveStats
 );
 
+router.get("/payroll/stats",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE, Role.ACCOUNTANT),
+    statsController.getPayrollStats
+);
+
 export const statsRoute = router;

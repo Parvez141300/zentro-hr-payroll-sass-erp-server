@@ -1,7 +1,7 @@
 import { AttendanceStatus, EmployeeStatus, Gender, HrScope, LeaveStatus, PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { AttendanceWhereInput, DepartmentWhereInput, EmployeeWhereInput, LeaveWhereInput, PayrollWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IGetDashboardStatsPayload } from "./stats.interface";
+import { IGetDashboardStatsPayload, IGetPayrollReportPayload } from "./stats.interface";
 
 const getDashboardStatsFromDB = async (
     companyId: string,
@@ -601,9 +601,207 @@ const getLeaveStatsFromDB = async (
     };
 };
 
+const getPayrollStatsFromDB = async (
+    companyId: string,
+    userId: string,
+    role: Role,
+    payload?: IGetPayrollReportPayload
+) => {
+    const today = new Date();
+
+    // 1. PAYROLL DATE
+    let reportMonth: number;
+    let reportYear: number;
+
+    if (payload?.month && payload?.year) {
+        reportMonth = payload.month;
+        reportYear = payload.year;
+    } else {
+        // Default: current month
+        reportMonth = today.getMonth() + 1;
+        reportYear = today.getFullYear();
+    }
+
+    // 2. GET ROLE-SPECIFIC EMPLOYEES
+
+    const employeeIds: string[] = [];
+    const departmentIds: string[] = [];
+
+    if (role === Role.EMPLOYEE) {
+        const employee = await prisma.employee.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!employee) {
+            throw new Error("Employee not found");
+        }
+
+        employeeIds.push(employee.id);
+    }
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const departmentHead = await prisma.departmentHead.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!departmentHead) {
+            throw new Error("Department head not found");
+        }
+
+        departmentIds.push(departmentHead.id);
+        const employees = await prisma.employee.findMany({
+            where: {
+                departmentId: departmentHead.departmentId,
+            }
+        });
+
+        employeeIds.push(...employees.map((emp) => emp.id));
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId: userId }
+        });
+
+        if (!hrManager) {
+            throw new Error("HR Manager not found");
+        }
+
+        if (hrManager.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
+            departmentIds.push(hrManager.departmentId);
+            const employees = await prisma.employee.findMany({
+                where: {
+                    departmentId: hrManager.departmentId,
+                }
+            });
+
+            employeeIds.push(...employees.map((emp) => emp.id));
+        }
+    }
+
+    // 3. TOTAL EMPLOYEES
+
+    const employeeWhere: EmployeeWhereInput = {
+        companyId: companyId,
+        status: EmployeeStatus.ACTIVE,
+    };
+
+    if (employeeIds.length > 0) {
+        employeeWhere.id = { in: employeeIds };
+    }
+
+    if (payload?.departmentId) {
+        employeeWhere.departmentId = payload.departmentId;
+    }
+
+    const totalEmployees = await prisma.employee.count({
+        where: employeeWhere
+    });
+
+    // 4. TOTAL DEPARTMENTS
+
+    const departmentWhere: DepartmentWhereInput = {
+        companyId: companyId,
+    };
+
+    if (departmentIds.length > 0) {
+        departmentWhere.id = { in: departmentIds };
+    }
+
+    if (payload?.departmentId) {
+        departmentWhere.id = payload.departmentId;
+    }
+
+    const totalDepartments = await prisma.department.count({
+        where: departmentWhere
+    });
+
+    // 5. PAYROLL DATA
+
+    const payrollWhere: PayrollWhereInput = {
+        companyId: companyId,
+        month: reportMonth,
+        year: reportYear,
+        status: {
+            not: PayrollStatus.CANCELLED,
+        }
+    };
+
+    if (employeeIds.length > 0) {
+        payrollWhere.employeeId = { in: employeeIds };
+    }
+
+    if (payload?.departmentId) {
+        payrollWhere.employee = {
+            departmentId: payload.departmentId
+        };
+    }
+
+    if (payload?.status) {
+        payrollWhere.status = payload.status;
+    }
+
+    // Get payrolls with employee details
+    const payrolls = await prisma.payroll.findMany({
+        where: payrollWhere,
+        include: {
+            employee: {
+                include: {
+                    department: true,
+                    designation: true,
+                    user: true
+                }
+            }
+        },
+    });
+
+    // 6. CALCULATE SUMMARY
+
+    const payrollSummary = {
+        totalGross: 0,
+        totalNet: 0,
+        totalTax: 0,
+        totalPF: 0,
+        totalDeductions: 0,
+        totalEmployees: payrolls.length,
+        averageSalary: 0
+    };
+
+    payrolls.forEach(p => {
+        payrollSummary.totalGross += p.grossSalary;
+        payrollSummary.totalNet += p.netSalary;
+        payrollSummary.totalTax += p.taxDeduction;
+        payrollSummary.totalPF += p.pfDeduction;
+        payrollSummary.totalDeductions += p.totalDeductions;
+    });
+
+    payrollSummary.averageSalary = payrollSummary.totalEmployees > 0
+        ? payrollSummary.totalNet / payrollSummary.totalEmployees
+        : 0;
+
+    // 8. STATUS WISE BREAKDOWN
+
+    const statusWise = {
+        draft: payrolls.filter(p => p.status === PayrollStatus.DRAFT).length,
+        approved: payrolls.filter(p => p.status === PayrollStatus.APPROVED).length,
+        paid: payrolls.filter(p => p.status === PayrollStatus.PAID).length,
+        cancelled: payrolls.filter(p => p.status === PayrollStatus.CANCELLED).length
+    };
+
+    return {
+        period: `${reportMonth}/${reportYear}`,
+        totalEmployees,
+        totalDepartments,
+        summary: payrollSummary,
+        statusWise,
+        data: payrolls,
+    };
+};
+
 export const statsService = {
     getDashboardStatsFromDB,
     getDepartmentStatsFromDB,
     getAttendanceStatsFromDB,
     getLeaveStatsFromDB,
+    getPayrollStatsFromDB,
 }

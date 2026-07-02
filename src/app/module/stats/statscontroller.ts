@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { statsService } from "./stats.service";
 import status from "http-status";
-import { Role } from "../../../generated/prisma/enums";
+import { PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { sendResponse } from "../../utils/sendResponse";
 
 const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
@@ -53,9 +53,27 @@ const getLeaveStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getPayrollStats = catchAsync(async (req: Request, res: Response) => {
+    const { companyId, userId, role } = req.user;
+
+    const month = req.query.month ? parseInt(req.query.month as string) : undefined;
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+    const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
+    const payrollStatus = typeof req.query.status === "string" ? (req.query.status as PayrollStatus) : undefined;
+
+    const result = await statsService.getPayrollStatsFromDB(companyId, userId, role as Role, { month, year, departmentId, status: payrollStatus });
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Payroll stats fetched successfully",
+        data: result,
+    });
+});
+
 export const statsController = {
     getDashboardStats,
     getDepartmentStats,
     getAttendanceStats,
     getLeaveStats,
+    getPayrollStats,
 };
