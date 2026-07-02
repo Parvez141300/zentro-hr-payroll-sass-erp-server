@@ -316,6 +316,10 @@ const resetPasswordInBetterAuth = async (email: string, otp: string, newPassword
     },
   });
 
+  if (!result.success) {
+    throw new Error(`Password reset failed because otp expired or invalid`);
+  }
+
   await prisma.session.deleteMany({
     where: {
       userId: isUserExist.id,
