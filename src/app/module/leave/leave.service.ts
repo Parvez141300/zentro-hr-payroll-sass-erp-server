@@ -1,6 +1,7 @@
 import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/client";
 import { HrScope, LeaveStatus, Role } from "../../../generated/prisma/enums";
 import { LeaveUpdateInput, LeaveWhereInput } from "../../../generated/prisma/models";
+import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeavesPayload, IUpdateLeavePayload } from "./leave.interface"
 import { totalDaysForLeaveCalculation } from "./leave.utils";
@@ -421,6 +422,10 @@ const employeeLeaveUpdateInDB = async (companyId: string, leaveId: string, paylo
             ...payload,
         },
     });
+
+    if (updateLeave.id && isExistLeave.attachmentUrl) {
+        await deleteFileFromCloudinary(isExistLeave.attachmentUrl);
+    }
 
     return updateLeave;
 };

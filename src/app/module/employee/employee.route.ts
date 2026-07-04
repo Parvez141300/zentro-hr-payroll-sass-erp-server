@@ -28,7 +28,7 @@ router.patch(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE),
     multerUploadService.single("file"),
     updateProfileMiddlewareSecond,
-    // below dosen't multer dosen't work
+    // alternative best to use is below
     // multerUpload.fields([{ name: "file", maxCount: 1 }]), 
     // updateProfileMiddleware,
     employeeController.updateEmployee
