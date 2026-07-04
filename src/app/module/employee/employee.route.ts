@@ -9,6 +9,8 @@ import { Role } from "../../../generated/prisma/enums";
 import { Router } from "express";
 import { updateProfileMiddlewareSecond } from "../../middleware/updateProfileMiddlewareSecond";
 import { multerUploadService } from "../../config/cloudinary.utils";
+// import { multerUpload } from "../../config/multer.config";
+// import { updateProfileMiddleware } from "../../middleware/updateProfileMiddleware";
 
 const router = Router();
 
@@ -24,10 +26,11 @@ router.get(
 router.patch(
     "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE),
-    // multerUpload.fields([{ name: "profilePhoto", maxCount: 1 }]),
     multerUploadService.single("file"),
-    // updateProfileMiddleware,
     updateProfileMiddlewareSecond,
+    // below dosen't multer dosen't work
+    // multerUpload.fields([{ name: "file", maxCount: 1 }]), 
+    // updateProfileMiddleware,
     employeeController.updateEmployee
 );
 router.delete(

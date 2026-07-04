@@ -11,13 +11,13 @@ export const updateProfileMiddleware = async (req: Request, res: Response, next:
 
         const files = req.files;
 
-        console.log(files);
+        console.log("this is from update profile middleware files is from postman:" , req.file);
 
-        if (files && typeof files === 'object' && !Array.isArray(files) && files.profilePhoto?.[0]) {
+        if (files && typeof files === 'object' && !Array.isArray(files) && files.file?.[0]) {
             if (!payload.info) {
                 payload.info = {};
             }
-            payload.info.photoUrl = files.profilePhoto[0].path;
+            payload.info.photoUrl = files.file[0].path;
         }
 
         req.body = payload.info;

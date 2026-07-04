@@ -47,20 +47,25 @@ export const uploadFileToCloudinary = async (buffer: Buffer, fileName: string) =
 
 export const deleteFileFromCloudinary = async (url: string) => {
     try {
-        // eslint-disable-next-line no-useless-escape
-        const regex = /\/([^\/]+)\.[a-zA-Z0-9]+$/;
+        // Captures everything after /upload/v<version>/ up to the file extension
+        // This correctly includes folder paths in the public_id
+        const regex = /\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/;
         const match = url.match(regex);
 
         if (match && match[1]) {
-            const publicId = match[1];
-            await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
-            console.log(`File ${publicId} is deleted from cloudinary`);
+            const publicId = match[1]; // e.g. zentro-hr-payroll-sass/images/y4rwn6wu328-...-unsplash
+            const extension = url.split(".").pop()?.toLowerCase();
+            const resourceType = extension === "pdf" ? "raw" : "image";
+
+            const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+            console.log("Cloudinary delete result:", result); // check: should be { result: "ok" }
+        } else {
+            console.warn("Could not parse public ID from URL:", url);
         }
     } catch (error: any) {
-        console.log('error from deleting file upload cloudinary: ', error);
-        throw new Error("Failed to delete file from cloudinary", error.message);
+        console.log("error from deleting file from cloudinary:", error);
     }
-}
+};
 
 export const cloudinaryUpload = cloudinary;
 
