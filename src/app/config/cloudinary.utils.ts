@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { v2 as cloudinary } from "cloudinary";
 import { envVars } from "../utils/env";
+import multer from "multer";
 
 cloudinary.config({
     cloud_name: envVars.CLOUDINARY.CLOUDINARY_CLOUD_NAME,
@@ -30,11 +31,12 @@ export const uploadFileToCloudinary = async (buffer: Buffer, fileName: string) =
     return new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream({
             resource_type: "auto",
-            public_id: `cure-point-care/${folder}/${uniqueName}`,
-            folder: `cure-point-care/${folder}`,
+            public_id: uniqueName,
+            folder: `zentro-hr-payroll-sass/${folder}`,
         },
             (error, result) => {
                 if (error) {
+                    console.error("Error uploading file to Cloudinary:", error);
                     return reject(error);
                 }
                 resolve(result);
@@ -61,3 +63,5 @@ export const deleteFileFromCloudinary = async (url: string) => {
 }
 
 export const cloudinaryUpload = cloudinary;
+
+export const multerUploadService = multer({ storage: multer.memoryStorage() });
