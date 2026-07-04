@@ -1,5 +1,6 @@
 import { Role } from "../../../generated/prisma/enums";
 import { HrManagerWhereInput } from "../../../generated/prisma/models";
+import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryHRManagerPayload, IUpdateHRManagerPayload } from "./hrManager.interface";
 
@@ -140,6 +141,10 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
             return uHr;
         });
 
+        if(updateHr.userId && isExistHr.photoUrl){
+            await deleteFileFromCloudinary(isExistHr.photoUrl);
+        }
+
         return updateHr;
     }
     else {
@@ -174,6 +179,10 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
 
             return uHr;
         });
+
+        if(updateHr.userId && isExistHr.photoUrl){
+            await deleteFileFromCloudinary(isExistHr.photoUrl);
+        }
 
         return updateHr;
     }

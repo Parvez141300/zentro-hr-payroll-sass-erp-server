@@ -1,5 +1,6 @@
 import { Role } from "../../../generated/prisma/enums";
 import { AccountantWhereInput } from "../../../generated/prisma/models";
+import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryAccountantPayload, IUpdateAccountantPayload } from "./accountant.interface";
 
@@ -78,11 +79,11 @@ const getAccountOwnerFromDB = async (accountId: string, userId: string) => {
     return accountant;
 }
 
-const updateCompanyAccountantInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateAccountantPayload) => {
+const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, role: Role, payload: IUpdateAccountantPayload) => {
     const isExistAccountant = await prisma.accountant.findUnique({
         where: {
             companyId: companyId,
-            userId: userId
+            id: accountantId
         }
     });
 
@@ -94,25 +95,35 @@ const updateCompanyAccountantInDB = async (companyId: string, userId: string, ro
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    userId: isExistAccountant.userId,
+                    id: accountantId
                 },
                 data: {
                     ...payload,
                 }
             });
 
+            const userData = await tx.user.findUnique({
+                where: {
+                    id: accountant.userId
+                }
+            });
+
             await tx.user.update({
                 where: {
-                    id: isExistAccountant.userId,
+                    id: accountant.userId
                 },
                 data: {
-                    name: payload.name || isExistAccountant?.name,
-                    image: payload.photoUrl || isExistAccountant?.photoUrl,
+                    name: payload.name || userData?.name,
+                    image: payload.photoUrl || userData?.image,
                 }
             });
 
             return accountant;
         });
+
+        if (updateAccountant.userId && isExistAccountant.photoUrl) {
+            await deleteFileFromCloudinary(isExistAccountant.photoUrl);
+        }
 
         return updateAccountant;
     }
@@ -120,7 +131,7 @@ const updateCompanyAccountantInDB = async (companyId: string, userId: string, ro
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    id: isExistAccountant.id,
+                    id: accountantId
                 },
                 data: {
                     name: payload.name || isExistAccountant.name,
@@ -133,18 +144,29 @@ const updateCompanyAccountantInDB = async (companyId: string, userId: string, ro
                 }
             });
 
+            const userData = await tx.user.findUnique({
+                where: {
+                    id: accountant.userId
+                }
+            });
+
             await tx.user.update({
                 where: {
-                    id: isExistAccountant.userId
+                    id: accountant.userId
                 },
                 data: {
-                    name: payload.name || isExistAccountant?.name,
-                    image: payload.photoUrl || isExistAccountant?.photoUrl,
+                    name: payload.name || userData?.name,
+                    image: payload.photoUrl || userData?.image,
                 }
             });
 
             return accountant;
         });
+
+        if (updateAccountant.userId && isExistAccountant.photoUrl) {
+            await deleteFileFromCloudinary(isExistAccountant.photoUrl);
+        }
+
         return updateAccountant;
     }
 };

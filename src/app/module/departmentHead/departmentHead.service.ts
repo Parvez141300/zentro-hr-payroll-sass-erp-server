@@ -1,5 +1,6 @@
 import { Role } from "../../../generated/prisma/enums";
 import { DepartmentHeadWhereInput } from "../../../generated/prisma/models";
+import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryDepartmentHeadPayload, IUpdateDepartmentHeadPayload } from "./departmentHead.interface";
 
@@ -132,6 +133,11 @@ const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHead
 
             return departmentHead;
         });
+
+        if (updateDepartmentHead.userId && isExistDepartmentHead.photoUrl) {
+            await deleteFileFromCloudinary(isExistDepartmentHead.photoUrl);
+        }
+
         return updateDepartmentHead;
     }
     else {
@@ -168,6 +174,11 @@ const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHead
 
             return departmentHead;
         });
+
+        if (updateDepartmentHead.userId && isExistDepartmentHead.photoUrl) {
+            await deleteFileFromCloudinary(isExistDepartmentHead.photoUrl);
+        }
+
         return updateDepartmentHead;
     }
 }

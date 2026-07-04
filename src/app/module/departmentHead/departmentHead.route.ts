@@ -2,6 +2,8 @@ import { Router } from "express";
 import { departmentHeadController } from "./departmentHead.controller";
 import { checkAuthMiddleware } from "../../middleware/checkAuthMiddleware";
 import { Role } from "../../../generated/prisma/enums";
+import { multerUploadService } from "../../config/cloudinary.utils";
+import { updateProfileMiddlewareSecond } from "../../middleware/updateProfileMiddlewareSecond";
 
 const router = Router();
 
@@ -16,8 +18,10 @@ router.get(
     departmentHeadController.getDepartmentHeadOwnProfile
 );
 router.patch(
-    "/",
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.DEPARTMENT_HEAD),
+    multerUploadService.single("file"),
+    updateProfileMiddlewareSecond,
     departmentHeadController.updateCompanyDepartmentHead
 );
 router.delete(
