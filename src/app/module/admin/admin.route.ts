@@ -2,6 +2,8 @@ import { Router } from "express";
 import { adminController } from "./admin.controller";
 import { checkAuthMiddleware } from "../../middleware/checkAuthMiddleware";
 import { Role } from "../../../generated/prisma/enums";
+import { multerUploadService } from "../../config/cloudinary.utils";
+import { updateProfileMiddlewareSecond } from "../../middleware/updateProfileMiddlewareSecond";
 
 const router = Router();
 
@@ -18,14 +20,18 @@ router.get(
 );
 
 router.patch(
-    "/super-admin/:id",
+    "/super-admin",
     checkAuthMiddleware(Role.Super_ADMIN),
+    multerUploadService.single("file"),
+    updateProfileMiddlewareSecond,
     adminController.updateCompanySuperAdminOwnProfile
 );
 
 router.patch(
-    "/platform-super-admin/:id",
+    "/platform-super-admin",
     checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
+    multerUploadService.single("file"),
+    updateProfileMiddlewareSecond,
     adminController.updatePlatformSuperAdminProfile
 );
 

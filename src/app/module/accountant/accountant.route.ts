@@ -16,7 +16,7 @@ router.get(
     accountantController.getAccountantOwnProfile
 );
 router.patch(
-    "/update-company-accountant/:id",
+    "/update-company-accountant",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     accountantController.updateCompanyAccountant
 );

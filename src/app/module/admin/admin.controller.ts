@@ -5,10 +5,9 @@ import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 
 const updateCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: Response) => {
-    const { id: adminId } = req.params;
     const user = req.user;
     const payload = req.body;
-    const result = await adminService.updateCompanySuperAdminOwnProfileInDB(user.companyId, adminId as string, payload);
+    const result = await adminService.updateCompanySuperAdminOwnProfileInDB(user.companyId, user.userId as string, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -18,9 +17,9 @@ const updateCompanySuperAdminOwnProfile = catchAsync(async (req: Request, res: R
 });
 
 const updatePlatformSuperAdminProfile = catchAsync(async (req: Request, res: Response) => {
-    const { id: adminId } = req.params;
+    const user = req.user;
     const payload = req.body;
-    const result = await adminService.updatePlatformSuperAdminProfileInDB( adminId as string, payload);
+    const result = await adminService.updatePlatformSuperAdminProfileInDB( user.userId as string, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

@@ -78,11 +78,11 @@ const getAccountOwnerFromDB = async (accountId: string, userId: string) => {
     return accountant;
 }
 
-const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, role: Role, payload: IUpdateAccountantPayload) => {
+const updateCompanyAccountantInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateAccountantPayload) => {
     const isExistAccountant = await prisma.accountant.findUnique({
         where: {
             companyId: companyId,
-            id: accountantId
+            userId: userId
         }
     });
 
@@ -94,26 +94,20 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    id: accountantId
+                    userId: isExistAccountant.userId,
                 },
                 data: {
                     ...payload,
                 }
             });
 
-            const userData = await tx.user.findUnique({
-                where: {
-                    id: accountant.userId
-                }
-            });
-
             await tx.user.update({
                 where: {
-                    id: accountant.userId
+                    id: isExistAccountant.userId,
                 },
                 data: {
-                    name: payload.name || userData?.name,
-                    image: payload.photoUrl || userData?.image,
+                    name: payload.name || isExistAccountant?.name,
+                    image: payload.photoUrl || isExistAccountant?.photoUrl,
                 }
             });
 
@@ -126,7 +120,7 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    id: accountantId
+                    id: isExistAccountant.id,
                 },
                 data: {
                     name: payload.name || isExistAccountant.name,
@@ -139,19 +133,13 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
                 }
             });
 
-            const userData = await tx.user.findUnique({
-                where: {
-                    id: accountant.userId
-                }
-            });
-
             await tx.user.update({
                 where: {
-                    id: accountant.userId
+                    id: isExistAccountant.userId
                 },
                 data: {
-                    name: payload.name || userData?.name,
-                    image: payload.photoUrl || userData?.image,
+                    name: payload.name || isExistAccountant?.name,
+                    image: payload.photoUrl || isExistAccountant?.photoUrl,
                 }
             });
 

@@ -1,7 +1,8 @@
+import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IUpdateAdminPayload } from "./admin.interface";
 
-const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId: string, payload: IUpdateAdminPayload) => {
+const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, userId: string, payload: IUpdateAdminPayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
             id: companyId
@@ -12,9 +13,9 @@ const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId:
         throw new Error("Company not found");
     }
 
-    const isExistAdmin = await prisma.user.findUnique({
+    const isExistAdmin = await prisma.superAdmin.findUnique({
         where: {
-            id: adminId,
+            userId: userId,
             companyId: companyId
         }
     });
@@ -26,7 +27,7 @@ const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId:
     const updateAdmin = await prisma.$transaction(async (tx) => {
         const uAdmin = await tx.superAdmin.update({
             where: {
-                userId: adminId
+                userId: isExistAdmin.userId,
             },
             data: {
                 ...payload,
@@ -35,25 +36,29 @@ const updateCompanySuperAdminOwnProfileInDB = async (companyId: string, adminId:
 
         await tx.user.update({
             where: {
-                id: adminId
+                id: isExistAdmin.userId
             },
             data: {
                 name: payload.name || isExistAdmin.name,
-                image: payload.photoUrl || isExistAdmin.image,
+                image: payload.photoUrl || isExistAdmin.photoUrl,
             }
         });
 
         return uAdmin;
     });
 
+    if(updateAdmin.userId && isExistAdmin.photoUrl) {
+        await deleteFileFromCloudinary(isExistAdmin.photoUrl);
+    }
+
     return updateAdmin;
 }
 
-const updatePlatformSuperAdminProfileInDB = async (adminId: string, payload: IUpdateAdminPayload) => {
+const updatePlatformSuperAdminProfileInDB = async (userId: string, payload: IUpdateAdminPayload) => {
 
-    const isExistAdmin = await prisma.user.findUnique({
+    const isExistAdmin = await prisma.platformSuperAdmin.findUnique({
         where: {
-            id: adminId,
+            userId: userId,
         }
     });
 
@@ -64,7 +69,7 @@ const updatePlatformSuperAdminProfileInDB = async (adminId: string, payload: IUp
     const updateAdmin = await prisma.$transaction(async (tx) => {
         const uAdmin = await tx.platformSuperAdmin.update({
             where: {
-                userId: adminId
+                userId: userId
             },
             data: {
                 ...payload,
@@ -73,16 +78,20 @@ const updatePlatformSuperAdminProfileInDB = async (adminId: string, payload: IUp
 
         await tx.user.update({
             where: {
-                id: adminId
+                id: userId
             },
             data: {
                 name: payload.name || isExistAdmin.name,
-                image: payload.photoUrl || isExistAdmin.image,
+                image: payload.photoUrl || isExistAdmin.photoUrl,
             }
         });
 
         return uAdmin;
     });
+
+    if(updateAdmin.userId && isExistAdmin.photoUrl) {
+        await deleteFileFromCloudinary(isExistAdmin.photoUrl);
+    }
 
     return updateAdmin;
 }
