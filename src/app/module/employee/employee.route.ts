@@ -1,8 +1,10 @@
-import { Router } from "express";
+
 import { employeeController } from "./employee.controller";
 import { checkAuthMiddleware } from "../../middleware/checkAuthMiddleware";
 import { Role } from "../../../generated/prisma/enums";
+import { updateProfileMiddleware } from "../../middleware/updateProfileMiddleware";
 import { multerUpload } from "../../config/multer.config";
+import { Router } from "express";
 
 const router = Router();
 
@@ -18,7 +20,8 @@ router.get(
 router.patch(
     "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE),
-    multerUpload.single("file"), 
+    multerUpload.fields([{name: "profilePhoto", maxCount: 1}]),
+    updateProfileMiddleware,
     employeeController.updateEmployee
 );
 router.delete(
@@ -26,5 +29,6 @@ router.delete(
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     employeeController.deleteEmployee
 );
+
 
 export const employeeRoute = router;

@@ -14,6 +14,7 @@ app.set("views", path.resolve(process.cwd(), "src/app/templates"));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
 

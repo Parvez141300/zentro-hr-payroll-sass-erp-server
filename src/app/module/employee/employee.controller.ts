@@ -41,10 +41,9 @@ const updateEmployee = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
     const role = user.role as Role;
     const { id: employeeId } = req.params;
-    const payload = {
-        ...req.body,
-        photoUrl: req.file?.path,
-    }
+
+    const payload = req.body;
+
     const result = await employeeService.updateEmployeeInDB(user.companyId, employeeId as string, role, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,

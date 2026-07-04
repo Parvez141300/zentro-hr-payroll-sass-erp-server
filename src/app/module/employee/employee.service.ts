@@ -273,7 +273,7 @@ const updateEmployeeInDB = async (companyId: string, employeeId: string, role: R
 
             await tx.user.update({
                 where: {
-                    id: employeeId,
+                    id: employeeData.userId,
                     companyId: companyId,
                 },
                 data: {
@@ -314,7 +314,7 @@ const updateEmployeeInDB = async (companyId: string, employeeId: string, role: R
 
             await tx.user.update({
                 where: {
-                    id: employeeId,
+                    id: employeeData.userId,
                     companyId: companyId,
                 },
                 data: {
