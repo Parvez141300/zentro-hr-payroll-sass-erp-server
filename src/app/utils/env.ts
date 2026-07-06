@@ -4,6 +4,8 @@ dotenv.config();
 
 interface IEnvVarialbleConfig {
     NODE_ENV: string;
+    FRONTEND_URL: string;
+    BACKEND_URL: string;
     PORT: string;
     DATABASE_URL: string;
     BETTER_AUTH_URL: string;
@@ -11,7 +13,6 @@ interface IEnvVarialbleConfig {
     PLATFORM_SUPER_ADMIN_NAME: string;
     PLATFORM_SUPER_ADMIN_EMAIL: string;
     PLATFORM_SUPER_ADMIN_PASSWORD: string;
-    FRONTEND_URL: string;
     JWT_TOKEN_SECRET: string;
     JWT_ACCESS_TOKEN_EXPIRATION_TIME: string;
     JWT_REFRESH_TOKEN_EXPIRATION_TIME: string;
@@ -38,6 +39,8 @@ interface IEnvVarialbleConfig {
 const loadEnvVariables = (): IEnvVarialbleConfig => {
     const requireEnvVariables = [
         "NODE_ENV",
+        "FRONTEND_URL",
+        "BACKEND_URL",
         "PORT",
         "DATABASE_URL",
         "BETTER_AUTH_URL",
@@ -45,7 +48,6 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         "PLATFORM_SUPER_ADMIN_NAME",
         "PLATFORM_SUPER_ADMIN_EMAIL",
         "PLATFORM_SUPER_ADMIN_PASSWORD",
-        "FRONTEND_URL",
         "JWT_TOKEN_SECRET",
         "JWT_ACCESS_TOKEN_EXPIRATION_TIME",
         "JWT_REFRESH_TOKEN_EXPIRATION_TIME",
@@ -71,6 +73,7 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
 
     return {
         NODE_ENV: process.env.NODE_ENV as string,
+        BACKEND_URL: process.env.BACKEND_URL as string,
         PORT: process.env.PORT as string,
         DATABASE_URL: process.env.DATABASE_URL as string,
         BETTER_AUTH_URL: process.env.BETTER_AUTH_URL as string,
