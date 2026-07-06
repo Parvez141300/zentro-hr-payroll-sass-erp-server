@@ -14,6 +14,7 @@ import { attendanceRoute } from "../module/attendance/attendance.route";
 import { leaveTypeRoute } from "../module/leaveType/leaveType.route";
 import { leaveRoute } from "../module/leave/leave.route";
 import { payrollRoute } from "../module/payroll/payroll.route";
+import { stripeRoute } from "../module/stripe/stripe.route";
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use("/attendances", attendanceRoute);
 router.use("/leave-types", leaveTypeRoute);
 router.use("/leaves", leaveRoute);
 router.use("/payrolls", payrollRoute);
+router.use("/stripe", stripeRoute);
 
 export const indexRoute = router;

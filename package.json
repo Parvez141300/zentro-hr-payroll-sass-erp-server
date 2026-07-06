@@ -10,6 +10,7 @@
     "seed:platform_super_admin": "tsx ./src/scripts/seedPlatformSuperAdmin.ts",
     "seed:default_subscription_plans_config": "tsx ./src/scripts/seedDefaultSubscriptionPlansConfig.ts",
     "seed:default_leave_types": "tsx ./src/scripts/seedDefaultLeaveTypes.ts",
+    "stripe:webhook": "stripe listen --forward-to localhost:5000/api/v1/stripe/webhook",
     "lint": "eslint ./src/**/*",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",
@@ -41,6 +42,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.21.0",
+    "stripe": "^22.3.0",
     "tsx": "^4.22.4",
     "zod": "^4.4.3"
   },
