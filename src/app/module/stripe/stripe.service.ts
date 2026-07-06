@@ -1,4 +1,5 @@
-import { PaymentGateway, PaymentStatus, SubscriptionPlan } from "../../../generated/prisma/enums";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { PaymentGateway, PaymentStatus, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import { envVars } from "../../utils/env";
 import { ICreateStripeCheckoutSessionPayload } from "./stripe.interface";
@@ -88,8 +89,8 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
                     currency: "usd",
                     unit_amount: Math.round(isExistsSubscriptionPlanConfig.priceUSD * 100), // cents
                     recurring: { interval: "month" },
-                    product_data: { 
-                        name: `Zentro ${isExistsSubscriptionPlanConfig.name} Plan` 
+                    product_data: {
+                        name: `Zentro ${isExistsSubscriptionPlanConfig.name} Plan`
                     },
                 },
                 quantity: 1,
@@ -102,28 +103,9 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
             userId: isExistUser.id,
             companyId: isExistCompany.id,
             companyName: isExistCompany.name,
+            planName: isExistsSubscriptionPlanConfig.name,
             paymentId: payment.id,
         },
-    });
-
-    // update payment with stripe checkout session id
-    await prisma.payment.update({
-        where: {
-            id: payment.id,
-        },
-        data: {
-            stripePaymentIntentId: session.payment_intent as string,
-            stripeSubscriptionId: session.subscription as string,
-        }
-    });
-    // update company with stripe subscription id
-    await prisma.company.update({
-        where: {
-            id: isExistCompany.id,
-        },
-        data: {
-            stripeSubscriptionId: session.subscription as string,
-        }
     });
 
     return {
@@ -133,9 +115,106 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
     };
 };
 
-const handleStripeWebhookInDB = async (payload: Record<string, unknown>, signature: string) => {
+const handleStripeWebhookInDB = async (payload: any, signature: string) => {
     console.log(payload, signature, "this is from the stripe webhook");
-    return true;
+
+    let event: Stripe.Event;
+
+    if (!envVars.STRIPE.STRIPE_WEBHOOK_SECRET) {
+        throw new Error("Stripe webhook secret not found");
+    }
+
+    try {
+        event = stripe.webhooks.constructEvent(payload, signature, envVars.STRIPE.STRIPE_WEBHOOK_SECRET);
+    } catch (error: any) {
+        throw new Error("Stripe webhook error", error);
+    }
+
+    switch (event.type) {
+        case "checkout.session.completed": {
+            await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+            break;
+        }
+
+        case "checkout.session.expired": {
+            const session = event.data.object;
+            console.log(`Stripe checkout session expired: ${session.id}`);
+            break;
+        }
+
+        case "payment_intent.payment_failed": {
+            const paymentIntent = event.data.object;
+            console.log(`Stripe payment intent failed: ${paymentIntent.id}`);
+            break;
+        }
+
+        default:
+            console.log(`Unhandled Stripe event type: ${event.type}`);
+            break;
+    }
+
+    return { message: "Stripe webhook processed successfully event: " + event.id };
+};
+
+const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) => {
+    const { companyId, companyName, paymentId, planName } = session.metadata as Record<string, string>;
+
+    const result = await prisma.$transaction(async (tx) => {
+        const subscriptionPlanConfig = await tx.subscriptionPlanConfig.findUnique({
+            where: {
+                name: planName as SubscriptionPlan,
+            }
+        });
+
+        const payment = await tx.payment.update({
+            where: {
+                id: paymentId,
+            },
+            data: {
+                status: PaymentStatus.SUCCESS,
+                stripePaymentIntentId: session.payment_intent as string,
+                stripeSubscriptionId: session.subscription as string,
+                stripeInvoiceId: session.invoice as string,
+                paidAt: new Date(),
+                subscriptionStart: new Date(),
+                subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            }
+        });
+
+        const company = await tx.company.update({
+            where: {
+                id: companyId,
+                name: companyName,
+            },
+            data: {
+                subscriptionPlan: subscriptionPlanConfig!.name as SubscriptionPlan,
+                subscriptionStatus: SubscriptionStatus.ACTIVE,
+                subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                maxEmployees: subscriptionPlanConfig!.maxEmployees,
+                stripeSubscriptionId: session.subscription as string,
+            }
+        });
+
+        const subscriptionHistory = await tx.subscriptionHistory.create({
+            data: {
+                plan: subscriptionPlanConfig!.name as SubscriptionPlan,
+                status: SubscriptionStatus.ACTIVE,
+                companyId: companyId,
+                paymentId: payment.id,
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+            }
+        });
+
+        return {
+            companyId: company.id,
+            paymentId: payment.id,
+            subscriptionHistoryId: subscriptionHistory.id,
+            planName: subscriptionPlanConfig!.name as SubscriptionPlan
+        };
+    });
+
+    return result;
 };
 
 export const stripeService = {
