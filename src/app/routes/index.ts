@@ -16,6 +16,7 @@ import { leaveRoute } from "../module/leave/leave.route";
 import { payrollRoute } from "../module/payroll/payroll.route";
 import { stripeRoute } from "../module/stripe/stripe.route";
 import { sslCommerzRoute } from "../module/sslCommerz/sslCommerz.route";
+import { paymentRoute } from "../module/payment/payment.route";
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use("/leaves", leaveRoute);
 router.use("/payrolls", payrollRoute);
 router.use("/stripe", stripeRoute);
 router.use("/sslcommerz", sslCommerzRoute);
+router.use("/payments", paymentRoute);
 
 export const indexRoute = router;
