@@ -6,6 +6,8 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { envVars } from "./app/utils/env";
+import crone from "node-cron";
+import { companyService } from "./app/module/company/company.service";
 
 export const app: Application = express();
 
@@ -23,6 +25,16 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(cookieParser());
+
+// node cron job
+crone.schedule("*/5 * * * *", async () => {
+  try {
+    console.log("running a task every 5 minutes");
+    await companyService.cancelCompanySubscriptionInDB();
+  } catch (error) {
+    console.log("error from node cron job", error);
+  }
+});
 
 // api route
 app.use("/api/v1", indexRoute);

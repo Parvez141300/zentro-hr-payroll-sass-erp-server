@@ -1,6 +1,8 @@
-import { SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { Role, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { CompanyWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
+import { envVars } from "../../utils/env";
+import { sendEmail } from "../../utils/sendEmail";
 import { IGetCompanyPayload, IUpdateCompanyPayload } from "./company.interface"
 
 
@@ -120,10 +122,85 @@ const deleteCompany = async (id: string) => {
     return company;
 }
 
+const cancelCompanySubscriptionInDB = async () => {
+    const today = new Date();
+
+    const expiredCompanies = await prisma.company.findMany({
+        where: {
+            subscriptionStatus: SubscriptionStatus.ACTIVE,
+            subscriptionExpiry: {
+                lte: today
+            },
+            NOT: {
+                subscriptionPlan: SubscriptionPlan.FREE,
+            }
+        },
+        include: {
+            users: {
+                where: {
+                    role: Role.Super_ADMIN,
+                },
+                include: {
+                    superAdmin: true,
+                }
+            },
+        }
+    });
+
+    for (const company of expiredCompanies) {
+        await prisma.$transaction(async (tx) => {
+            await tx.company.update({
+                where: {
+                    id: company.id
+                },
+                data: {
+                    subscriptionStatus: SubscriptionStatus.EXPIRED,
+                    subscriptionPlan: SubscriptionPlan.FREE,
+                    maxEmployees: 10,
+                    stripeSubscriptionId: null,
+                }
+            });
+
+            await tx.subscriptionHistory.create({
+                data: {
+                    companyId: company.id,
+                    plan: SubscriptionPlan.FREE,
+                    status: SubscriptionStatus.EXPIRED,
+                    startDate: company.subscriptionExpiry || new Date(),
+                    // FREE plan never expires
+                    // No paymentId for automatic expiry
+                    endDate: new Date('2099-12-31'),
+                }
+            });
+
+            sendEmail({
+                to: company.users[0].email || company.email,
+                subject: "Subscription Expired",
+                templateName: "expiration",
+                templateData: {
+                    name: company.name,
+                    subscriptionPlan: company.subscriptionPlan,
+                    subscriptionStatus: SubscriptionStatus.EXPIRED,
+                    subscriptionExpiry: company.subscriptionExpiry?.toLocaleDateString(
+                        "en-GB",
+                        {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                        }
+                    ),
+                    renewSubscriptionUrl: `${envVars.FRONTEND_URL}/dashboard/subscription`
+                }
+            });
+        });
+    }
+}
+
 export const companyService = {
     getAllOrQueryCompaniesFromDB,
     getSingleCompanyFromDB,
     updateCompanyInDB,
     softDeleteCompany,
     deleteCompany,
+    cancelCompanySubscriptionInDB,
 }
