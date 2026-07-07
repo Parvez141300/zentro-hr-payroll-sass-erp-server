@@ -15,6 +15,7 @@ import { leaveTypeRoute } from "../module/leaveType/leaveType.route";
 import { leaveRoute } from "../module/leave/leave.route";
 import { payrollRoute } from "../module/payroll/payroll.route";
 import { stripeRoute } from "../module/stripe/stripe.route";
+import { sslCommerzRoute } from "../module/sslCommerz/sslCommerz.route";
 
 const router = Router();
 
@@ -34,5 +35,6 @@ router.use("/leave-types", leaveTypeRoute);
 router.use("/leaves", leaveRoute);
 router.use("/payrolls", payrollRoute);
 router.use("/stripe", stripeRoute);
+router.use("/sslcommerz", sslCommerzRoute);
 
 export const indexRoute = router;
