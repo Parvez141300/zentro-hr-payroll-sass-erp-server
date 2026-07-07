@@ -17,6 +17,7 @@ import { payrollRoute } from "../module/payroll/payroll.route";
 import { stripeRoute } from "../module/stripe/stripe.route";
 import { sslCommerzRoute } from "../module/sslCommerz/sslCommerz.route";
 import { paymentRoute } from "../module/payment/payment.route";
+import { subscriptionHistoryRoute } from "../module/subscriptionHistory/subscriptionHistory.route";
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use("/payrolls", payrollRoute);
 router.use("/stripe", stripeRoute);
 router.use("/sslcommerz", sslCommerzRoute);
 router.use("/payments", paymentRoute);
+router.use("/subscription-history", subscriptionHistoryRoute);
 
 export const indexRoute = router;
