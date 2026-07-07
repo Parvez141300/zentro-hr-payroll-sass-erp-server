@@ -33,7 +33,12 @@ interface IEnvVarialbleConfig {
     STRIPE: {
         STRIPE_SECRET_KEY: string;
         STRIPE_WEBHOOK_SECRET: string;
-    }
+    };
+    SSLCOMMERZ: {
+        SSLCOMMERZ_STORE_ID: string;
+        SSLCOMMERZ_STORE_PASSWORD: string;
+        SSLCOMMERZ_IS_LIVE: string;
+    };
 }
 
 const loadEnvVariables = (): IEnvVarialbleConfig => {
@@ -63,6 +68,9 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         "CLOUDINARY_API_SECRET",
         "STRIPE_SECRET_KEY",
         "STRIPE_WEBHOOK_SECRET",
+        "SSLCOMMERZ_STORE_ID",
+        "SSLCOMMERZ_STORE_PASSWORD",
+        "SSLCOMMERZ_IS_LIVE",
     ];
 
     requireEnvVariables.forEach((envVariable) => {
@@ -102,6 +110,11 @@ const loadEnvVariables = (): IEnvVarialbleConfig => {
         STRIPE: {
             STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY as string,
             STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET as string,
+        },
+        SSLCOMMERZ: {
+            SSLCOMMERZ_STORE_ID: process.env.SSLCOMMERZ_STORE_ID as string,
+            SSLCOMMERZ_STORE_PASSWORD: process.env.SSLCOMMERZ_STORE_PASSWORD as string,
+            SSLCOMMERZ_IS_LIVE: process.env.SSLCOMMERZ_IS_LIVE as string,
         },
     }
 }
