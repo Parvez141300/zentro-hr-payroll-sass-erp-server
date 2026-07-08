@@ -8,7 +8,7 @@
 
 1. [Project Overview](#1-project-overview)
 2. [Tech Stack](#2-tech-stack)
-3. [Role-Based Access Control (RBAC)](#5-role-based-access-control-rbac)
+3. [Role-Based Access Control (RBAC)](#6-role-based-access-control-rbac)
 4. [Role Profile Models](#4-role-profile-models)
 5. [Features by Module](#5-features-by-module)
 6. [Database Schema](#6-database-schema)
@@ -512,7 +512,7 @@ POST /api/platform/setup
 ## 7. Database Schema
 
 // ============================================
-// CORRECTED FULL SCHEMA
+// FULL SCHEMA
 // ============================================
 
 generator client {
@@ -528,12 +528,12 @@ datasource db {
 
 // Role Enum
 enum Role {
-  PLATFORM_SUPER_ADMIN  // 👈 Added: Owns the SaaS platform
-  SUPER_ADMIN
-  HR_MANAGER
-  ACCOUNTANT
-  DEPARTMENT_HEAD
-  EMPLOYEE
+    PLATFORM_SUPER_ADMIN
+    Super_ADMIN
+    HR_MANAGER
+    ACCOUNTANT
+    DEPARTMENT_HEAD
+    EMPLOYEE
 }
 
 // Gender Enum
@@ -628,516 +628,620 @@ enum HrScope {
 // ─── COMPANY (TENANT) ───────────────────────────────────
 
 model Company {
-  id                  String              @id @default(cuid())
-  name                String
-  logo                String?
-  address             String?
-  email               String?
-  phone               String?
-  taxId               String?
-  website             String?
-  fiscalYearStart     DateTime?
-  fiscalYearEnd       DateTime?
-  
-  // Subscription
-  subscriptionPlan    SubscriptionPlan    @default(FREE)
-  subscriptionStatus  SubscriptionStatus  @default(TRIAL)
-  subscriptionExpiry  DateTime?
-  maxEmployees        Int                 @default(10)
-  
-  // 🔐 Stripe fields
-  stripeCustomerId     String?             // Stripe customer ID
-  stripeSubscriptionId String?             // Stripe subscription ID
-  
-  // 🇧🇩 SSLCommerz fields (যোগ করতে হবে)
-  sslCommerzStoreId    String?             // SSLCommerz store ID for this company
-  sslCommerzCustomerId String?             // SSLCommerz customer reference
-  sslCommerzToken      String?             // Token for recurring payment (if supported)
-  
-  // Relations
-  users               User[]
-  superAdmins         SuperAdminProfile[]
-  hrManagers          HrManagerProfile[]
-  accountants         AccountantProfile[]
-  deptHeads           DeptHeadProfile[]
-  employees           EmployeeProfile[]
-  departments         Department[]
-  attendance          Attendance[]
-  leaves              Leave[]
-  payrolls            Payroll[]
-  payments            Payment[]
-  auditLogs           AuditLog[]
-  leaveTypes          LeaveType[]
-  subscriptionHistory SubscriptionHistory[]
-  
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+    id              String    @id @default(cuid())
+    name            String    @unique
+    logo            String?
+    address         String?
+    email           String    @unique
+    phone           String?
+    taxId           String?
+    website         String?
+    fiscalYearStart DateTime?
+    fiscalYearEnd   DateTime?
+
+    // Subscription
+    subscriptionPlan   SubscriptionPlan   @default(FREE)
+    subscriptionStatus SubscriptionStatus @default(TRIAL)
+    subscriptionExpiry DateTime?
+    maxEmployees       Int                @default(10)
+
+    // 🔐 Stripe fields
+    stripeCustomerId     String? // Stripe customer ID
+    stripeSubscriptionId String? // Stripe subscription ID
+
+    // 🇧🇩 SSLCommerz fields (যোগ করতে হবে)
+    sslCommerzStoreId    String? // SSLCommerz store ID for this company
+    sslCommerzCustomerId String? // SSLCommerz customer reference
+    sslCommerzToken      String? // Token for recurring payment (if supported)
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    users                 User[]
+    superAdmins           SuperAdmin[]
+    hrManagers            HrManager[]
+    departments           Department[]
+    designations          Designation[]
+    accountants           Accountant[]
+    departmentHeads       DepartmentHead[]
+    employees             Employee[]
+    attendances           Attendance[]
+    leaves                Leave[]
+    leaveTypes            LeaveType[]
+    payrolls              Payroll[]
+    subscriptionHistories SubscriptionHistory[]
+    payments              Payment[]
+
+    @@index([email], name: "idx_company_email")
+    @@index([isDeleted], name: "idx_doctor_isDeleted")
+    @@map("company")
 }
+
 
 // ─── BASE USER ─────────────────────────────────────────
 
 model User {
-  id                String              @id @default(cuid())
-  email             String
-  password          String
-  role              Role                @default(EMPLOYEE)
-  isActive          Boolean             @default(true)
-  lastLoginAt       DateTime?
-  
-  companyId         String
-  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  // Role profiles
-  platformSuperAdminProfile PlatformSuperAdminProfile?
-  superAdminProfile SuperAdminProfile?
-  hrManagerProfile  HrManagerProfile?
-  accountantProfile AccountantProfile?
-  deptHeadProfile   DeptHeadProfile?
-  employeeProfile   EmployeeProfile?
-  
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  
-  @@unique([email, companyId])
-  @@index([companyId])
-  @@index([role])
+  id            String    @id
+  name          String
+  email         String
+  role          Role      @default(EMPLOYEE)
+  isActive      Boolean   @default(true)
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  //relations
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  platformSuperAdmin PlatformSuperAdmin?
+  superAdmin         SuperAdmin?
+  hrManager          HrManager?
+  accountant         Accountant?
+  departmentHead     DepartmentHead?
+  employee           Employee?
+
+  @@unique([email])
+  @@index([email], name: "idx_user_email")
+  @@map("user")
 }
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
 
 // ─── ROLE PROFILES (with companyId) ────────────────────
 
 // Platform Admin Model
-model PlatformSuperAdminProfile {
-  id              String         @id @default(cuid())
-  userId          String         @unique
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName        String
-  email           String
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  @@index([userId])
+model PlatformSuperAdmin {
+    id String @id @default(cuid())
+
+    name String
+    email    String
+    phone    String?
+    photoUrl String?
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([email], name: "idx_platform_super_admin_email")
+    @@index([userId], name: "idx_platform_super_admin_userId")
+    @@map("platform_super_admin")
 }
 
-model SuperAdminProfile {
-  id                  String             @id @default(cuid())
-  userId              String             @unique
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  fullName            String
-  phone               String?
-  photoUrl            String?
-  
-  companyId           String
-  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  twoFactorEnabled    Boolean            @default(false)
-  
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  
-  @@index([companyId])
+
+model SuperAdmin {
+    id     String @id @default(cuid())
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    name String
+    phone    String?
+    photoUrl String?
+
+    isDeleted Boolean   @default(false)
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    // relation
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([userId], name: "idx_superAdmin_userId")
+    @@index([companyId], name: "idx_superAdmin_companyId")
+    @@map("super_admin")
 }
 
-model HrManagerProfile {
-  id                  String    @id @default(cuid())
-  userId              String    @unique
-  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  fullName            String
-  phone               String?
-  photoUrl            String?
-  employeeCode        String?
-  
-  // 🆕 Job Information
-  designation         String?
-  joinDate            DateTime?
-  hrLicenseNumber     String?
-  officePhone         String?
-  bio                 String?
-  
-  // 🆕 Department Assignment (Optional)
-  // NULL means Company Level HR Manager (manages all departments)
-  // NOT NULL means Department-specific HR Manager
-  departmentId        String?
-  department          Department? @relation(fields: [departmentId], references: [id])
-      
-  designationId  String?
-  designation    Designation?   @relation(fields: [designationId], references: [id])
-  
-  // 🆕 Scope of responsibility
-  scope               HrScope     @default(COMPANY_WIDE)
-  
-  companyId           String
-  company             Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  
-  @@index([companyId])
-  @@index([employeeCode])
-  @@index([departmentId])
-  @@index([scope])
+model HrManager {
+    id String @id @default(cuid())
+
+    name     String
+    phone        String?
+    photoUrl     String?
+    employeeCode String?
+
+    // 🆕 Job Information
+    joinDate        DateTime?
+    hrLicenseNumber String?
+    officePhone     String?
+    bio             String?
+    // 🆕 Scope of responsibility
+    scope           HrScope   @default(COMPANY_WIDE)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    // 🆕 Department Assignment (Optional)
+    // NULL means Company Level HR Manager (manages all departments)
+    // NOT NULL means Department-specific HR Manager
+    departmentId String?
+    department   Department? @relation(fields: [departmentId], references: [id])
+
+    designationId String?
+    designation   Designation? @relation(fields: [designationId], references: [id])
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([companyId], name: "idx_hrManager_companyId")
+    @@index([employeeCode], name: "idx_hrManager_employeeCode")
+    @@index([departmentId], name: "idx_hrManager_departmentId")
+    @@map("hr_manager")
 }
 
-model AccountantProfile {
-  id                  String             @id @default(cuid())
-  userId              String             @unique
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  fullName            String
-  phone               String?
-  photoUrl            String?
-  employeeCode        String?
-  joinDate            DateTime?
-  caLicenseNumber     String?
-  taxIdNumber         String?
-  bankName            String?
-  bankAccount         String?
-  fiscalYearAccess    Boolean            @default(true)
-  
-  companyId           String
-  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  
-  @@index([companyId])
+
+model Accountant {
+    id String @id @default(cuid())
+
+    name         String
+    phone            String?
+    photoUrl         String?
+    employeeCode     String?
+    joinDate         DateTime?
+    caLicenseNumber  String?
+    taxIdNumber      String?
+    bankName         String?
+    bankAccount      String?
+    fiscalYearAccess Boolean   @default(true)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+
+    @@index([companyId], name: "idx_accountant_companyId")
+    @@map("accountant")
 }
 
-model DepartmentHeadProfile {
-  id                  String             @id @default(cuid())
-  userId              String             @unique
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  fullName            String
-  phone               String?
-  photoUrl            String?
-  employeeCode        String?
-  departmentId        String?
-  department          Department?        @relation(fields: [departmentId], references: [id])
-  designation         String?
-  joinDate            DateTime?
-  officeLocation      String?
-  linkedinUrl         String?
-  bio                 String?
-  
-  companyId           String
-  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  designationId  String?
-  designation    Designation?   @relation(fields: [designationId], references: [id])
-  
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  
-  @@index([companyId])
-  @@index([departmentId])
+model DepartmentHead {
+    id     String @id @default(cuid())
+
+    name       String
+    phone          String?
+    photoUrl       String?
+    employeeCode   String?
+    joinDate       DateTime?
+    officeLocation String?
+    linkedinUrl    String?
+    bio            String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    departmentId String?
+    department   Department? @relation(fields: [departmentId], references: [id])
+
+    designationId String?
+    designation   Designation? @relation(fields: [designationId], references: [id])
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+
+    @@index([companyId], name: "idx_departmentHead_companyId")
+    @@index([departmentId], name: "idx_departmentHead_departmentId")
+    @@map("department_head")
 }
 
-model EmployeeProfile {
-  id                  String             @id @default(cuid())
-  userId              String             @unique
-  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Personal Info
-  firstName           String
-  lastName            String
-  phone               String?
-  photoUrl            String?
-  dateOfBirth         DateTime?
-  gender              Gender?
-  address             String?
-  nidNumber           String?
-  bloodGroup          String?
-  
-  // Job Info
-  employeeCode        String
-  departmentId        String?
-  department          Department?        @relation(fields: [departmentId], references: [id])
-  designationId       String?
-  designation         Designation?       @relation(fields: [designationId], references: [id])
-  joinDate            DateTime
-  employmentType      EmploymentType     @default(FULL_TIME)
-  status              EmployeeStatus     @default(ACTIVE)
-  
-  // Salary Info
-  basicSalary         Float
-  houseAllowance      Float              @default(0)
-  medicalAllowance    Float              @default(0)
-  transportAllowance  Float              @default(0)
-  
-  // Bank Info
-  bankName            String?
-  bankAccount         String?
-  
-  // Emergency Contact
-  emergencyName       String?
-  emergencyPhone      String?
-  emergencyRelation   String?
-  
-  companyId           String
-  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  attendances         Attendance[]
-  leaves              Leave[]
-  payrolls            Payroll[]
-  
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  
-  @@unique([employeeCode, companyId])
-  @@index([companyId])
-  @@index([departmentId])
-  @@index([designationId])
-  @@index([status])
-  @@index([joinDate])
+model Employee {
+    id String @id @default(cuid())
+
+    // Personal Info
+    name    String
+    phone       String?
+    photoUrl    String?
+    dateOfBirth DateTime?
+    gender      Gender?
+    address     String?
+    nidNumber   String?
+    bloodGroup  String?
+
+    // Job Info
+    employeeCode   String?
+    joinDate       DateTime?
+    employmentType EmploymentType @default(FULL_TIME)
+    status         EmployeeStatus @default(ACTIVE)
+
+    // Salary Info
+    basicSalary        Float
+    houseAllowance     Float @default(0)
+    medicalAllowance   Float @default(0)
+    transportAllowance Float @default(0)
+
+    // Bank Info
+    bankName    String?
+    bankAccount String?
+
+    // Emergency Contact
+    emergencyName     String?
+    emergencyPhone    String?
+    emergencyRelation String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    departmentId String?
+    department   Department? @relation(fields: [departmentId], references: [id])
+
+    designationId String?
+    designation   Designation? @relation(fields: [designationId], references: [id])
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    attendances Attendance[]
+    leaves      Leave[]
+    payrolls    Payroll[]
+
+    @@unique([employeeCode, companyId])
+    @@index([departmentId], name: "idx_employee_departmentId")
+    @@index([designationId], name: "idx_employee_designationId")
+    @@map("employee")
 }
+
 
 // ─── DEPARTMENT & DESIGNATION ──────────────────────────
 
-model Department {
-  id              String            @id @default(cuid())
-  name            String
-  description     String?
-  
-  companyId       String
-  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  employees       EmployeeProfile[]
-  departmentHeads       DepartmentHeadProfile[]
-  designations    Designation[]
-  
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  
-  @@unique([name, companyId])
-  @@index([companyId])
+model DepartmentHead {
+    id     String @id @default(cuid())
+
+    name       String
+    phone          String?
+    photoUrl       String?
+    employeeCode   String?
+    joinDate       DateTime?
+    officeLocation String?
+    linkedinUrl    String?
+    bio            String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    userId String @unique
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    departmentId String?
+    department   Department? @relation(fields: [departmentId], references: [id])
+
+    designationId String?
+    designation   Designation? @relation(fields: [designationId], references: [id])
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+
+    @@index([companyId], name: "idx_departmentHead_companyId")
+    @@index([departmentId], name: "idx_departmentHead_departmentId")
+    @@map("department_head")
 }
 
 model Designation {
-  id              String            @id @default(cuid())
-  title           String
-  description     String?
-  departmentId    String
-  department      Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  
-  companyId       String
-  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  employees       EmployeeProfile[]
-  
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  
-  @@unique([title, departmentId, companyId])
-  @@index([companyId])
-  @@index([departmentId])
+    id           String  @id @default(cuid())
+    title        String
+    description  String?
+    departmentId String
+    isDeleted    Boolean @default(false)
+
+    deletedAt DateTime?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+
+    //   relations
+    department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    departmentHeads DepartmentHead[]
+    hrManagers HrManager[]
+    employees       Employee[]
+
+    @@unique([title, departmentId, companyId])
+    @@index([companyId], name: "idx_designation_companyId")
+    @@index([departmentId], name: "idx_designation_departmentId")
+    @@map("designation")
 }
+
 
 // ─── ATTENDANCE ────────────────────────────────────────
 
 model Attendance {
-  id                String           @id @default(cuid())
-  employeeId        String
-  employee          EmployeeProfile  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date              DateTime
-  status            AttendanceStatus @default(PRESENT)
-  checkIn           DateTime?
-  checkOut          DateTime?
-  note              String?
-  overtimeHours     Float?           @default(0)
-  lateMinutes       Int?             @default(0)
-  earlyExitMinutes  Int?             @default(0)
-  approvedBy        String?
-  approvedAt        DateTime?
-  
-  companyId         String
-  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdAt         DateTime         @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([employeeId, date])
-  @@index([companyId])
-  @@index([date])
-  @@index([status])
-  @@index([employeeId, date])
+    id String @id @default(cuid())
+
+    date             DateTime
+    status           AttendanceStatus @default(PRESENT)
+    checkIn          DateTime?
+    checkOut         DateTime?
+    note             String?
+    overtimeHours    Float?           @default(0)
+    lateMinutes      Int?             @default(0)
+    earlyExitMinutes Int?             @default(0)
+    approvedBy       String?
+    approvedAt       DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    employeeId String
+    employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    companyId  String
+    company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@unique([employeeId, date])
+    @@index([employeeId], name: "idx_attendance_employeeId")
+    @@index([companyId], name: "idx_attendance_companyId")
+    @@map("attendance")
 }
+
 
 // ─── LEAVE ─────────────────────────────────────────────
 
-model LeaveType {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?
-  daysAllowed     Int
-  isPaid          Boolean  @default(true)
-  isActive        Boolean  @default(true)
-  
-  companyId       String
-  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  leaves          Leave[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  @@unique([name, companyId])
-  @@index([companyId])
-  @@index([isActive])
+model Leave {
+    id String @id @default(cuid())
+
+    startDate        DateTime
+    endDate          DateTime
+    totalDays        Int
+    reason           String
+    attachmentUrl    String?
+    status           LeaveStatus @default(PENDING)
+    reviewedById     String?
+    reviewNote       String?
+    approvedByHeadAt DateTime?
+    approvedByHRAt   DateTime?
+    rejectedAt       DateTime?
+    rejectedReason   String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    employeeId  String
+    employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    leaveTypeId String
+    leaveType   LeaveType       @relation(fields: [leaveTypeId], references: [id])
+    companyId   String
+    company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    @@index([employeeId], name: "idx_leave_employeeId")
+    @@index([leaveTypeId], name: "idx_leave_leaveTypeId")
+    @@index([companyId], name: "idx_leave_companyId")
+    @@map("leave")
 }
 
-model Leave {
-  id                  String          @id @default(cuid())
-  employeeId          String
-  employee            EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveTypeId         String
-  leaveType           LeaveType       @relation(fields: [leaveTypeId], references: [id])
-  startDate           DateTime
-  endDate             DateTime
-  totalDays           Int
-  reason              String
-  attachmentUrl       String?
-  status              LeaveStatus     @default(PENDING)
-  reviewedById        String?
-  reviewNote          String?
-  approvedByHeadAt    DateTime?
-  approvedByHRAt      DateTime?
-  rejectedAt          DateTime?
-  rejectedReason      String?
-  
-  companyId           String
-  company             Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  
-  @@index([companyId])
-  @@index([employeeId])
-  @@index([leaveTypeId])
-  @@index([status])
-  @@index([startDate, endDate])
-}
 
 // ─── PAYROLL ───────────────────────────────────────────
 
 model Payroll {
-  id                  String          @id @default(cuid())
-  employeeId          String
-  employee            EmployeeProfile @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  month               Int
-  year                Int
-  
-  basicSalary         Float
-  houseAllowance      Float           @default(0)
-  medicalAllowance    Float           @default(0)
-  transportAllowance  Float           @default(0)
-  overtimePay         Float           @default(0)
-  
-  grossSalary         Float
-  taxDeduction        Float           @default(0)
-  pfDeduction         Float           @default(0)
-  otherDeductions     Float           @default(0)
-  totalDeductions     Float
-  netSalary           Float
-  
-  status              PayrollStatus   @default(DRAFT)
-  paidAt              DateTime?
-  generatedById       String?
-  approvedById        String?
-  
-  companyId           String
-  company             Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  
-  @@unique([employeeId, month, year])
-  @@index([companyId])
-  @@index([status])
-  @@index([month, year])
-  @@index([employeeId, status])
+    id String @id @default(cuid())
+
+    month Int
+    year  Int
+
+    basicSalary        Float
+    houseAllowance     Float @default(0)
+    medicalAllowance   Float @default(0)
+    transportAllowance Float @default(0)
+    overtimePay        Float @default(0)
+
+    grossSalary     Float
+    taxDeduction    Float @default(0)
+    pfDeduction     Float @default(0)
+    otherDeductions Float @default(0)
+    totalDeductions Float
+    netSalary       Float
+
+    status        PayrollStatus @default(DRAFT)
+    paidAt        DateTime?
+    generatedById String?
+    approvedById  String?
+
+    // relations
+    employeeId String
+    employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+    companyId  String
+    company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([employeeId, month, year])
+    @@index([companyId], name: "idx_payroll_companyId")
+    @@map("payroll")
 }
+
 
 // ─── SUBSCRIPTION & PAYMENT ────────────────────────────
 
-// ✅ CORRECT: Platform-wide configuration (NOT per company)
 model SubscriptionPlanConfig {
-  id              String           @id @default(cuid())
-  name            SubscriptionPlan @unique  // FREE, BASIC, PRO, ENTERPRISE
-  displayName     String
-  description     String?
-  priceUSD        Float
-  priceBDT        Float
-  yearlyPriceUSD  Float?
-  yearlyPriceBDT  Float?
-  maxEmployees    Int
-  features        Json
-  isActive        Boolean          @default(true)
-  sortOrder       Int              @default(0)
-  popularBadge    Boolean          @default(false)
-  
-  // ⭐ NO companyId here! - This is PLATFORM level
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+    id             String           @id @default(cuid())
+    name           SubscriptionPlan @unique // FREE, BASIC, PRO, ENTERPRISE
+    displayName    String
+    description    String?
+    priceUSD       Float
+    priceBDT       Float
+    yearlyPriceUSD Float?
+    yearlyPriceBDT Float?
+    maxEmployees   Int
+    features       Json
+    isActive       Boolean          @default(true)
+    sortOrder      Int              @default(0)
+    popularBadge   Boolean          @default(false)
+
+    // ⭐ NO companyId here! - This is PLATFORM level
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([name], name: "idx_subscription_plan_name")
+    @@index([isActive], name: "idx_subscription_plan_isActive")
+    @@map("subscription_plan_config")
 }
+
 
 model SubscriptionHistory {
-  id              String           @id @default(cuid())
-  companyId       String
-  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  plan            SubscriptionPlan
-  status          SubscriptionStatus
-  startDate       DateTime
-  endDate         DateTime
-  paymentId       String?
-  payment         Payment?         @relation(fields: [paymentId], references: [id])
-  
-  createdAt       DateTime         @default(now())
-  
-  @@index([companyId])
-  @@index([startDate, endDate])
-  @@index([status])
+    id String @id @default(cuid())
+
+    plan      SubscriptionPlan
+    status    SubscriptionStatus
+    startDate DateTime
+    endDate   DateTime
+    createdAt DateTime           @default(now())
+    updatedAt DateTime           @updatedAt
+
+    // relations
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    paymentId String?  @unique
+    payment   Payment? @relation(fields: [paymentId], references: [id])
+
+    @@index([companyId], name: "idx_subscription_history_companyId")
+    @@index([startDate, endDate], name: "idx_subscription_history_date_range")
+    @@map("subscription_history")
 }
+
 
 model Payment {
-  id                      String         @id @default(cuid())
-  companyId               String
-  company                 Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  
-  gateway                 PaymentGateway
-  plan                    SubscriptionPlan
-  amountUSD               Float?
-  amountBDT               Float?
-  
-  // Stripe fields
-  stripePaymentIntentId   String?        @unique
-  stripeInvoiceId         String?
-  stripeSubscriptionId    String?
-  
-  // SSLCommerz fields
-  sslTranId               String?        @unique
-  sslValId                String?
-  sslSessionKey           String?
-  
-  status                  PaymentStatus  @default(PENDING)
-  paidAt                  DateTime?
-  subscriptionStart       DateTime?
-  subscriptionEnd         DateTime?
-  transactionId           String?        @unique
-  
-  subscriptionHistory     SubscriptionHistory?
-  
-  createdAt               DateTime       @default(now())
-  updatedAt               DateTime       @updatedAt
-  
-  @@index([companyId])
-  @@index([status])
-  @@index([paidAt])
+    id String @id @default(cuid())
+
+    gateway   PaymentGateway
+    plan      SubscriptionPlan
+    amountUSD Float?
+    amountBDT Float?
+
+    // Stripe fields
+    stripePaymentIntentId String? @unique
+    stripeInvoiceId       String?
+    stripeSubscriptionId  String?
+
+    // SSLCommerz fields
+    sslTranId     String? @unique
+    sslValId      String?
+    sslSessionKey String?
+
+    transactionId     String?       @unique
+    status            PaymentStatus @default(PENDING)
+    paidAt            DateTime?
+    subscriptionStart DateTime?
+    subscriptionEnd   DateTime?
+    invoiceUrl            String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // relations
+    companyId String
+    company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+    subscriptionHistory SubscriptionHistory?
+
+    @@index([companyId], name: "idx_payment_companyId")
+    @@map("payment")
 }
 
-// ─── AUDIT LOG ─────────────────────────────────────────
+// ─── AUDIT LOG (For Future) ─────────────────────────────────────────
 
 model AuditLog {
   id          String   @id @default(cuid())
