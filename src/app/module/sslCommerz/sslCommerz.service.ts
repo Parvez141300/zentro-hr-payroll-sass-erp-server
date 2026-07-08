@@ -1,6 +1,9 @@
 import { PaymentGateway, PaymentStatus, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { uploadFileToCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { envVars } from "../../utils/env";
+import { generateInvoicePdf } from "../../utils/generateInvoicePdf";
+import { sendEmail } from "../../utils/sendEmail";
 import { ISSLCommerzFailedOrCancelPayload, ISSLCommerzInitiatePaymentPayload, ISSLCommerzSuccessPayload } from "./sslCommerz.interface";
 import SSLCommerzPayment from "sslcommerz-lts";
 
@@ -121,6 +124,13 @@ const handleSSLCommerzSuccessInDB = async (payload: ISSLCommerzSuccessPayload) =
     const payment = await prisma.payment.findUnique({
         where: {
             transactionId: tran_id,
+        },
+        include: {
+            company: {
+                include: {
+                    users: true,
+                }
+            }
         }
     });
 
@@ -177,6 +187,57 @@ const handleSSLCommerzSuccessInDB = async (payload: ISSLCommerzSuccessPayload) =
                 endDate: updatedPayment.subscriptionEnd!,
                 paymentId: payment.id,
             }
+        });
+
+        // Generate Invoice PDF
+        const pdfBuffer = await generateInvoicePdf({
+            invoiceId: payment?.id as string,
+            transactionId: payment?.transactionId as string,
+            companyName: payment?.company?.name as string,
+            customerName: payment?.company?.users[0]?.name as string,
+            customerEmail: payment?.company?.users[0]?.email as string,
+            planName: payment?.plan as string,
+            amount: payment?.amountBDT as number,
+            paymentDate: payment?.paidAt as Date,
+            paymentGateway: payment.gateway,
+        });
+
+        // upload file to cloudinary
+        const cloudinaryResponse = await uploadFileToCloudinary(pdfBuffer, 'invoice.pdf') as { secure_url: string };
+
+        const invoiceUrl = cloudinaryResponse.secure_url;
+
+        await prisma.payment.update({
+            where: {
+                id: payment.id,
+            },
+            data: {
+                invoiceUrl: invoiceUrl,
+            }
+        });
+
+        // send email to customer
+        await sendEmail({
+            to: payment?.company?.users[0]?.email as string,
+            subject: "Invoice",
+            templateName: "invoice",
+            templateData: {
+                transactionId: payment?.transactionId as string,
+                invoiceId: payment?.id as string,
+                companyName: payment?.company?.name as string,
+                customerName: payment?.company?.users[0]?.name as string,
+                customerEmail: payment?.company?.users[0]?.email as string,
+                planName: payment?.plan as string,
+                amount: payment?.amountBDT as number,
+                paymentDate: payment?.paidAt ? new Date(payment?.paidAt).toISOString() : new Date(),
+                invoiceUrl: invoiceUrl,
+                paymentGateway: payment.gateway,
+            },
+            attachments: [{
+                filename: 'invoice.pdf',
+                content: pdfBuffer,
+                contentType: 'application/pdf',
+            }]
         });
 
         return { message: `${envVars.FRONTEND_URL}/dashboard/settings/billing?payment=success` };

@@ -217,6 +217,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         };
     });
 
+    // get payment data
     const paymentData = await prisma.payment.findUnique({
         where: {
             id: paymentId,
@@ -240,6 +241,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         planName: paymentData?.plan as string,
         amount: paymentData?.amountUSD as number,
         paymentDate: paymentData?.paidAt as Date,
+        paymentGateway: paymentData?.gateway as string
     });
 
     // upload file to cloudinary
@@ -271,6 +273,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
             amount: paymentData?.amountUSD as number,
             paymentDate: paymentData?.paidAt ? new Date(paymentData?.paidAt).toISOString() : new Date(),
             invoiceUrl: invoiceUrl,
+            paymentGateway: paymentData?.gateway as string
         },
         attachments: [{
             filename: 'invoice.pdf',
