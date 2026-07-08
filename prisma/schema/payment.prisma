@@ -16,11 +16,12 @@ model Payment {
     sslValId      String?
     sslSessionKey String?
 
+    transactionId     String?       @unique
     status            PaymentStatus @default(PENDING)
     paidAt            DateTime?
     subscriptionStart DateTime?
     subscriptionEnd   DateTime?
-    transactionId     String?       @unique
+    invoiceUrl            String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PaymentGateway, PaymentStatus, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { uploadFileToCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { envVars } from "../../utils/env";
+import { generateInvoicePdf } from "../../utils/generateInvoicePdf";
+import { sendEmail } from "../../utils/sendEmail";
 import { ICreateStripeCheckoutSessionPayload } from "./stripe.interface";
 import Stripe from "stripe";
 
@@ -212,6 +215,68 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
             subscriptionHistoryId: subscriptionHistory.id,
             planName: subscriptionPlanConfig!.name as SubscriptionPlan
         };
+    });
+
+    const paymentData = await prisma.payment.findUnique({
+        where: {
+            id: paymentId,
+        },
+        include: {
+            company: {
+                include: {
+                    users: true,
+                }
+            }
+        }
+    });
+
+    // Generate Invoice PDF
+    const pdfBuffer = await generateInvoicePdf({
+        invoiceId: paymentData?.id as string,
+        transactionId: paymentData?.transactionId as string,
+        companyName: paymentData?.company?.name as string,
+        customerName: paymentData?.company?.users[0]?.name as string,
+        customerEmail: paymentData?.company?.users[0]?.email as string,
+        planName: paymentData?.plan as string,
+        amount: paymentData?.amountUSD as number,
+        paymentDate: paymentData?.paidAt as Date,
+    });
+
+    // upload file to cloudinary
+    const cloudinaryResponse = await uploadFileToCloudinary(pdfBuffer, 'invoice.pdf') as { secure_url: string };
+
+    const invoiceUrl = cloudinaryResponse.secure_url;
+
+    await prisma.payment.update({
+        where: {
+            id: paymentId,
+        },
+        data: {
+            invoiceUrl: invoiceUrl,
+        }
+    });
+
+    // send email to customer
+    await sendEmail({
+        to: paymentData?.company?.users[0]?.email as string,
+        subject: "Invoice",
+        templateName: "invoice",
+        templateData: {
+            transactionId: paymentData?.transactionId as string,
+            invoiceId: paymentData?.id as string,
+            companyName: paymentData?.company?.name as string,
+            customerName: paymentData?.company?.users[0]?.name as string,
+            customerEmail: paymentData?.company?.users[0]?.email as string,
+            planName: paymentData?.plan as string,
+            amount: paymentData?.amountUSD as number,
+            paymentDate: paymentData?.paidAt ? new Date(paymentData?.paidAt).toISOString() : new Date(),
+            invoiceUrl: invoiceUrl,
+        },
+        attachments: [{
+            filename: 'invoice.pdf',
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+        }]
     });
 
     return result;
