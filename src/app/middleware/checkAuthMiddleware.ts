@@ -9,13 +9,18 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
             console.log('cookie data from global check auth', req.cookies);
-            const sessionToken = cookieUtils.getCookie(req, "accessToken");
+            const sessionToken = cookieUtils.getCookie(req, "better-auth.session_token");
+            const refreshToken = cookieUtils.getCookie(req, "refreshToken");
 
             if (!sessionToken) {
                 throw new Error("Unauthorized access! No session token found.");
             }
 
-            if (sessionToken) {
+            if (!refreshToken) {
+                throw new Error("Unauthorized access! No refresh token found.");
+            }
+
+            if (sessionToken && refreshToken) {
                 const isExistSessionToken = await prisma.session.findUnique({
                     where: {
                         token: sessionToken,
@@ -28,18 +33,28 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
                     }
                 });
 
-                if (isExistSessionToken && isExistSessionToken.user) {
+                if (isExistSessionToken && isExistSessionToken.user && refreshToken) {
+                    const refreshTokenVerify = jwtUtils.verifyToken(refreshToken, envVars.JWT_TOKEN_SECRET);
+
+                    if (!refreshTokenVerify.success && refreshTokenVerify.error) {
+                        throw new Error("Refresh token is invalid");
+                    }
+
+                    if (!refreshTokenVerify.data || !refreshTokenVerify.data.exp || !refreshTokenVerify.data.iat) {
+                        throw new Error("Refresh token data is invalid");
+                    }
+
                     const user = isExistSessionToken.user;
                     console.log("user data from check auth middleware", user);
 
                     const now = new Date();
-                    const expiresAt = new Date(isExistSessionToken.expiresAt);
-                    const createdAt = new Date(isExistSessionToken.createdAt);
+                    const expiresAt = new Date((refreshTokenVerify.data.exp) / 1000);
+                    const createdAt = new Date((refreshTokenVerify.data.iat) / 1000);
 
-                    const sessionLifeTime = expiresAt.getTime() - createdAt.getTime();
+                    const refreshTokenLifeTime = expiresAt.getTime() - createdAt.getTime();
                     const remainingTime = expiresAt.getTime() - now.getTime();
 
-                    const remainingTimePercentage = (remainingTime / sessionLifeTime) * 100;
+                    const remainingTimePercentage = (remainingTime / refreshTokenLifeTime) * 100;
 
                     console.log("remaining time percentage", remainingTimePercentage);
 
