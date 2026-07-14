@@ -60,8 +60,8 @@ export const checkAuthMiddleware = (...authRoles: Role[]) => {
 
                     if (remainingTimePercentage < 20) {
                         res.set({
-                            "X-Session-Refresh": "true",
-                            "X-Session-Expires-At": expiresAt.toISOString(),
+                            "X-Refresh-Token-Refresh": "true",
+                            "X-Refresh-Token-Expires-At": expiresAt.toISOString(),
                             "X-Time-Remaining": remainingTime.toString(),
                         });
 
