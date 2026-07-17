@@ -99,6 +99,17 @@ const registerSuperAdminInDB = async (payload: IRegisterSuperAdminPayload) => {
 
 const loginUserInDB = async (payload: ILoginUserPayload) => {
   const { email, password } = payload;
+
+  const isExistUser = await prisma.user.findUnique({
+    where: {
+      email: email,
+    }
+  });
+
+  if (!isExistUser) {
+    throw new Error("User not found");
+  }
+
   const loginData = await auth.api.signInEmail({
     body: {
       email: email,
