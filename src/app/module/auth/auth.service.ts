@@ -271,13 +271,108 @@ const changePassowrdInDB = async (sessionToken: string, payload: IChangePassword
 }
 
 const getLoggedInUserInfoFromDB = async (accessToken: string) => {
+  console.log('accessToken', accessToken);
+
+  if (!accessToken) {
+    throw new Error("Access token is missing");
+  }
+
   const userInfo = jwtUtils.verifyToken(accessToken, envVars.JWT_TOKEN_SECRET);
 
   if (!userInfo.success && userInfo.error) {
     throw new Error("Access token is invalid");
   }
 
-  return userInfo.data;
+  if (!userInfo.data) {
+    throw new Error("Access token is invalid");
+  }
+
+  // switch (userInfo.data.role) {
+  //   case Role.PLATFORM_SUPER_ADMIN: {
+  //     const user = await prisma.user.findUnique({
+  //       where: {
+  //         id: userInfo.data.userId,
+  //       },
+  //       include: {
+  //         platformSuperAdmin: true,
+  //       }
+  //     })
+
+  //     return user;
+  //     break;
+  //   }
+  //   case Role.Super_ADMIN: {
+  //     const user = await prisma.user.findUnique({
+  //       where: {
+  //         id: userInfo.data.userId,
+  //       },
+  //       include: {
+  //         superAdmin: true,
+  //       }
+  //     })
+
+  //     return user;
+  //     break;
+  //   }
+  //   case Role.HR_MANAGER: {
+  //     const user = await prisma.user.findUnique({
+  //       where: {
+  //         id: userInfo.data.userId,
+  //       },
+  //       include: {
+  //         hrManager: true,
+  //       }
+  //     })
+
+  //     return user;
+  //     break;
+  //   }
+  //   case Role.ACCOUNTANT: {
+  //     const user = await prisma.user.findUnique({
+  //       where: {
+  //         id: userInfo.data.userId,
+  //       },
+  //       include: {
+  //         accountant: true,
+  //       }
+  //     })
+
+  //     return user;
+  //     break;
+  //   }
+  //   case Role.EMPLOYEE: {
+  //     const user = await prisma.user.findUnique({
+  //       where: {
+  //         id: userInfo.data.userId,
+  //       },
+  //       include: {
+  //         employee: true,
+  //       }
+  //     })
+
+  //     return user;
+  //     break;
+  //   }
+
+  //   default:
+  //     break;
+  // }
+
+  const user = await prisma.user.findUnique({
+        where: {
+          id: userInfo.data.userId,
+        },
+        include: {
+          platformSuperAdmin: true,
+          superAdmin: true,
+          hrManager: true,
+          accountant: true,
+          departmentHead: true,
+          employee: true,
+        }
+      })
+
+      return user;
 }
 
 const forgetPasswordInBetterAuth = async (email: string) => {

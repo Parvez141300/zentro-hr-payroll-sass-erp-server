@@ -143,6 +143,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 
 const getLoggedInUserInfo = catchAsync(async (req: Request, res: Response) => {
     const accessToken = req.cookies["accessToken"];
+    console.log('accessToken from me route', accessToken);
     const result = await authService.getLoggedInUserInfoFromDB(accessToken);
     sendResponse(res, {
         httpStatusCode: status.OK,
