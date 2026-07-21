@@ -29,7 +29,7 @@ app.use(cookieParser());
 // node cron job
 crone.schedule("*/5 * * * *", async () => {
   try {
-    console.log("running a task every 5 minutes");
+    console.log("running a task every 5 minutes to check company subscription status is expired or not");
     await companyService.cancelCompanySubscriptionInDB();
   } catch (error) {
     console.log("error from node cron job", error);
