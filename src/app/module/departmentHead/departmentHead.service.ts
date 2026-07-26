@@ -92,11 +92,11 @@ const getDepartmentHeadOwnProfileFromDB = async (companyId: string, departmentHe
     return isExistDepartmentHead;
 }
 
-const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHeadId: string, role: Role, payload: IUpdateDepartmentHeadPayload) => {
+const updateCompanyDepartmentHeadInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateDepartmentHeadPayload) => {
     const isExistDepartmentHead = await prisma.departmentHead.findUnique({
         where: {
             companyId: companyId,
-            id: departmentHeadId
+            userId: userId,
         }
     });
 
@@ -108,7 +108,7 @@ const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHead
         const updateDepartmentHead = await prisma.$transaction(async (tx) => {
             const departmentHead = await tx.departmentHead.update({
                 where: {
-                    id: departmentHeadId
+                    userId: userId,
                 },
                 data: {
                     ...payload,
@@ -144,7 +144,7 @@ const updateCompanyDepartmentHeadInDB = async (companyId: string, departmentHead
         const updateDepartmentHead = await prisma.$transaction(async (tx) => {
             const departmentHead = await tx.departmentHead.update({
                 where: {
-                    id: departmentHeadId
+                    userId: userId,
                 },
                 data: {
                     name: payload.name || isExistDepartmentHead.name,

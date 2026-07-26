@@ -40,11 +40,11 @@ const getEmployeeOwnProfile = catchAsync(async (req: Request, res: Response) => 
 const updateEmployee = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
     const role = user.role as Role;
-    const { id: employeeId } = req.params;
+    const { id: userId } = req.params;
 
     const payload = req.body;
 
-    const result = await employeeService.updateEmployeeInDB(user.companyId, employeeId as string, role, payload);
+    const result = await employeeService.updateEmployeeInDB(user.companyId, userId as string, role, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

@@ -79,11 +79,11 @@ const getAccountOwnerFromDB = async (accountId: string, userId: string) => {
     return accountant;
 }
 
-const updateCompanyAccountantInDB = async (companyId: string, accountantId: string, role: Role, payload: IUpdateAccountantPayload) => {
+const updateCompanyAccountantInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateAccountantPayload) => {
     const isExistAccountant = await prisma.accountant.findUnique({
         where: {
             companyId: companyId,
-            id: accountantId
+            userId: userId,
         }
     });
 
@@ -95,7 +95,7 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    id: accountantId
+                    userId: userId,
                 },
                 data: {
                     ...payload,
@@ -131,7 +131,7 @@ const updateCompanyAccountantInDB = async (companyId: string, accountantId: stri
         const updateAccountant = await prisma.$transaction(async (tx) => {
             const accountant = await tx.accountant.update({
                 where: {
-                    id: accountantId
+                    userId: userId,
                 },
                 data: {
                     name: payload.name || isExistAccountant.name,

@@ -217,7 +217,7 @@ const getEmployeeOwnProfileFromDB = async (companyId: string, userId: string) =>
     return employee;
 }
 
-const updateEmployeeInDB = async (companyId: string, employeeId: string, role: Role, payload: IUpdateEmployeePayload) => {
+const updateEmployeeInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateEmployeePayload) => {
     const { name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation, departmentId, designationId } = payload;
 
     const isExistCompany = await prisma.company.findUnique({
@@ -232,7 +232,7 @@ const updateEmployeeInDB = async (companyId: string, employeeId: string, role: R
 
     const employeeData = await prisma.employee.findUnique({
         where: {
-            id: employeeId,
+            userId: userId,
             companyId: companyId,
         }
     });
@@ -245,7 +245,7 @@ const updateEmployeeInDB = async (companyId: string, employeeId: string, role: R
         const updateEmployee = await prisma.$transaction(async (tx) => {
             const uEmployee = await tx.employee.update({
                 where: {
-                    id: employeeId,
+                    userId: userId,
                     companyId: companyId,
                 },
                 data: {
@@ -297,14 +297,14 @@ const updateEmployeeInDB = async (companyId: string, employeeId: string, role: R
         const updateEmployee = await prisma.$transaction(async (tx) => {
             const uEmployee = await tx.employee.update({
                 where: {
-                    id: employeeId,
+                    userId: userId,
                     companyId: companyId,
                 },
                 data: {
                     name: name || employeeData.name,
                     phone: phone || employeeData.phone,
                     photoUrl: photoUrl || employeeData.photoUrl,
-                    dateOfBirth: dateOfBirth || employeeData.dateOfBirth,
+                    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : employeeData.dateOfBirth || employeeData.dateOfBirth,
                     gender: gender || employeeData.gender,
                     address: address || employeeData.address,
                     nidNumber: nidNumber || employeeData.nidNumber,

@@ -31,11 +31,11 @@ const getDepartmentHeadOwnProfile = catchAsync(async (req: Request, res: Respons
 });
 
 const updateCompanyDepartmentHead = catchAsync(async (req: Request, res: Response) => {
-    const { id: departmentHeadId } = req.params;
+    const { id: userId } = req.params;
     const payload = req.body;
     const user = req.user;
     const role = user.role as Role;
-    const result = await departmentHeadService.updateCompanyDepartmentHeadInDB(user.companyId, departmentHeadId as string, role, payload);
+    const result = await departmentHeadService.updateCompanyDepartmentHeadInDB(user.companyId, userId as string, role, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

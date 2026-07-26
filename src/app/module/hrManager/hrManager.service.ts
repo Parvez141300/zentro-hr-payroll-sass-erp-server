@@ -97,12 +97,12 @@ const getHrManagerOwnProfileFromDB = async (companyId: string, userId: string) =
     return hrManager;
 }
 
-const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, payload: IUpdateHRManagerPayload) => {
+const updateCompanyHrInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateHRManagerPayload) => {
 
     const isExistHr = await prisma.hrManager.findUnique({
         where: {
             companyId: companyId,
-            id: hrId
+            userId: userId,
         }
     });
 
@@ -114,7 +114,7 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
         const updateHr = await prisma.$transaction(async (tx) => {
             const uHr = await tx.hrManager.update({
                 where: {
-                    id: hrId
+                    userId: userId,
                 },
                 data: {
                     ...payload,
@@ -151,7 +151,7 @@ const updateCompanyHrInDB = async (companyId: string, hrId: string, role: Role, 
         const updateHr = await prisma.$transaction(async (tx) => {
             const uHr = await tx.hrManager.update({
                 where: {
-                    id: hrId
+                    userId: userId,
                 },
                 data: {
                     name: payload.name || isExistHr.name,

@@ -18,14 +18,14 @@ router.get(
     accountantController.getAccountantOwnProfile
 );
 router.patch(
-    "/update-company-accountant/:id",
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     multerUploadService.single("file"),
     updateProfileMiddlewareSecond,
     accountantController.updateCompanyAccountant
 );
 router.delete(
-    "/delete-company-accountant/:id",
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN),
     accountantController.deleteCompanyAccountant
 );
