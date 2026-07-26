@@ -20,7 +20,7 @@ router.get(
 );
 
 router.patch(
-    "/super-admin",
+    "/super-admin/:id",
     checkAuthMiddleware(Role.Super_ADMIN),
     multerUploadService.single("file"),
     updateProfileMiddlewareSecond,
@@ -28,7 +28,7 @@ router.patch(
 );
 
 router.patch(
-    "/platform-super-admin",
+    "/platform-super-admin/:id",
     checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
     multerUploadService.single("file"),
     updateProfileMiddlewareSecond,
