@@ -1,12 +1,23 @@
 model Company {
     id              String    @id @default(cuid())
     name            String    @unique
-    logo            String?
     address         String?
     email           String    @unique
     phone           String?
     taxId           String?
-    website         String?
+    
+    logoUrl         String?
+    bannerUrl       String?
+    
+    websiteUrl      String?
+
+    // Social
+    facebookUrl     String?
+    instagramUrl    String?
+    linkedinUrl     String?
+    youtubeUrl      String?
+    twitterUrl      String?
+
     fiscalYearStart DateTime?
     fiscalYearEnd   DateTime?
 

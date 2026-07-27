@@ -15,7 +15,18 @@ export interface IUpdateCompanyPayload {
     phone?: string;
     address?: string;
     taxId?: string;
-    website?: string;
+    
+    logoUrl: string;
+    bannerUrl: string;
+
+    websiteUrl?: string;
+
+    facebookUrl?: string;
+    instagramUrl?: string;
+    linkedinUrl?: string;
+    youtubeUrl?: string;
+    twitterUrl?: string;
+
     fiscalYearStart?: Date;
     fiscalYearEnd?: Date;
 }

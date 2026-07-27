@@ -86,10 +86,20 @@ const getSingleCompanyFromDB = async (id: string) => {
     return company;
 }
 
-const updateCompanyInDB = async (id: string, payload: IUpdateCompanyPayload) => {
+const updateCompanyInDB = async (companyId: string, payload: IUpdateCompanyPayload) => {
+    const isExistCompany = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!isExistCompany) {
+        throw new Error("Company does not exist!");
+    }
+
     const company = await prisma.company.update({
         where: {
-            id
+            id: companyId,
         },
         data: {
             ...payload
