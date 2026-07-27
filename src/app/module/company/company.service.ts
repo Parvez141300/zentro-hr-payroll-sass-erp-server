@@ -87,7 +87,6 @@ const getSingleCompanyFromDB = async (id: string) => {
 }
 
 const getUserOwnCompanyFromDB = async (companyId: string) => {
-
     const company = await prisma.company.findUnique({
         where: {
             id: companyId
