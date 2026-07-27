@@ -35,10 +35,21 @@ const getSingleCompany = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const updateCompany = catchAsync(async (req: Request, res: Response) => {
-    const { id: companyId } = req.params;
+const getUserOwnCompany = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
+    const result = await companyService.getUserOwnCompanyFromDB(user.companyId);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Company fetched successfully",
+        data: result,
+    });
+});
+
+const updateOwnCompany = catchAsync(async (req: Request, res: Response) => {
+    const user = req.user;
     const payload = req.body;
-    const result = await companyService.updateCompanyInDB(companyId as string, payload);
+    const result = await companyService.updateOwnCompanyInDB(user.companyId as string, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -61,6 +72,7 @@ const deleteCompany = catchAsync(async (req: Request, res: Response) => {
 export const companyController = {
     getAllOrQueryCompanies,
     getSingleCompany,
-    updateCompany,
+    updateOwnCompany,
     deleteCompany,
+    getUserOwnCompany,
 };

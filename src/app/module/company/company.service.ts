@@ -86,7 +86,22 @@ const getSingleCompanyFromDB = async (id: string) => {
     return company;
 }
 
-const updateCompanyInDB = async (companyId: string, payload: IUpdateCompanyPayload) => {
+const getUserOwnCompanyFromDB = async (companyId: string) => {
+
+    const company = await prisma.company.findUnique({
+        where: {
+            id: companyId
+        }
+    });
+
+    if (!company) {
+        throw new Error("Company not found");
+    }
+
+    return company;
+}
+
+const updateOwnCompanyInDB = async (companyId: string, payload: IUpdateCompanyPayload) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
             id: companyId
@@ -209,8 +224,9 @@ const cancelCompanySubscriptionInDB = async () => {
 export const companyService = {
     getAllOrQueryCompaniesFromDB,
     getSingleCompanyFromDB,
-    updateCompanyInDB,
+    updateOwnCompanyInDB,
     softDeleteCompany,
     deleteCompany,
     cancelCompanySubscriptionInDB,
+    getUserOwnCompanyFromDB,
 }
