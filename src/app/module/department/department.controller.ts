@@ -44,7 +44,8 @@ const updateDepartment = catchAsync(async (req: Request, res: Response) => {
 
 const deleteDepartment = catchAsync(async (req: Request, res: Response) => {
     const { id: departmentId } = req.params;
-    const result = await departmentService.deleteCompanyDepartmentInDB(departmentId as string);
+    const user = req.user;
+    const result = await departmentService.deleteCompanyDepartmentInDB(user.companyId as string, departmentId as string);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

@@ -48,7 +48,7 @@ const getCompanyAllOrQueryDepartmentsFromDB = async (companyId: string, payload:
         },
     });
 
-    return { 
+    return {
         data: departments,
         pagination: {
             total: departmentCount,
@@ -96,10 +96,26 @@ const updateDepartmentInDB = async (departmentId: string, payload: IUpdateDepart
     return department;
 };
 
-const deleteCompanyDepartmentInDB = async (departmentId: string) => {
-    const department = await prisma.department.delete({
+const deleteCompanyDepartmentInDB = async (companyId: string, departmentId: string) => {
+    console.log("departmentId", departmentId);
+
+    const isExistDepartment = await prisma.department.findUnique({
         where: {
             id: departmentId,
+            companyId: companyId,
+        }
+    });
+
+    if (!isExistDepartment) {
+        throw new Error("Department not found");
+    }
+
+    const department = await prisma.department.delete({
+        where: {
+            name_companyId: {
+                name: isExistDepartment.name,
+                companyId: isExistDepartment.companyId,
+            }
         }
     });
 
