@@ -35,6 +35,9 @@ const getCompanyAllOrQueryDesignationFromDB = async (companyId: string, payload:
         take: limit,
         orderBy: {
             [sortBy]: sortOrder
+        },
+        include: {
+            department: true,
         }
     });
 

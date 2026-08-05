@@ -7,6 +7,7 @@ export interface ICreateDesignationPayload {
 export interface IUpdateDesignationPayload {
     title?: string;
     description?: string;
+    departmentId?: string;
 }
 
 export interface IGetCompanyDesignationPayload {
