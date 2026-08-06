@@ -116,6 +116,9 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             },
             include: {
                 user: true,
+                department: true,
+                designation: true,
+                company: true,
             }
         });
 
@@ -141,6 +144,9 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             },
             include: {
                 user: true,
+                department: true,
+                designation: true,
+                company: true,
             }
         });
 
@@ -177,6 +183,9 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             },
             include: {
                 user: true,
+                department: true,
+                designation: true,
+                company: true,
             }
         });
 
