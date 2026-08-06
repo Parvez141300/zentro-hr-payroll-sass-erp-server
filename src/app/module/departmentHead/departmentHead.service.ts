@@ -53,7 +53,13 @@ const getAllOrQueryDepartmentHeadsFromDB = async (companyId: string, payload: IG
         take: limit,
         orderBy: {
             [sortBy]: sortOrder
-        }
+        },
+        include: {
+            user: true,
+            department: true,
+            company: true,
+            designation: true,
+        },
     });
 
     const departmentHeadsCount = await prisma.departmentHead.count({
