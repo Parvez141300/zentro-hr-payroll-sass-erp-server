@@ -39,6 +39,9 @@ const getCompanyAllOrQueryDepartmentsFromDB = async (companyId: string, payload:
         orderBy: {
             [sortBy]: sortOrder
         },
+        include: {
+            designations: true,
+        }
     });
 
     const departmentCount = await prisma.department.count({

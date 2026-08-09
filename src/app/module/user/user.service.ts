@@ -179,6 +179,7 @@ const getSingleCompanyUserFromDB = async (companyId: string, userId: string) => 
 }
 
 const createCompanyHrInDB = async (companyId: string, payload: ICreateHRManagerPayload) => {
+    console.log('create company hr: ', payload);
     const isExistCompany = await prisma.company.findUnique({
         where: {
             id: companyId
