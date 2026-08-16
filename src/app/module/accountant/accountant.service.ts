@@ -43,7 +43,10 @@ const getAllOrQueryAccountantFromDB = async (companyId: string, payload: IGetAll
         take: limit,
         orderBy: {
             [sortBy]: sortOrder
-        }
+        },
+        include: {
+            user: true,
+        },
     });
 
     const accountantCount = await prisma.accountant.count({
