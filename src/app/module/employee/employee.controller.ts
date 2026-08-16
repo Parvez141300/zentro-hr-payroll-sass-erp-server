@@ -4,7 +4,7 @@ import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelp
 import { employeeService } from "./employee.service";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
-import { EmployeeStatus, EmploymentType, Role } from "../../../generated/prisma/enums";
+import { EmployeeStatus, EmploymentType, Gender, Role } from "../../../generated/prisma/enums";
 
 const getAllOrQueryEmployees = catchAsync(async (req: Request, res: Response) => {
     const { companyId, role, email } = req.user;
@@ -13,10 +13,14 @@ const getAllOrQueryEmployees = catchAsync(async (req: Request, res: Response) =>
     const search = typeof req.query.search === "string" ? req.query.search : "";
     const employmentType = typeof req.query.employmentType === "string" ? (req.query.employmentType as EmploymentType) : undefined;
     const employeeStatus = typeof req.query.status === "string" ? (req.query.status as EmployeeStatus) : undefined;
+    const employeeGender = typeof req.query.gender === "string" ? (req.query.gender as Gender) : undefined;
+
     const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
     const designationId = typeof req.query.designationId === "string" ? req.query.designationId : undefined;
+
     const { page, limit, skip, sortBy, sortOrder } = paginationAndSortingHelper(req.query);
-    const result = await employeeService.getAllOrQueryEmployeesFromDB(companyId, email, userRole, { search, page, limit, skip, sortBy, sortOrder, employmentType, status: employeeStatus, departmentId, designationId });
+
+    const result = await employeeService.getAllOrQueryEmployeesFromDB(companyId, email, userRole, { search, page, limit, skip, sortBy, sortOrder, employmentType, status: employeeStatus, gender: employeeGender, departmentId, designationId });
 
     sendResponse(res, {
         httpStatusCode: status.OK,
