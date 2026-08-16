@@ -222,6 +222,9 @@ const getEmployeeOwnProfileFromDB = async (companyId: string, userId: string) =>
         },
         include: {
             user: true,
+            company: true,
+            department: true,
+            designation: true,
         }
     });
 
