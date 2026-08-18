@@ -140,8 +140,8 @@ const getAllOrQueryAttendanceFromDB = async (
     if (startDate && endDate) {
         addCondition.push({
             date: {
-                gte: startDate,
-                lte: endDate
+                gte: new Date(startDate),
+                lte: new Date(endDate)
             }
         });
     }
