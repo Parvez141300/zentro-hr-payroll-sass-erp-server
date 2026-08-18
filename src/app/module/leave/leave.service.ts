@@ -187,14 +187,14 @@ const getAllOrQueryLeavesFromDB = async (
             OR: [
                 {
                     startDate: {
-                        gte: startDate,
-                        lte: endDate
+                        gte: new Date(startDate),
+                        lte: new Date(endDate),
                     }
                 },
                 {
                     endDate: {
-                        gte: startDate,
-                        lte: endDate
+                        gte: new Date(startDate),
+                        lte: new Date(endDate),
                     }
                 }
             ]
