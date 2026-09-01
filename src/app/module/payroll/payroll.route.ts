@@ -10,8 +10,19 @@ router.post(
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     payrollController.generatePayroll
 );
-router.get("/", payrollController.getAllOrQueryPayrolls);
-router.patch("/:id", payrollController.updatePayrollInDB);
-router.get("/:id/payslip", payrollController.getPayslipData);
+router.get(
+    "/",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
+    payrollController.getAllOrQueryPayrolls
+);
+router.patch(
+    "/:id", 
+    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
+    payrollController.updatePayrollInDB
+);
+router.get(
+    "/:id/payslip", 
+    payrollController.getPayslipData
+);
 
 export const payrollRoute = router;
