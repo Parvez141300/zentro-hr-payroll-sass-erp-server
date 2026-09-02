@@ -39,6 +39,17 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             where: {
                 companyId: companyId,
                 userId: isExistsDepartmentHead.id
+            },
+            include: {
+                user: {
+                    include: {
+                        employee: {
+                            include: {
+                                attendances: true,
+                            }
+                        }
+                    }
+                }
             }
         });
     }
@@ -58,6 +69,17 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
             where: {
                 companyId: companyId,
                 userId: isExistsHrManager.id
+            },
+            include: {
+                user: {
+                    include: {
+                        employee: {
+                            include: {
+                                attendances: true,
+                            }
+                        }
+                    }
+                }
             }
         })
     }
@@ -188,7 +210,15 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
                 [sortBy]: sortOrder
             },
             include: {
-                user: true,
+                user: {
+                    include: {
+                        employee: {
+                            include: {
+                                attendances: true,
+                            }
+                        }
+                    }
+                },
                 department: true,
                 designation: true,
                 company: true,
