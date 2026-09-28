@@ -5,6 +5,13 @@ import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
+// generate payroll for all employees
+router.post(
+    "/all-employees",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
+    payrollController.generatePayroll
+);
+// generate payroll for individual employee
 router.post(
     "/",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
