@@ -6,6 +6,11 @@ export interface IGeneratePayrollPayload {
     employeeId: string;
 }
 
+export interface IGeneratePayrollForAllPayload {
+    month: number;
+    year: number;
+}
+
 export interface IGetAllOrQueryPayrollsPayload {
     search?: string;
     page?: number;
