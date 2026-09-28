@@ -6,6 +6,18 @@ import status from "http-status";
 import { PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
+const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Response) => {
+    const { companyId, userId } = req.user;
+    const payload = req.body;
+    const result = await payrollService.generatePayrollForAllEmployeeInDB(companyId, userId, payload);
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "Payroll generated for all employees successfully",
+        data: result,
+    });
+});
+
 const generatePayroll = catchAsync(async (req: Request, res: Response) => {
     const { companyId, userId } = req.user; // Assuming companyId and userId are sent in the request body
     const payload = req.body;
@@ -68,6 +80,7 @@ const getPayslipData = catchAsync(async (req: Request, res: Response) => {
 
 export const payrollController = {
     generatePayroll,
+    generatePayrollForAllEmployee,
     getAllOrQueryPayrolls,
     updatePayrollInDB,
     getPayslipData,
