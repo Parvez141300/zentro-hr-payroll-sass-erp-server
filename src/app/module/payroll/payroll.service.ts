@@ -42,7 +42,7 @@ const generatePayrollInDB = async (companyId: string, userId: string, payload: I
         where: {
             employeeId_month_year: {
                 employeeId: employeeId,
-                month: month,
+                month: Number(month),
                 year: year,
             }
         }
