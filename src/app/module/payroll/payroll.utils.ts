@@ -82,6 +82,5 @@ export const calculateSalaryPayroll = async (employee: Employee, month: number, 
         otherDeductions,
         totalDeductions,
         netSalary,
-        totalOvertimeHours
     };
 }

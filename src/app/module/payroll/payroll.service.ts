@@ -35,17 +35,17 @@ const generatePayrollForAllEmployeeInDB = async (
         throw new Error("Company not found");
     }
 
-    if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
-        throw new Error(
-            "Company subscription has expired/trial. Please renew your subscription to generate payroll."
-        );
-    }
+    // if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
+    //     throw new Error(
+    //         "Company subscription has expired/trial. Please renew your subscription to generate payroll."
+    //     );
+    // }
 
-    if (company.subscriptionStatus === SubscriptionStatus.TRIAL) {
-        throw new Error(
-            "Company subscription is on trial. Please renew your subscription to generate payroll."
-        );
-    }
+    // if (company.subscriptionStatus === SubscriptionStatus.TRIAL) {
+    //     throw new Error(
+    //         "Company subscription is on trial. Please renew your subscription to generate payroll."
+    //     );
+    // }
 
     // ✅ Fetch employees ONCE with all needed relations
     const employees = await prisma.employee.findMany({
