@@ -8,7 +8,6 @@ import { calculateSalaryPayroll } from "./payroll.utils";
 
 const generatePayrollForAllEmployeeInDB = async (
     companyId: string,
-    userId: string,
     payload: IGeneratePayrollForAllPayload
 ) => {
     const { month, year } = payload;
@@ -36,9 +35,15 @@ const generatePayrollForAllEmployeeInDB = async (
         throw new Error("Company not found");
     }
 
-    if (company.subscriptionStatus === SubscriptionStatus.EXPIRED || company.subscriptionStatus === SubscriptionStatus.TRIAL) {
+    if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
         throw new Error(
-            "Company subscription has expired. Please renew your subscription to generate payroll."
+            "Company subscription has expired/trial. Please renew your subscription to generate payroll."
+        );
+    }
+
+    if (company.subscriptionStatus === SubscriptionStatus.TRIAL) {
+        throw new Error(
+            "Company subscription is on trial. Please renew your subscription to generate payroll."
         );
     }
 
@@ -89,7 +94,7 @@ const generatePayrollForAllEmployeeInDB = async (
 
     if (employeesToProcess.length === 0) {
         return {
-            success: true,
+            success: false,
             message: "Payroll already generated for all employees for this period",
             data: {
                 totalEmployees: employees.length,

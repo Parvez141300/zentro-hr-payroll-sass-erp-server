@@ -7,9 +7,9 @@ import { PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
 const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Response) => {
-    const { companyId, userId } = req.user;
+    const { companyId } = req.user;
     const payload = req.body;
-    const result = await payrollService.generatePayrollForAllEmployeeInDB(companyId, userId, payload);
+    const result = await payrollService.generatePayrollForAllEmployeeInDB(companyId, payload);
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,

@@ -9,7 +9,7 @@ const router = Router();
 router.post(
     "/all-employees",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
-    payrollController.generatePayroll
+    payrollController.generatePayrollForAllEmployee
 );
 // generate payroll for individual employee
 router.post(
