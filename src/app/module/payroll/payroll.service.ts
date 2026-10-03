@@ -21,10 +21,6 @@ const generatePayrollForAllEmployeeInDB = async (
         throw new Error("Invalid month. Must be between 1 and 12");
     }
 
-    if (isNaN(yearNum) || yearNum < 2000 || yearNum > 2100) {
-        throw new Error("Invalid year. Must be between 2000 and 2100");
-    }
-
     // ✅ Check company exists and is active
     const company = await prisma.company.findUnique({
         where: { id: companyId },
@@ -40,7 +36,7 @@ const generatePayrollForAllEmployeeInDB = async (
         throw new Error("Company not found");
     }
 
-    if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
+    if (company.subscriptionStatus === SubscriptionStatus.EXPIRED || company.subscriptionStatus === SubscriptionStatus.TRIAL) {
         throw new Error(
             "Company subscription has expired. Please renew your subscription to generate payroll."
         );
