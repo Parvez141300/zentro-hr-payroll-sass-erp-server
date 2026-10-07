@@ -1,4 +1,4 @@
-import { EmploymentType, Gender, HrScope, Role } from "../../../generated/prisma/enums";
+import { EmploymentType, Gender, HrScope, Role, SalaryType } from "../../../generated/prisma/enums";
 
 export interface ICreateHRManagerPayload {
     // User fields
@@ -72,6 +72,8 @@ export interface ICreateCompanyEmployeePayload {
     houseAllowance?: number;
     medicalAllowance?: number;
     transportAllowance?: number;
+    salaryType: SalaryType;
+    workingDaysPerMonth: number;
 
     bankName?: string;
     bankAccount?: string;
