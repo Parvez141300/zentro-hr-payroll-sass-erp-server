@@ -481,6 +481,8 @@ const createCompanyEmployeeInDB = async (companyId: string, payload: ICreateComp
 
                 employmentType: payload.employmentType,
 
+                salaryType: payload.salaryType,
+                workingDaysPerMonth: payload.workingDaysPerMonth,
                 basicSalary: payload.basicSalary,
                 houseAllowance: payload.houseAllowance || 0,
                 medicalAllowance: payload.medicalAllowance || 0,
