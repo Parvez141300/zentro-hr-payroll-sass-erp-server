@@ -2,7 +2,7 @@ model Employee {
     id String @id @default(cuid())
 
     // Personal Info
-    name    String
+    name        String
     phone       String?
     photoUrl    String?
     dateOfBirth DateTime?
@@ -18,10 +18,14 @@ model Employee {
     status         EmployeeStatus @default(ACTIVE)
 
     // Salary Info
+    salaryType         SalaryType @default(MONTHLY) // NEW: MONTHLY | DAILY | HOURLY
     basicSalary        Float
-    houseAllowance     Float @default(0)
-    medicalAllowance   Float @default(0)
-    transportAllowance Float @default(0)
+    houseAllowance     Float      @default(0)
+    medicalAllowance   Float      @default(0)
+    transportAllowance Float      @default(0)
+
+    // ✅ Optional: Override working days per employee
+    workingDaysPerMonth Int @default(22) // NEW: Can be customized
 
     // Bank Info
     bankName    String?

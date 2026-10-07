@@ -96,3 +96,10 @@ enum HrScope {
   DEPARTMENT_SPECIFIC // Manages specific department only
   REGIONAL         // Manages specific region
 }
+
+// 🆕 Salary Type
+enum SalaryType {
+    MONTHLY
+    DAILY
+    HOURLY
+}
