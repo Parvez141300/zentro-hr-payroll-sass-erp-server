@@ -4,11 +4,14 @@ model Payroll {
     month Int
     year  Int
 
-    basicSalary        Float
-    houseAllowance     Float @default(0)
-    medicalAllowance   Float @default(0)
-    transportAllowance Float @default(0)
-    overtimePay        Float @default(0)
+    // Salary Info
+    salaryType          SalaryType
+    workingDaysPerMonth Float      @default(22)
+    basicSalary         Float
+    houseAllowance      Float      @default(0)
+    medicalAllowance    Float      @default(0)
+    transportAllowance  Float      @default(0)
+    overtimePay         Float      @default(0)
 
     grossSalary     Float
     taxDeduction    Float @default(0)
@@ -26,7 +29,7 @@ model Payroll {
     employeeId String
     employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
     companyId  String
-    company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
