@@ -7,7 +7,7 @@ import { IGetAllOrQueryEmployeePayload, IUpdateEmployeePayload } from "./employe
 
 const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | undefined, role: Role | undefined, payload: IGetAllOrQueryEmployeePayload) => {
 
-    const { search, page, limit, skip, sortBy, sortOrder, employmentType, status, gender, departmentId, designationId } = payload;
+    const { search, page, limit, skip, sortBy, sortOrder, salaryType, employmentType, status, gender, departmentId, designationId } = payload;
 
     const isExistCompany = await prisma.company.findUnique({
         where: {
@@ -106,6 +106,12 @@ const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | u
                     }
                 },
             ]
+        });
+    }
+
+    if (salaryType) {
+        addCondition.push({
+            salaryType: salaryType
         });
     }
 

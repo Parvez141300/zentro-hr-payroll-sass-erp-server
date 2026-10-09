@@ -7,6 +7,7 @@ export interface IGetAllOrQueryEmployeePayload {
     skip: number;
     sortBy: string;
     sortOrder: string;
+    salaryType: SalaryType | undefined;
     employmentType: EmploymentType | undefined;
     status: EmployeeStatus | undefined;
     gender: Gender | undefined;
