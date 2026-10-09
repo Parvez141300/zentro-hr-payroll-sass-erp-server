@@ -266,7 +266,7 @@ const getEmployeeOwnProfileFromDB = async (companyId: string, userId: string) =>
 }
 
 const updateEmployeeInDB = async (companyId: string, userId: string, role: Role, payload: IUpdateEmployeePayload) => {
-    const { name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation, departmentId, designationId } = payload;
+    const { name, phone, photoUrl, dateOfBirth, gender, address, nidNumber, bloodGroup, employmentType, basicSalary, houseAllowance, medicalAllowance, transportAllowance, bankName, bankAccount, emergencyName, emergencyPhone, emergencyRelation, departmentId, designationId, salaryType, workingDaysPerMonth } = payload;
 
     const isExistCompany = await prisma.company.findUnique({
         where: {
@@ -306,10 +306,14 @@ const updateEmployeeInDB = async (companyId: string, userId: string, role: Role,
                     nidNumber: nidNumber || employeeData.nidNumber,
                     bloodGroup: bloodGroup || employeeData.bloodGroup,
                     employmentType: employmentType || employeeData.employmentType,
+
+                    salaryType: salaryType || employeeData.salaryType,
+                    workingDaysPerMonth: workingDaysPerMonth || employeeData.workingDaysPerMonth,
                     basicSalary: basicSalary || employeeData.basicSalary,
                     houseAllowance: houseAllowance || employeeData.houseAllowance,
                     medicalAllowance: medicalAllowance || employeeData.medicalAllowance,
                     transportAllowance: transportAllowance || employeeData.transportAllowance,
+
                     bankName: bankName || employeeData.bankName,
                     bankAccount: bankAccount || employeeData.bankAccount,
                     emergencyName: emergencyName || employeeData.emergencyName,

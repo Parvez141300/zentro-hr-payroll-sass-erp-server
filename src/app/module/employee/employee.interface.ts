@@ -1,4 +1,4 @@
-import { EmployeeStatus, EmploymentType, Gender } from "../../../generated/prisma/enums";
+import { EmployeeStatus, EmploymentType, Gender, SalaryType } from "../../../generated/prisma/enums";
 
 export interface IGetAllOrQueryEmployeePayload {
     search: string | undefined;
@@ -24,10 +24,14 @@ export interface IUpdateEmployeePayload {
     nidNumber?: string;
     bloodGroup?: string;
     employmentType?: EmploymentType;
+
+    salaryType?: SalaryType;
+    workingDaysPerMonth?: number;
     basicSalary?: number;
     houseAllowance?: number;
     medicalAllowance?: number;
     transportAllowance?: number;
+
     bankName?: string;
     bankAccount?: string;
     emergencyName?: string;

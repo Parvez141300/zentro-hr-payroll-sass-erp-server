@@ -68,6 +68,7 @@ export interface ICreateCompanyEmployeePayload {
     employmentType: EmploymentType;
     joinDate?: Date;
 
+    // employee salary info
     basicSalary: number;
     houseAllowance?: number;
     medicalAllowance?: number;
