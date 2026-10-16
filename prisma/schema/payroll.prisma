@@ -1,8 +1,16 @@
 model Payroll {
     id String @id @default(cuid())
 
-    month Int
-    year  Int
+    month Int?
+    year  Int?
+
+    // ✅ Range-based fields
+    periodStart DateTime?
+    periodEnd   DateTime?
+
+    // ✅ Daily/Hourly tracking
+    totalDays  Int   @default(0)
+    totalHours Float @default(0)
 
     // Salary Info
     salaryType          SalaryType

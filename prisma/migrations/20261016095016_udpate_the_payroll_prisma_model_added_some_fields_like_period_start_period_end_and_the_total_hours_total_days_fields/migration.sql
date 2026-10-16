@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "payroll" ADD COLUMN     "periodEnd" TIMESTAMP(3),
+ADD COLUMN     "periodStart" TIMESTAMP(3),
+ADD COLUMN     "totalDays" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "totalHours" DOUBLE PRECISION NOT NULL DEFAULT 0;
