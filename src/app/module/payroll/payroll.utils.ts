@@ -175,6 +175,93 @@ const calculateDailyPayroll = async (employee: Employee, startDate: Date, endDat
     };
 };
 
+// ============================================
+// 3️⃣ HOURLY Employee
+// ============================================
+const calculateHourlyPayroll = async (employee: Employee, startDate: Date, endDate: Date) => {
+    // For HOURLY, basicSalary is the per-hour rate
+    const hourlyRate = employee.basicSalary || 0;
+
+    const workingDays = employee.workingDaysPerMonth || 22;
+    const dailyHouse = (employee.houseAllowance || 0) / workingDays;
+    const dailyMedical = (employee.medicalAllowance || 0) / workingDays;
+    const dailyTransport = (employee.transportAllowance || 0) / workingDays;
+
+    const attendances = await prisma.attendance.findMany({
+        where: {
+            employeeId: employee.id,
+            companyId: employee.companyId,
+            date: { gte: startDate, lte: endDate },
+        },
+    });
+
+    let totalRegularHours = 0;
+    let totalOvertimeHours = 0;
+    let presentDays = 0;
+
+    for (const att of attendances) {
+        if (!att.checkIn || !att.checkOut) continue;
+
+        const checkIn = new Date(att.checkIn);
+        const checkOut = new Date(att.checkOut);
+        const workedHours = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60);
+
+        const regularHours = Math.min(workedHours, WORKING_HOURS_PER_DAY);
+        const overtime = Math.max(0, workedHours - WORKING_HOURS_PER_DAY);
+
+        if (att.status === AttendanceStatus.PRESENT || att.status === AttendanceStatus.LEAVE || att.status === AttendanceStatus.LATE) {
+            totalRegularHours += regularHours;
+            totalOvertimeHours += overtime;
+            presentDays += 1;
+        } else if (att.status === AttendanceStatus.HALF_DAY) {
+            totalRegularHours += (regularHours / 2);
+            totalOvertimeHours += overtime;
+            presentDays += 0.5;
+        }
+
+        if (att.overtimeHours && att.overtimeHours > 0) {
+            totalOvertimeHours += att.overtimeHours;
+        }
+    }
+
+    const basicSalary = hourlyRate * totalRegularHours;
+
+    // Calculate daily allowance rate and multiply by how many full days worked
+    // const dailyRateEquivalent = hourlyRate * WORKING_HOURS_PER_DAY;
+    const houseAllowance = dailyHouse * presentDays;
+    const medicalAllowance = dailyMedical * presentDays;
+    const transportAllowance = dailyTransport * presentDays;
+
+    const overtimePay = totalOvertimeHours * hourlyRate * OVERTIME_MULTIPLIER;
+
+    const grossSalary = basicSalary + houseAllowance + medicalAllowance + transportAllowance + overtimePay;
+
+    const estimatedMonthlyGross = grossSalary * (workingDays / (presentDays || 1));
+    const taxDeduction = calculateTax(estimatedMonthlyGross) * (presentDays / workingDays);
+
+    const pfDeduction = basicSalary * PF_DEDUCTION_PERCENTAGE;
+    const totalDeductions = taxDeduction + pfDeduction;
+    const netSalary = grossSalary - totalDeductions;
+
+    return {
+        salaryType: SalaryType.HOURLY,
+        workingDaysPerMonth: workingDays,
+        basicSalary: Math.round(basicSalary * 100) / 100,
+        houseAllowance: Math.round(houseAllowance * 100) / 100,
+        medicalAllowance: Math.round(medicalAllowance * 100) / 100,
+        transportAllowance: Math.round(transportAllowance * 100) / 100,
+        overtimePay: Math.round(overtimePay * 100) / 100,
+        grossSalary: Math.round(grossSalary * 100) / 100,
+        taxDeduction: Math.round(taxDeduction * 100) / 100,
+        pfDeduction: Math.round(pfDeduction * 100) / 100,
+        otherDeductions: 0,
+        totalDeductions: Math.round(totalDeductions * 100) / 100,
+        netSalary: Math.round(netSalary * 100) / 100,
+        totalDays: Math.floor(presentDays),
+        totalHours: Math.round((totalRegularHours + totalOvertimeHours) * 100) / 100,
+    };
+};
+
 export const calculateSalaryPayroll = async (employee: Employee, month: number, year: number) => {
     const startDate = new Date(year, month - 1, 1); // First day of the month
     const endDate = new Date(year, month, 0); // Last day of the month
