@@ -1,9 +1,11 @@
 import { PayrollStatus } from "../../../generated/prisma/enums";
 
 export interface IGeneratePayrollPayload {
+    employeeId: string;
     month: number;
     year: number;
-    employeeId: string;
+    periodStart: Date;
+    periodEnd: Date;
 }
 
 export interface IGeneratePayrollForAllPayload {

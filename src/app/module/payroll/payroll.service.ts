@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/client";
-import { PayrollStatus, Role, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { PayrollStatus, Role, SalaryType, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { PayrollWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 import { IGeneratePayrollForAllPayload, IGeneratePayrollPayload, IGetAllOrQueryPayrollsPayload, IPayslipData, IUpdatePayrollPayload } from "./payroll.interface";
-import { calculateSalaryPayroll } from "./payroll.utils";
+import { calculateDailyPayroll, calculateHourlyPayroll, calculateMonthlyPayroll, calculateSalaryPayroll, getMonthRange } from "./payroll.utils";
 
 const generatePayrollForAllEmployeeInDB = async (
     companyId: string,
@@ -190,79 +190,167 @@ const generatePayrollForAllEmployeeInDB = async (
 };
 
 // generate payroll for individual employee
-const generatePayrollInDB = async (companyId: string, userId: string, payload: IGeneratePayrollPayload) => {
-    const { month, year, employeeId } = payload;
+const generatePayrollInDB = async (
+    companyId: string,
+    userId: string,
+    payload: IGeneratePayrollPayload
+) => {
+    const { employeeId, month, year, periodStart, periodEnd } = payload;
 
-    const isExistCompany = await prisma.company.findUnique({
-        where: {
-            id: companyId,
-        },
+    const company = await prisma.company.findUnique({ where: { id: companyId } });
+    if (!company) throw new Error("Company not found");
+    
+    //* Todo : Add subscription check
+    // if (company.subscriptionStatus === SubscriptionStatus.EXPIRED || company.subscriptionStatus === SubscriptionStatus.TRIAL) {
+    //     throw new Error("Company subscription has expired/trial. Please renew to generate payroll.");
+    // }
+
+    const employee = await prisma.employee.findUnique({
+        where: { id: employeeId, companyId },
+        include: { user: true, designation: true, department: true },
     });
+    if (!employee) throw new Error("Employee not found for this company");
 
-    if (!isExistCompany) {
-        throw new Error("Company not found");
-    }
+    // Determine Date Range
+    let startDate: Date;
+    let endDate: Date;
 
-    if (isExistCompany.subscriptionStatus === SubscriptionStatus.EXPIRED) {
-        throw new Error("Company subscription has expired please renew your subscription to generate payroll");
-    }
-
-    const employeeData = await prisma.employee.findUnique({
-        where: {
-            id: employeeId,
-            companyId: companyId,
-        },
-        include: {
-            user: true,
-            designation: true,
-            department: true,
+    if (employee.salaryType === SalaryType.MONTHLY) {
+        if (!month || !year) throw new Error("Month and year are required for monthly employees");
+        const range = getMonthRange(Number(month), Number(year));
+        startDate = range.startDate;
+        endDate = range.endDate;
+    } else {
+        if (periodStart && periodEnd) {
+            startDate = new Date(periodStart);
+            endDate = new Date(periodEnd);
+        } else if (month && year) {
+            const range = getMonthRange(Number(month), Number(year));
+            startDate = range.startDate;
+            endDate = range.endDate;
+        } else {
+            throw new Error("Either (month + year) or (periodStart + periodEnd) is required");
         }
-    });
-
-    if (!employeeData) {
-        throw new Error("Employee not found for the given employeeId and companyId to do payroll generation");
     }
 
-    const isExistPayroll = await prisma.payroll.findUnique({
-        where: {
-            employeeId_month_year: {
-                employeeId: employeeId,
-                month: Number(month),
-                year: year,
-            }
-        }
+    // Check existing
+    const existingPayroll = await prisma.payroll.findFirst({
+        where: { employeeId, companyId, periodStart: startDate, periodEnd: endDate },
     });
-
-    if (isExistPayroll) {
-        throw new Error("Payroll already generated for this employee for the given month and year");
+    if (existingPayroll) {
+        throw new Error(`Payroll already generated for this period`);
     }
 
-    const calculation = await calculateSalaryPayroll(employeeData, month, year);
+    // Calculate
+    let calculation;
+    switch (employee.salaryType) {
+        case SalaryType.MONTHLY:
+            calculation = await calculateMonthlyPayroll(employee, startDate, endDate);
+            break;
+        case SalaryType.DAILY:
+            calculation = await calculateDailyPayroll(employee, startDate, endDate);
+            break;
+        case SalaryType.HOURLY:
+            calculation = await calculateHourlyPayroll(employee, startDate, endDate);
+            break;
+        default:
+            throw new Error(`Unsupported salary type: ${employee.salaryType}`);
+    }
 
+    // Save
     const payroll = await prisma.payroll.create({
         data: {
-            employeeId: employeeData.id,
+            employeeId: employee.id,
             companyId,
-            month,
-            year,
-            basicSalary: calculation.basicSalary,
-            houseAllowance: calculation.houseAllowance,
-            medicalAllowance: calculation.medicalAllowance,
-            transportAllowance: calculation.transportAllowance,
-            overtimePay: calculation.overtimePay,
-            grossSalary: calculation.grossSalary,
-            taxDeduction: calculation.taxDeduction,
-            pfDeduction: calculation.pfDeduction,
-            otherDeductions: calculation.otherDeductions,
-            totalDeductions: calculation.totalDeductions,
-            netSalary: calculation.netSalary,
+            periodStart: startDate,
+            periodEnd: endDate,
+            month: month ? Number(month) : null,
+            year: year ? Number(year) : null,
+            ...calculation,
             status: PayrollStatus.DRAFT,
-            generatedById: userId
+            generatedById: userId,
+        },
+        include: {
+            employee: { select: { id: true, name: true, user: { select: { name: true } } } },
         },
     });
 
     return payroll;
-}
+};
+// const generatePayrollInDB = async (companyId: string, userId: string, payload: IGeneratePayrollPayload) => {
+//     const { month, year, employeeId } = payload;
+
+//     const isExistCompany = await prisma.company.findUnique({
+//         where: {
+//             id: companyId,
+//         },
+//     });
+
+//     if (!isExistCompany) {
+//         throw new Error("Company not found");
+//     }
+
+//     if (isExistCompany.subscriptionStatus === SubscriptionStatus.EXPIRED) {
+//         throw new Error("Company subscription has expired please renew your subscription to generate payroll");
+//     }
+
+//     const employeeData = await prisma.employee.findUnique({
+//         where: {
+//             id: employeeId,
+//             companyId: companyId,
+//         },
+//         include: {
+//             user: true,
+//             designation: true,
+//             department: true,
+//         }
+//     });
+
+//     if (!employeeData) {
+//         throw new Error("Employee not found for the given employeeId and companyId to do payroll generation");
+//     }
+
+//     const isExistPayroll = await prisma.payroll.findUnique({
+//         where: {
+//             employeeId_month_year: {
+//                 employeeId: employeeId,
+//                 month: Number(month),
+//                 year: year,
+//             }
+//         }
+//     });
+
+//     if (isExistPayroll) {
+//         throw new Error("Payroll already generated for this employee for the given month and year");
+//     }
+
+//     const calculation = await calculateSalaryPayroll(employeeData, month, year);
+
+//     const payroll = await prisma.payroll.create({
+//         data: {
+//             employeeId: employeeData.id,
+//             companyId,
+//             month,
+//             year,
+//             basicSalary: calculation.basicSalary,
+//             houseAllowance: calculation.houseAllowance,
+//             medicalAllowance: calculation.medicalAllowance,
+//             transportAllowance: calculation.transportAllowance,
+//             overtimePay: calculation.overtimePay,
+//             grossSalary: calculation.grossSalary,
+//             taxDeduction: calculation.taxDeduction,
+//             pfDeduction: calculation.pfDeduction,
+//             otherDeductions: calculation.otherDeductions,
+//             totalDeductions: calculation.totalDeductions,
+//             netSalary: calculation.netSalary,
+//             status: PayrollStatus.DRAFT,
+//             generatedById: userId
+//         },
+//     });
+
+//     return payroll;
+// }
+
 
 const getAllOrQueryPayrollsFromDB = async (
     companyId: string,
