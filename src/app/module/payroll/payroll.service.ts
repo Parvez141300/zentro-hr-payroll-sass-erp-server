@@ -199,7 +199,7 @@ const generatePayrollInDB = async (
 
     const company = await prisma.company.findUnique({ where: { id: companyId } });
     if (!company) throw new Error("Company not found");
-    
+
     //* Todo : Add subscription check
     // if (company.subscriptionStatus === SubscriptionStatus.EXPIRED || company.subscriptionStatus === SubscriptionStatus.TRIAL) {
     //     throw new Error("Company subscription has expired/trial. Please renew to generate payroll.");
@@ -266,9 +266,24 @@ const generatePayrollInDB = async (
             periodEnd: endDate,
             month: month ? Number(month) : null,
             year: year ? Number(year) : null,
-            ...calculation,
             status: PayrollStatus.DRAFT,
             generatedById: userId,
+            // salary calculation data
+            salaryType: calculation.salaryType,
+            workingDaysPerMonth: calculation.workingDaysPerMonth,
+            basicSalary: calculation.basicSalary,
+            houseAllowance: calculation.houseAllowance,
+            medicalAllowance: calculation.medicalAllowance,
+            transportAllowance: calculation.transportAllowance,
+            overtimePay: calculation.overtimePay,
+            grossSalary: calculation.grossSalary,
+            taxDeduction: calculation.taxDeduction,
+            pfDeduction: calculation.pfDeduction,
+            otherDeductions: calculation.otherDeductions,
+            totalDeductions: calculation.totalDeductions,
+            netSalary: calculation.netSalary,
+            totalDays: calculation.totalDays,
+            totalHours: calculation.totalHours,
         },
         include: {
             employee: { select: { id: true, name: true, user: { select: { name: true } } } },
