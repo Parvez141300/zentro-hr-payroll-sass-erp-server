@@ -5,6 +5,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { PayrollStatus, Role } from "../../../generated/prisma/enums";
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
+import { IGeneratePayrollPayload } from "./payroll.interface";
 
 const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Response) => {
     const { companyId } = req.user;
@@ -20,8 +21,20 @@ const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Respo
 
 const generatePayroll = catchAsync(async (req: Request, res: Response) => {
     const { companyId, userId } = req.user; // Assuming companyId and userId are sent in the request body
-    const payload = req.body;
-    const result = await payrollService.generatePayrollInDB(companyId, userId, payload);
+    
+    const payload = req.body as IGeneratePayrollPayload;
+    const result = await payrollService.generatePayrollInDB(
+        companyId,
+        userId,
+        {
+            month: payload.month,
+            year: payload.year,
+            employeeId: payload.employeeId,
+            periodStart: payload.periodStart,
+            periodEnd: payload.periodEnd,
+        }
+    );
+
     sendResponse(res, {
         httpStatusCode: status.CREATED,
         success: true,
