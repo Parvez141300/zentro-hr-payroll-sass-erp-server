@@ -1,4 +1,4 @@
-import { PayrollStatus } from "../../../generated/prisma/enums";
+import { PayrollStatus, SalaryType } from "../../../generated/prisma/enums";
 
 export interface IGeneratePayrollPayload {
     employeeId: string;
@@ -25,6 +25,7 @@ export interface IGetAllOrQueryPayrollsPayload {
     status?: PayrollStatus;
     startDate?: Date;
     endDate?: Date;
+    salaryType?: SalaryType;
     departmentId?: string;
     designationId?: string;
 }

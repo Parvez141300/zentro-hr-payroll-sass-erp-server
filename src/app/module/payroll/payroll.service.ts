@@ -385,6 +385,7 @@ const getAllOrQueryPayrollsFromDB = async (
         status,
         startDate,
         endDate,
+        salaryType,
         departmentId,
         designationId,
     } = payload;
@@ -504,6 +505,13 @@ const getAllOrQueryPayrollsFromDB = async (
     if (status) {
         addCondition.push({
             status: status
+        });
+    }
+
+    // Salary Type filter
+    if (salaryType) {
+        addCondition.push({
+            salaryType: salaryType,
         });
     }
 
