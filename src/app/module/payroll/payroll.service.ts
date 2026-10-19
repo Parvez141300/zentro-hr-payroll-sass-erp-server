@@ -593,9 +593,10 @@ const getAllOrQueryPayrollsFromDB = async (
                                 email: true,
                                 name: true
                             }
-                        }
+                        },
                     }
-                }
+                },
+                company: true,
             }
         });
 
@@ -638,7 +639,8 @@ const getAllOrQueryPayrollsFromDB = async (
                             }
                         }
                     }
-                }
+                },
+                company: true,
             }
         });
 
@@ -692,7 +694,8 @@ const getAllOrQueryPayrollsFromDB = async (
                             }
                         }
                     }
-                }
+                },
+                company: true,
             }
         });
 
