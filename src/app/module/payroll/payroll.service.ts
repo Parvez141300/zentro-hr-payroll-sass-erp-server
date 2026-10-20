@@ -718,73 +718,82 @@ const getAllOrQueryPayrollsFromDB = async (
 const updatePayrollInDB = async (
     companyId: string,
     payrollId: string,
-    payload: IUpdatePayrollPayload,
+    userId: string, // For audit logging if needed later
+    payload: IUpdatePayrollPayload
 ) => {
-    const {
-        basicSalary,
-        houseAllowance,
-        medicalAllowance,
-        transportAllowance,
-        overtimePay,
-        taxDeduction,
-        pfDeduction,
-        otherDeductions,
-        status
-    } = payload;
-
-    const isExistPayroll = await prisma.payroll.findFirst({
-        where: {
-            id: payrollId,
-            companyId
-        },
-        include: {
-            employee: true
-        }
-    });
-
-    if (!isExistPayroll) {
-        throw new Error("Payroll not found");
-    }
-
-    // Cannot update if already paid
-    if (isExistPayroll.status === 'PAID') {
-        throw new Error("Cannot update a paid payroll");
-    }
-
-    // Calculate new values
-    const newBasicSalary = basicSalary ?? isExistPayroll.basicSalary;
-    const newHouseAllowance = houseAllowance ?? isExistPayroll.houseAllowance;
-    const newMedicalAllowance = medicalAllowance ?? isExistPayroll.medicalAllowance;
-    const newTransportAllowance = transportAllowance ?? isExistPayroll.transportAllowance;
-    const newOvertimePay = overtimePay ?? isExistPayroll.overtimePay;
-    const newTaxDeduction = taxDeduction ?? isExistPayroll.taxDeduction;
-    const newPfDeduction = pfDeduction ?? isExistPayroll.pfDeduction;
-    const newOtherDeductions = otherDeductions ?? isExistPayroll.otherDeductions;
-
-    const grossSalary = newBasicSalary + newHouseAllowance + newMedicalAllowance +
-        newTransportAllowance + newOvertimePay;
-    const totalDeductions = newTaxDeduction + newPfDeduction + newOtherDeductions;
-    const netSalary = grossSalary - totalDeductions;
-
-    const updated = await prisma.payroll.update({
+    // 1. Verify the payroll exists and belongs to the company
+    const existingPayroll = await prisma.payroll.findUnique({
         where: { id: payrollId },
-        data: {
-            basicSalary: newBasicSalary,
-            houseAllowance: newHouseAllowance,
-            medicalAllowance: newMedicalAllowance,
-            transportAllowance: newTransportAllowance,
-            overtimePay: newOvertimePay,
-            grossSalary,
-            taxDeduction: newTaxDeduction,
-            pfDeduction: newPfDeduction,
-            otherDeductions: newOtherDeductions,
-            totalDeductions,
-            netSalary,
-            status: status || isExistPayroll.status,
+        include: {
+            employee: { select: { name: true } },
         },
     });
 
-    return updated;
+    if (!existingPayroll) {
+        throw new Error("Payroll record not found");
+    }
+
+    if (existingPayroll.companyId !== companyId) {
+        throw new Error("Unauthorized: You do not have access to this payroll record");
+    }
+
+    // 2. Prevent editing if already PAID or CANCELLED (Optional but recommended)
+    if (existingPayroll.status === PayrollStatus.PAID) {
+        throw new Error("Cannot edit a payroll that has already been paid");
+    }
+    if (existingPayroll.status === PayrollStatus.CANCELLED) {
+        throw new Error("Cannot edit a cancelled payroll");
+    }
+
+    // 3. Prepare the update data
+    const updateData: any = {};
+
+    if (payload.month !== undefined) {
+        updateData.month = payload.month ? Number(payload.month) : null;
+    }
+    if (payload.year !== undefined) {
+        updateData.year = payload.year ? Number(payload.year) : null;
+    }
+    if (payload.periodStart) {
+        updateData.periodStart = new Date(payload.periodStart);
+    }
+    if (payload.periodEnd) {
+        updateData.periodEnd = new Date(payload.periodEnd);
+    }
+    if (payload.status) {
+        updateData.status = payload.status;
+    }
+
+    // 4. Handle PaidAt logic based on status
+    if (payload.status !== PayrollStatus.PAID) {
+        // If moving away from PAID, clear the paidAt date
+        updateData.paidAt = null;
+    }
+    else if (payload.status === PayrollStatus.PAID) {
+        // If marking as PAID, use provided date or default to now
+        updateData.paidAt = payload.paidAt ? new Date(payload.paidAt) : new Date();
+    }  else if (payload.paidAt !== undefined) {
+        // If just updating the date directly
+        updateData.paidAt = payload.paidAt ? new Date(payload.paidAt) : null;
+    }
+
+    // 5. Execute the update
+    const updatedPayroll = await prisma.payroll.update({
+        where: { id: payrollId },
+        data: updateData,
+        include: {
+            employee: {
+                select: {
+                    id: true,
+                    name: true,
+                    employeeCode: true,
+                    user: { select: { name: true, email: true } },
+                },
+            },
+        },
+    });
+
+    return updatedPayroll;
 };
 
 const getPayslipDataFromDB = async (

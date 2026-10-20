@@ -31,15 +31,12 @@ export interface IGetAllOrQueryPayrollsPayload {
 }
 
 export interface IUpdatePayrollPayload {
-    basicSalary?: number;
-    houseAllowance?: number;
-    medicalAllowance?: number;
-    transportAllowance?: number;
-    overtimePay?: number;
-    taxDeduction?: number;
-    pfDeduction?: number;
-    otherDeductions?: number;
+    month?: number | null;
+    year?: number | null;
+    periodStart?: string; // ISO string
+    periodEnd?: string;   // ISO string
     status?: PayrollStatus;
+    paidAt?: string | null; // ISO string
 }
 
 export interface IPayslipData {
