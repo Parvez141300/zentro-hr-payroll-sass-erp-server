@@ -68,10 +68,12 @@ const getAllOrQueryPayrolls = catchAsync(async (req: Request, res: Response) => 
 });
 
 const updatePayrollInDB = catchAsync(async (req: Request, res: Response) => {
-    const { companyId } = req.user;
+    const { companyId, userId } = req.user;
     const { id: payrollId } = req.params;
     const payload = req.body;
-    const result = await payrollService.updatePayrollInDB(companyId, payrollId as string, payload);
+    
+    const result = await payrollService.updatePayrollInDB(companyId, userId, payrollId as string, payload);
+
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

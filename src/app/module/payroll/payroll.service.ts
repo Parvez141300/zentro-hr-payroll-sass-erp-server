@@ -717,8 +717,8 @@ const getAllOrQueryPayrollsFromDB = async (
 
 const updatePayrollInDB = async (
     companyId: string,
-    payrollId: string,
     userId: string, // For audit logging if needed later
+    payrollId: string,
     payload: IUpdatePayrollPayload
 ) => {
     // 1. Verify the payroll exists and belongs to the company
@@ -738,12 +738,12 @@ const updatePayrollInDB = async (
     }
 
     // 2. Prevent editing if already PAID or CANCELLED (Optional but recommended)
-    if (existingPayroll.status === PayrollStatus.PAID) {
-        throw new Error("Cannot edit a payroll that has already been paid");
-    }
-    if (existingPayroll.status === PayrollStatus.CANCELLED) {
-        throw new Error("Cannot edit a cancelled payroll");
-    }
+    // if (existingPayroll.status === PayrollStatus.PAID) {
+    //     throw new Error("Cannot edit a payroll that has already been paid");
+    // }
+    // if (existingPayroll.status === PayrollStatus.CANCELLED) {
+    //     throw new Error("Cannot edit a cancelled payroll");
+    // }
 
     // 3. Prepare the update data
     const updateData: any = {};
