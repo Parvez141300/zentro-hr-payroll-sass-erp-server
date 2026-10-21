@@ -6,11 +6,11 @@ import { Role } from "../../../generated/prisma/enums";
 const router = Router();
 
 // generate payroll for all employees
-router.post(
-    "/all-employees",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
-    payrollController.generatePayrollForAllEmployee
-);
+// router.post(
+//     "/all-employees",
+//     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
+//     payrollController.generatePayrollForAllEmployee
+// );
 // generate payroll for individual employee
 router.post(
     "/",
@@ -27,9 +27,9 @@ router.patch(
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     payrollController.updatePayrollInDB
 );
-router.get(
-    "/:id/payslip", 
-    payrollController.getPayslipData
-);
+// router.get(
+//     "/:id/payslip", 
+//     payrollController.getPayslipData
+// );
 
 export const payrollRoute = router;

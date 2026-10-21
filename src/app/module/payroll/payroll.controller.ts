@@ -7,17 +7,17 @@ import { PayrollStatus, Role, SalaryType } from "../../../generated/prisma/enums
 import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 import { IGeneratePayrollPayload } from "./payroll.interface";
 
-const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Response) => {
-    const { companyId } = req.user;
-    const payload = req.body;
-    const result = await payrollService.generatePayrollForAllEmployeeInDB(companyId, payload);
-    sendResponse(res, {
-        httpStatusCode: status.CREATED,
-        success: true,
-        message: "Payroll generated for all employees successfully",
-        data: result,
-    });
-});
+// const generatePayrollForAllEmployee = catchAsync(async (req: Request, res: Response) => {
+//     const { companyId } = req.user;
+//     const payload = req.body;
+//     const result = await payrollService.generatePayrollForAllEmployeeInDB(companyId, payload);
+//     sendResponse(res, {
+//         httpStatusCode: status.CREATED,
+//         success: true,
+//         message: "Payroll generated for all employees successfully",
+//         data: result,
+//     });
+// });
 
 const generatePayroll = catchAsync(async (req: Request, res: Response) => {
     const { companyId, userId } = req.user; // Assuming companyId and userId are sent in the request body
@@ -82,22 +82,22 @@ const updatePayrollInDB = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const getPayslipData = catchAsync(async (req: Request, res: Response) => {
-    const { companyId, userId, role } = req.user;
-    const { id: payrollId } = req.params;
-    const result = await payrollService.getPayslipDataFromDB(companyId, userId, payrollId as string, role as Role);
-    sendResponse(res, {
-        httpStatusCode: status.OK,
-        success: true,
-        message: "Payslip data fetched successfully",
-        data: result,
-    });
-});
+// const getPayslipData = catchAsync(async (req: Request, res: Response) => {
+//     const { companyId, userId, role } = req.user;
+//     const { id: payrollId } = req.params;
+//     const result = await payrollService.getPayslipDataFromDB(companyId, userId, payrollId as string, role as Role);
+//     sendResponse(res, {
+//         httpStatusCode: status.OK,
+//         success: true,
+//         message: "Payslip data fetched successfully",
+//         data: result,
+//     });
+// });
 
 export const payrollController = {
     generatePayroll,
-    generatePayrollForAllEmployee,
+    // generatePayrollForAllEmployee,
     getAllOrQueryPayrolls,
     updatePayrollInDB,
-    getPayslipData,
+    // getPayslipData,
 };

@@ -1,193 +1,211 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { DepartmentHead, Employee, HrManager } from "../../../generated/prisma/client";
-import { PayrollStatus, Role, SalaryType, SubscriptionStatus } from "../../../generated/prisma/enums";
+import {
+    PayrollStatus,
+    Role,
+    SalaryType,
+    // SubscriptionStatus,
+} from "../../../generated/prisma/enums";
 import { PayrollWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
-import { IGeneratePayrollForAllPayload, IGeneratePayrollPayload, IGetAllOrQueryPayrollsPayload, IPayslipData, IUpdatePayrollPayload } from "./payroll.interface";
-import { calculateDailyPayroll, calculateHourlyPayroll, calculateMonthlyPayroll, calculateSalaryPayroll, getMonthRange } from "./payroll.utils";
+import {
+    // IGeneratePayrollForAllPayload,
+    IGeneratePayrollPayload,
+    IGetAllOrQueryPayrollsPayload,
+    // IPayslipData,
+    IUpdatePayrollPayload
+} from "./payroll.interface";
+import { 
+    calculateDailyPayroll, 
+    calculateHourlyPayroll, 
+    calculateMonthlyPayroll, 
+    // calculateSalaryPayroll, 
+    getMonthRange, 
+} from "./payroll.utils";
 
-const generatePayrollForAllEmployeeInDB = async (
-    companyId: string,
-    payload: IGeneratePayrollForAllPayload
-) => {
-    const { month, year } = payload;
 
-    // ✅ Validate input
-    const monthNum = Number(month);
-    const yearNum = Number(year);
+// const generatePayrollForAllEmployeeInDB = async (
+//     companyId: string,
+//     payload: IGeneratePayrollForAllPayload
+// ) => {
+//     const { month, year } = payload;
 
-    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-        throw new Error("Invalid month. Must be between 1 and 12");
-    }
+//     // ✅ Validate input
+//     const monthNum = Number(month);
+//     const yearNum = Number(year);
 
-    // ✅ Check company exists and is active
-    const company = await prisma.company.findUnique({
-        where: { id: companyId },
-        select: {
-            id: true,
-            name: true,
-            subscriptionStatus: true,
-            maxEmployees: true,
-        },
-    });
+//     if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+//         throw new Error("Invalid month. Must be between 1 and 12");
+//     }
 
-    if (!company) {
-        throw new Error("Company not found");
-    }
+//     // ✅ Check company exists and is active
+//     const company = await prisma.company.findUnique({
+//         where: { id: companyId },
+//         select: {
+//             id: true,
+//             name: true,
+//             subscriptionStatus: true,
+//             maxEmployees: true,
+//         },
+//     });
 
-    // if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
-    //     throw new Error(
-    //         "Company subscription has expired/trial. Please renew your subscription to generate payroll."
-    //     );
-    // }
+//     if (!company) {
+//         throw new Error("Company not found");
+//     }
 
-    // if (company.subscriptionStatus === SubscriptionStatus.TRIAL) {
-    //     throw new Error(
-    //         "Company subscription is on trial. Please renew your subscription to generate payroll."
-    //     );
-    // }
+//     // if (company.subscriptionStatus === SubscriptionStatus.EXPIRED) {
+//     //     throw new Error(
+//     //         "Company subscription has expired/trial. Please renew your subscription to generate payroll."
+//     //     );
+//     // }
 
-    // ✅ Fetch employees ONCE with all needed relations
-    const employees = await prisma.employee.findMany({
-        where: {
-            companyId: companyId,
-        },
-        include: {
-            user: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                },
-            },
-            designation: true,
-            department: true,
-        },
-    });
+//     // if (company.subscriptionStatus === SubscriptionStatus.TRIAL) {
+//     //     throw new Error(
+//     //         "Company subscription is on trial. Please renew your subscription to generate payroll."
+//     //     );
+//     // }
 
-    if (!employees.length) {
-        throw new Error(
-            "No employees found for this company. Please add employees before generating payroll."
-        );
-    }
+//     // ✅ Fetch employees ONCE with all needed relations
+//     const employees = await prisma.employee.findMany({
+//         where: {
+//             companyId: companyId,
+//         },
+//         include: {
+//             user: {
+//                 select: {
+//                     id: true,
+//                     name: true,
+//                     email: true,
+//                 },
+//             },
+//             designation: true,
+//             department: true,
+//         },
+//     });
 
-    // ✅ Check which employees already have payroll for this period
-    const existingPayrolls = await prisma.payroll.findMany({
-        where: {
-            employeeId: { in: employees.map((e) => e.id) },
-            month: monthNum,
-            year: yearNum,
-        },
-        select: {
-            employeeId: true,
-        },
-    });
+//     if (!employees.length) {
+//         throw new Error(
+//             "No employees found for this company. Please add employees before generating payroll."
+//         );
+//     }
 
-    const existingPayrollEmployeeIds = new Set(
-        existingPayrolls.map((p) => p.employeeId)
-    );
+//     // ✅ Check which employees already have payroll for this period
+//     const existingPayrolls = await prisma.payroll.findMany({
+//         where: {
+//             employeeId: { in: employees.map((e) => e.id) },
+//             month: monthNum,
+//             year: yearNum,
+//         },
+//         select: {
+//             employeeId: true,
+//         },
+//     });
 
-    // ✅ Filter out employees who already have payroll
-    const employeesToProcess = employees.filter(
-        (emp) => !existingPayrollEmployeeIds.has(emp.id)
-    );
+//     const existingPayrollEmployeeIds = new Set(
+//         existingPayrolls.map((p) => p.employeeId)
+//     );
 
-    if (employeesToProcess.length === 0) {
-        return {
-            success: false,
-            message: "Payroll already generated for all employees for this period",
-            data: {
-                totalEmployees: employees.length,
-                alreadyProcessed: existingPayrolls.length,
-                newlyProcessed: 0,
-                skipped: existingPayrolls.length,
-                payrolls: [],
-            },
-        };
-    }
+//     // ✅ Filter out employees who already have payroll
+//     const employeesToProcess = employees.filter(
+//         (emp) => !existingPayrollEmployeeIds.has(emp.id)
+//     );
 
-    // ✅ Calculate all payrolls first (before database operations)
-    const payrollDataList = await Promise.all(
-        employeesToProcess.map(async (employee) => {
-            try {
-                const payrollData = await calculateSalaryPayroll(
-                    employee,
-                    monthNum,
-                    yearNum
-                );
+//     if (employeesToProcess.length === 0) {
+//         return {
+//             success: false,
+//             message: "Payroll already generated for all employees for this period",
+//             data: {
+//                 totalEmployees: employees.length,
+//                 alreadyProcessed: existingPayrolls.length,
+//                 newlyProcessed: 0,
+//                 skipped: existingPayrolls.length,
+//                 payrolls: [],
+//             },
+//         };
+//     }
 
-                return {
-                    employeeId: employee.id,
-                    companyId: companyId,
-                    month: monthNum,
-                    year: yearNum,
-                    ...payrollData,
-                };
-            } catch (error: any) {
-                console.error(
-                    `Payroll calculation failed for employee ${employee.id}:`,
-                    error.message
-                );
-                // Return null for failed calculations
-                return null;
-            }
-        })
-    );
+//     // ✅ Calculate all payrolls first (before database operations)
+//     const payrollDataList = await Promise.all(
+//         employeesToProcess.map(async (employee) => {
+//             try {
+//                 const payrollData = await calculateSalaryPayroll(
+//                     employee,
+//                     monthNum,
+//                     yearNum
+//                 );
 
-    // ✅ Filter out failed calculations
-    const validPayrollData = payrollDataList.filter(
-        (data): data is NonNullable<typeof data> => data !== null
-    );
+//                 return {
+//                     employeeId: employee.id,
+//                     companyId: companyId,
+//                     month: monthNum,
+//                     year: yearNum,
+//                     ...payrollData,
+//                 };
+//             } catch (error: any) {
+//                 console.error(
+//                     `Payroll calculation failed for employee ${employee.id}:`,
+//                     error.message
+//                 );
+//                 // Return null for failed calculations
+//                 return null;
+//             }
+//         })
+//     );
 
-    if (validPayrollData.length === 0) {
-        throw new Error(
-            "Failed to calculate payroll for any employee. Please check employee salary structures."
-        );
-    }
+//     // ✅ Filter out failed calculations
+//     const validPayrollData = payrollDataList.filter(
+//         (data): data is NonNullable<typeof data> => data !== null
+//     );
 
-    // ✅ Use transaction to create all payrolls atomically
-    const createdPayrolls = await prisma.$transaction(
-        validPayrollData.map(
-            (data) =>
-                prisma.payroll.create({
-                    data: {
-                        ...data,
-                    },
-                    include: {
-                        employee: {
-                            select: {
-                                id: true,
-                                user: {
-                                    select: {
-                                        name: true,
-                                        email: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                })
-        ),
-        {
-            timeout: 30000, // 30 seconds timeout
-            maxWait: 10000, // 10 seconds max wait
-        }
-    );
+//     if (validPayrollData.length === 0) {
+//         throw new Error(
+//             "Failed to calculate payroll for any employee. Please check employee salary structures."
+//         );
+//     }
 
-    // ✅ Return comprehensive result
-    return {
-        success: true,
-        message: `Payroll generated successfully for ${createdPayrolls.length} employee(s)`,
-        data: {
-            totalEmployees: employees.length,
-            alreadyProcessed: existingPayrolls.length,
-            newlyProcessed: createdPayrolls.length,
-            skipped: existingPayrolls.length,
-            failed: employeesToProcess.length - validPayrollData.length,
-            payrolls: createdPayrolls,
-        },
-    };
-};
+//     // ✅ Use transaction to create all payrolls atomically
+//     const createdPayrolls = await prisma.$transaction(
+//         validPayrollData.map(
+//             (data) =>
+//                 prisma.payroll.create({
+//                     data: {
+//                         ...data,
+//                     },
+//                     include: {
+//                         employee: {
+//                             select: {
+//                                 id: true,
+//                                 user: {
+//                                     select: {
+//                                         name: true,
+//                                         email: true,
+//                                     },
+//                                 },
+//                             },
+//                         },
+//                     },
+//                 })
+//         ),
+//         {
+//             timeout: 30000, // 30 seconds timeout
+//             maxWait: 10000, // 10 seconds max wait
+//         }
+//     );
+
+//     // ✅ Return comprehensive result
+//     return {
+//         success: true,
+//         message: `Payroll generated successfully for ${createdPayrolls.length} employee(s)`,
+//         data: {
+//             totalEmployees: employees.length,
+//             alreadyProcessed: existingPayrolls.length,
+//             newlyProcessed: createdPayrolls.length,
+//             skipped: existingPayrolls.length,
+//             failed: employeesToProcess.length - validPayrollData.length,
+//             payrolls: createdPayrolls,
+//         },
+//     };
+// };
 
 // generate payroll for individual employee
 const generatePayrollInDB = async (
@@ -772,7 +790,7 @@ const updatePayrollInDB = async (
     else if (payload.status === PayrollStatus.PAID) {
         // If marking as PAID, use provided date or default to now
         updateData.paidAt = payload.paidAt ? new Date(payload.paidAt) : new Date();
-    }  else if (payload.paidAt !== undefined) {
+    } else if (payload.paidAt !== undefined) {
         // If just updating the date directly
         updateData.paidAt = payload.paidAt ? new Date(payload.paidAt) : null;
     }
@@ -796,94 +814,94 @@ const updatePayrollInDB = async (
     return updatedPayroll;
 };
 
-const getPayslipDataFromDB = async (
-    payrollId: string,
-    companyId: string,
-    userId: string,
-    role: Role
-) => {
-    const payroll = await prisma.payroll.findFirst({
-        where: {
-            id: payrollId,
-            companyId
-        },
-        include: {
-            employee: {
-                include: {
-                    department: true,
-                    designation: true,
-                    user: true
-                }
-            }
-        }
-    });
+// const getPayslipDataFromDB = async (
+//     payrollId: string,
+//     companyId: string,
+//     userId: string,
+//     role: Role
+// ) => {
+//     const payroll = await prisma.payroll.findFirst({
+//         where: {
+//             id: payrollId,
+//             companyId
+//         },
+//         include: {
+//             employee: {
+//                 include: {
+//                     department: true,
+//                     designation: true,
+//                     user: true
+//                 }
+//             }
+//         }
+//     });
 
-    if (!payroll) {
-        throw new Error("Payroll not found");
-    }
+//     if (!payroll) {
+//         throw new Error("Payroll not found");
+//     }
 
-    // Check permission for EMPLOYEE
-    if (role === Role.EMPLOYEE) {
-        const employee = await prisma.employee.findUnique({
-            where: { userId }
-        });
-        if (payroll.employeeId !== employee?.id) {
-            throw new Error("You can only view your own payslip");
-        }
-    }
+//     // Check permission for EMPLOYEE
+//     if (role === Role.EMPLOYEE) {
+//         const employee = await prisma.employee.findUnique({
+//             where: { userId }
+//         });
+//         if (payroll.employeeId !== employee?.id) {
+//             throw new Error("You can only view your own payslip");
+//         }
+//     }
 
-    // Check permission for DEPARTMENT_HEAD
-    if (role === Role.DEPARTMENT_HEAD) {
-        const deptHead = await prisma.departmentHead.findUnique({
-            where: { userId }
-        });
-        if (payroll.employee.departmentId !== deptHead?.departmentId) {
-            throw new Error("You can only view payslip for your department");
-        }
-    }
+//     // Check permission for DEPARTMENT_HEAD
+//     if (role === Role.DEPARTMENT_HEAD) {
+//         const deptHead = await prisma.departmentHead.findUnique({
+//             where: { userId }
+//         });
+//         if (payroll.employee.departmentId !== deptHead?.departmentId) {
+//             throw new Error("You can only view payslip for your department");
+//         }
+//     }
 
-    // Check permission for HR_MANAGER
-    if (role === Role.HR_MANAGER) {
-        const hrManager = await prisma.hrManager.findUnique({
-            where: { userId }
-        });
-        if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' &&
-            hrManager.departmentId &&
-            payroll.employee.departmentId !== hrManager.departmentId) {
-            throw new Error("You can only view payslip for your assigned department");
-        }
-    }
+//     // Check permission for HR_MANAGER
+//     if (role === Role.HR_MANAGER) {
+//         const hrManager = await prisma.hrManager.findUnique({
+//             where: { userId }
+//         });
+//         if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' &&
+//             hrManager.departmentId &&
+//             payroll.employee.departmentId !== hrManager.departmentId) {
+//             throw new Error("You can only view payslip for your assigned department");
+//         }
+//     }
 
-    const payslipData: IPayslipData = {
-        employeeName: payroll.employee.user.name,
-        employeeCode: payroll.employee.employeeCode || 'N/A',
-        department: payroll.employee.department?.name || 'N/A',
-        designation: payroll.employee.designation?.title || 'N/A',
-        month: payroll.month,
-        year: payroll.year,
-        basicSalary: payroll.basicSalary,
-        houseAllowance: payroll.houseAllowance,
-        medicalAllowance: payroll.medicalAllowance,
-        transportAllowance: payroll.transportAllowance,
-        overtimePay: payroll.overtimePay,
-        grossSalary: payroll.grossSalary,
-        taxDeduction: payroll.taxDeduction,
-        pfDeduction: payroll.pfDeduction,
-        otherDeductions: payroll.otherDeductions,
-        totalDeductions: payroll.totalDeductions,
-        netSalary: payroll.netSalary,
-        status: payroll.status,
-        paidAt: payroll.paidAt || undefined,
-        generatedAt: payroll.createdAt
-    };
+//     const payslipData: IPayslipData = {
+//         employeeName: payroll.employee.user.name,
+//         employeeCode: payroll.employee.employeeCode || 'N/A',
+//         department: payroll.employee.department?.name || 'N/A',
+//         designation: payroll.employee.designation?.title || 'N/A',
+//         month: payroll.month,
+//         year: payroll.year,
+//         basicSalary: payroll.basicSalary,
+//         houseAllowance: payroll.houseAllowance,
+//         medicalAllowance: payroll.medicalAllowance,
+//         transportAllowance: payroll.transportAllowance,
+//         overtimePay: payroll.overtimePay,
+//         grossSalary: payroll.grossSalary,
+//         taxDeduction: payroll.taxDeduction,
+//         pfDeduction: payroll.pfDeduction,
+//         otherDeductions: payroll.otherDeductions,
+//         totalDeductions: payroll.totalDeductions,
+//         netSalary: payroll.netSalary,
+//         status: payroll.status,
+//         paidAt: payroll.paidAt || undefined,
+//         generatedAt: payroll.createdAt
+//     };
 
-    return payslipData;
-};
+//     return payslipData;
+// };
 
 export const payrollService = {
     generatePayrollInDB,
-    generatePayrollForAllEmployeeInDB,
+    // generatePayrollForAllEmployeeInDB,
     getAllOrQueryPayrollsFromDB,
     updatePayrollInDB,
-    getPayslipDataFromDB,
+    // getPayslipDataFromDB,
 }
