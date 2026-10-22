@@ -647,7 +647,7 @@ const getPayrollStatsFromDB = async (
 ) => {
     const today = new Date();
 
-    // 1. PAYROLL DATE
+    // 1. PAYROLL DATE DEFAULT
     let reportMonth: number;
     let reportYear: number;
 
@@ -655,131 +655,92 @@ const getPayrollStatsFromDB = async (
         reportMonth = payload.month;
         reportYear = payload.year;
     } else {
-        // Default: current month
         reportMonth = today.getMonth() + 1;
         reportYear = today.getFullYear();
     }
 
     // 2. GET ROLE-SPECIFIC EMPLOYEES
-
     const employeeIds: string[] = [];
     const departmentIds: string[] = [];
 
     if (role === Role.EMPLOYEE) {
-        const employee = await prisma.employee.findUnique({
-            where: { userId: userId }
-        });
-
-        if (!employee) {
-            throw new Error("Employee not found");
-        }
-
+        const employee = await prisma.employee.findUnique({ where: { userId } });
+        if (!employee) throw new Error("Employee not found");
         employeeIds.push(employee.id);
     }
 
     if (role === Role.DEPARTMENT_HEAD) {
-        const departmentHead = await prisma.departmentHead.findUnique({
-            where: { userId: userId }
-        });
-
-        if (!departmentHead) {
-            throw new Error("Department head not found");
+        const departmentHead = await prisma.departmentHead.findUnique({ where: { userId } });
+        if (!departmentHead) throw new Error("Department head not found");
+        if (departmentHead.departmentId) {
+            departmentIds.push(departmentHead.departmentId);
+            const employees = await prisma.employee.findMany({ where: { departmentId: departmentHead.departmentId } });
+            employeeIds.push(...employees.map((emp) => emp.id));
         }
-
-        departmentIds.push(departmentHead.id);
-        const employees = await prisma.employee.findMany({
-            where: {
-                departmentId: departmentHead.departmentId,
-            }
-        });
-
-        employeeIds.push(...employees.map((emp) => emp.id));
     }
 
     if (role === Role.HR_MANAGER) {
-        const hrManager = await prisma.hrManager.findUnique({
-            where: { userId: userId }
-        });
-
-        if (!hrManager) {
-            throw new Error("HR Manager not found");
-        }
-
+        const hrManager = await prisma.hrManager.findUnique({ where: { userId } });
+        if (!hrManager) throw new Error("HR Manager not found");
         if (hrManager.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
             departmentIds.push(hrManager.departmentId);
-            const employees = await prisma.employee.findMany({
-                where: {
-                    departmentId: hrManager.departmentId,
-                }
-            });
-
+            const employees = await prisma.employee.findMany({ where: { departmentId: hrManager.departmentId } });
             employeeIds.push(...employees.map((emp) => emp.id));
         }
     }
 
     // 3. TOTAL EMPLOYEES
-
     const employeeWhere: EmployeeWhereInput = {
         companyId: companyId,
         status: EmployeeStatus.ACTIVE,
     };
+    if (employeeIds.length > 0) employeeWhere.id = { in: employeeIds };
+    if (payload?.departmentId) employeeWhere.departmentId = payload.departmentId;
 
-    if (employeeIds.length > 0) {
-        employeeWhere.id = { in: employeeIds };
-    }
-
-    if (payload?.departmentId) {
-        employeeWhere.departmentId = payload.departmentId;
-    }
-
-    const totalEmployees = await prisma.employee.count({
-        where: employeeWhere
-    });
+    const totalEmployees = await prisma.employee.count({ where: employeeWhere });
 
     // 4. TOTAL DEPARTMENTS
+    const departmentWhere: DepartmentWhereInput = { companyId: companyId };
+    if (departmentIds.length > 0) departmentWhere.id = { in: departmentIds };
+    if (payload?.departmentId) departmentWhere.id = payload.departmentId;
 
-    const departmentWhere: DepartmentWhereInput = {
-        companyId: companyId,
-    };
+    const totalDepartments = await prisma.department.count({ where: departmentWhere });
 
-    if (departmentIds.length > 0) {
-        departmentWhere.id = { in: departmentIds };
-    }
-
-    if (payload?.departmentId) {
-        departmentWhere.id = payload.departmentId;
-    }
-
-    const totalDepartments = await prisma.department.count({
-        where: departmentWhere
-    });
-
-    // 5. PAYROLL DATA
-
+    // ============================================
+    // 5. PAYROLL DATA QUERY BUILDER
+    // ============================================
     const payrollWhere: PayrollWhereInput = {
         companyId: companyId,
-        month: reportMonth,
-        year: reportYear,
-        status: {
-            not: PayrollStatus.CANCELLED,
-        }
+        status: { not: PayrollStatus.CANCELLED }
     };
 
-    if (employeeIds.length > 0) {
-        payrollWhere.employeeId = { in: employeeIds };
-    }
+    if (employeeIds.length > 0) payrollWhere.employeeId = { in: employeeIds };
+    if (payload?.departmentId) payrollWhere.employee = { departmentId: payload.departmentId };
+    if (payload?.status) payrollWhere.status = payload.status;
+    if (payload?.salaryType) payrollWhere.salaryType = payload.salaryType;
 
-    if (payload?.departmentId) {
-        payrollWhere.employee = {
-            departmentId: payload.departmentId
+    // ✅ NEW: Filter by createdAt (startDate & endDate)
+    if (payload?.startDate && payload?.endDate) {
+        payrollWhere.createdAt = {
+            gte: new Date(payload.startDate),
+            // Set time to end of day for the endDate to include the whole day
+            lte: new Date(new Date(payload.endDate).setHours(23, 59, 59, 999))
         };
     }
-
-    if (payload?.status) {
-        payrollWhere.status = payload.status;
+    // If no date range, fallback to Month/Year filter
+    else if (payload?.startDate) {
+        payrollWhere.createdAt = { gte: new Date(payload.startDate) };
+    }
+    else if (payload?.endDate) {
+        payrollWhere.createdAt = { lte: new Date(new Date(payload.endDate).setHours(23, 59, 59, 999)) };
+    }
+    else {
+        // Default Month/Year filter based on the Payroll Month/Year fields
+        payrollWhere.month = reportMonth;
+        payrollWhere.year = reportYear;
     }
 
-    // Get payrolls with employee details
+    // Execute query
     const payrolls = await prisma.payroll.findMany({
         where: payrollWhere,
         include: {
@@ -791,10 +752,10 @@ const getPayrollStatsFromDB = async (
                 }
             }
         },
+        orderBy: { createdAt: 'desc' }
     });
 
     // 6. CALCULATE SUMMARY
-
     const payrollSummary = {
         totalGross: 0,
         totalNet: 0,
@@ -817,8 +778,7 @@ const getPayrollStatsFromDB = async (
         ? payrollSummary.totalNet / payrollSummary.totalEmployees
         : 0;
 
-    // 8. STATUS WISE BREAKDOWN
-
+    // 7. STATUS WISE BREAKDOWN
     const statusWise = {
         draft: payrolls.filter(p => p.status === PayrollStatus.DRAFT).length,
         approved: payrolls.filter(p => p.status === PayrollStatus.APPROVED).length,
@@ -826,12 +786,23 @@ const getPayrollStatsFromDB = async (
         cancelled: payrolls.filter(p => p.status === PayrollStatus.CANCELLED).length
     };
 
+    const salaryTypeWise = {
+        monthly: payrolls.filter(p => p.salaryType === 'MONTHLY').length,
+        daily: payrolls.filter(p => p.salaryType === 'DAILY').length,
+        hourly: payrolls.filter(p => p.salaryType === 'HOURLY').length,
+    };
+
+    // 8. RETURN
     return {
-        period: `${reportMonth}/${reportYear}`,
+        // ✅ Updated period display for the response
+        period: payload?.startDate
+            ? `${payload.startDate} to ${payload.endDate || "Now"}`
+            : `${reportMonth}/${reportYear}`,
         totalEmployees,
         totalDepartments,
         summary: payrollSummary,
         statusWise,
+        salaryTypeWise,
         data: payrolls,
     };
 };
