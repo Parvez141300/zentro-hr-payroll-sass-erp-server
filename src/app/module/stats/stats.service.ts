@@ -420,10 +420,18 @@ const getAttendanceStatsFromDB = async (
 
     attendance.forEach(record => {
         switch (record.status) {
-            case AttendanceStatus.PRESENT: summary.present = record._count; break;
-            case AttendanceStatus.ABSENT: summary.absent = record._count; break;
-            case AttendanceStatus.LATE: summary.late = record._count; break;
-            case AttendanceStatus.HALF_DAY: summary.halfDay = record._count; break;
+            case AttendanceStatus.PRESENT:
+                summary.present = record._count;
+                break;
+            case AttendanceStatus.ABSENT:
+                summary.absent = record._count;
+                break;
+            case AttendanceStatus.LATE:
+                summary.late = record._count;
+                break;
+            case AttendanceStatus.HALF_DAY:
+                summary.halfDay = record._count;
+                break;
         }
         totalRecords += record._count;
     });
