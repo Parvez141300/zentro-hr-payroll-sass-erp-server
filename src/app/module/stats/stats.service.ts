@@ -344,31 +344,25 @@ const getAttendanceStatsFromDB = async (
     let startDate: Date;
     let endDate: Date;
 
+    // ১. সময় নির্ধারণ (আপনার আগের লজিক)
     if (month && year) {
         startDate = new Date(year, month - 1, 1);
         endDate = new Date(year, month, 0);
-    }
-    else {
+    } else {
         startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
         endDate = new Date(today.getFullYear(), today.getMonth(), 0);
     }
 
-
-
-    // Get employees based on role
+    // ২. ইউজারের রোল অনুযায়ী এমপ্লয়ি ফিল্টার (আপনার আগের লজিক)
     let employeeIds: string[] = [];
 
     if (role === Role.EMPLOYEE) {
-        const employee = await prisma.employee.findUnique({
-            where: { userId }
-        });
+        const employee = await prisma.employee.findUnique({ where: { userId } });
         if (employee) employeeIds = [employee.id];
     }
 
     if (role === Role.DEPARTMENT_HEAD) {
-        const deptHead = await prisma.departmentHead.findUnique({
-            where: { userId }
-        });
+        const deptHead = await prisma.departmentHead.findUnique({ where: { userId } });
         if (deptHead?.departmentId) {
             const employees = await prisma.employee.findMany({
                 where: { departmentId: deptHead.departmentId },
@@ -379,9 +373,7 @@ const getAttendanceStatsFromDB = async (
     }
 
     if (role === Role.HR_MANAGER) {
-        const hrManager = await prisma.hrManager.findUnique({
-            where: { userId }
-        });
+        const hrManager = await prisma.hrManager.findUnique({ where: { userId } });
         if (hrManager?.scope === 'DEPARTMENT_SPECIFIC' && hrManager.departmentId) {
             const employees = await prisma.employee.findMany({
                 where: { departmentId: hrManager.departmentId },
@@ -391,47 +383,31 @@ const getAttendanceStatsFromDB = async (
         }
     }
 
-    // Get attendance data
+    // ৩. বেস WHERE কন্ডিশন
     const attendanceWhere: AttendanceWhereInput = {
         companyId,
-        date: {
-            gte: startDate,
-            lte: endDate
-        }
+        date: { gte: startDate, lte: endDate }
     };
     if (employeeIds.length > 0) {
         attendanceWhere.employeeId = { in: employeeIds };
     }
 
+    // ৪. নির্দিষ্ট মাসের অ্যাটেনডেন্স সামারি (আপনার আগের লজিক)
     const attendance = await prisma.attendance.groupBy({
         by: ['status'],
         where: attendanceWhere,
         _count: true
     });
 
-    const summary = {
-        present: 0,
-        absent: 0,
-        late: 0,
-        halfDay: 0
-    };
-
+    const summary = { present: 0, absent: 0, late: 0, halfDay: 0 };
     let totalRecords = 0;
 
     attendance.forEach(record => {
         switch (record.status) {
-            case AttendanceStatus.PRESENT:
-                summary.present = record._count;
-                break;
-            case AttendanceStatus.ABSENT:
-                summary.absent = record._count;
-                break;
-            case AttendanceStatus.LATE:
-                summary.late = record._count;
-                break;
-            case AttendanceStatus.HALF_DAY:
-                summary.halfDay = record._count;
-                break;
+            case AttendanceStatus.PRESENT: summary.present = record._count; break;
+            case AttendanceStatus.ABSENT: summary.absent = record._count; break;
+            case AttendanceStatus.LATE: summary.late = record._count; break;
+            case AttendanceStatus.HALF_DAY: summary.halfDay = record._count; break;
         }
         totalRecords += record._count;
     });
@@ -439,7 +415,7 @@ const getAttendanceStatsFromDB = async (
     const totalPresentDays = summary.present + summary.late + summary.halfDay;
     const attendanceRate = totalRecords > 0 ? (totalPresentDays / totalRecords * 100) : 0;
 
-    // Department wise breakdown
+    // ৫. ডিপার্টমেন্ট ভিত্তিক রিপোর্ট (আপনার আগের লজিক)
     const deptAttendance = await prisma.attendance.groupBy({
         by: ['employeeId', 'status'],
         where: attendanceWhere,
@@ -447,7 +423,6 @@ const getAttendanceStatsFromDB = async (
     });
 
     const departmentWiseMap = new Map();
-
     for (const record of deptAttendance) {
         const employee = await prisma.employee.findUnique({
             where: { id: record.employeeId },
@@ -461,7 +436,7 @@ const getAttendanceStatsFromDB = async (
             }
             const deptData = departmentWiseMap.get(deptName);
             deptData.total += record._count;
-            if (record.status === 'PRESENT' || record.status === 'LATE' || record.status === 'HALF_DAY') {
+            if (['PRESENT', 'LATE', 'HALF_DAY'].includes(record.status)) {
                 deptData.present += record._count;
             }
         }
@@ -474,6 +449,59 @@ const getAttendanceStatsFromDB = async (
         rate: data.total > 0 ? (data.present / data.total * 100) : 0
     }));
 
+    // ==========================================
+    // ✅ ৬. নতুন ফিচার: জানুয়ারি থেকে ডিসেম্বর পর্যন্ত অ্যাটেনডেন্স কাউন্ট
+    // ==========================================
+
+    // যে বছরটি সিলেক্ট করা হয়েছে (অথবা বর্তমান বছর)
+    const targetYear = year || today.getFullYear();
+
+    // বছরের শুরু (১ জানুয়ারি) থেকে শেষ (৩১ ডিসেম্বর)
+    const yearStartDate = new Date(targetYear, 0, 1);
+    const yearEndDate = new Date(targetYear, 11, 31, 23, 59, 59, 999);
+
+    // এই বছরের জন্য WHERE কন্ডিশন
+    const yearlyWhere: AttendanceWhereInput = {
+        companyId,
+        date: { gte: yearStartDate, lte: yearEndDate },
+        // শুধু উপস্থিত (PRESENT, LATE, HALF_DAY) গুলো নিব
+        status: { in: [AttendanceStatus.PRESENT, AttendanceStatus.LATE, AttendanceStatus.HALF_DAY] }
+    };
+    if (employeeIds.length > 0) {
+        yearlyWhere.employeeId = { in: employeeIds };
+    }
+
+    // পুরো বছরের ডেটা আনা
+    const yearlyAttendance = await prisma.attendance.findMany({
+        where: yearlyWhere,
+        select: { date: true, status: true }
+    });
+
+    // ১২ মাসের জন্য একটি খালি অ্যারে তৈরি করা (জানুয়ারি = 0, ডিসেম্বর = 11)
+    const monthlyBreakdown = Array.from({ length: 12 }, (_, index) => ({
+        month: index + 1, // 1-12
+        monthName: new Date(targetYear, index).toLocaleString('en-US', { month: 'long' }), // January, February...
+        present: 0,
+        late: 0,
+        halfDay: 0,
+        total: 0
+    }));
+
+    // ডেটাগুলো লুপ করে মাস অনুযায়ী কাউন্ট করা
+    yearlyAttendance.forEach(record => {
+        const recordMonth = new Date(record.date).getMonth(); // 0-11
+        const monthData = monthlyBreakdown[recordMonth];
+
+        if (record.status === AttendanceStatus.PRESENT) monthData.present += 1;
+        if (record.status === AttendanceStatus.LATE) monthData.late += 1;
+        if (record.status === AttendanceStatus.HALF_DAY) monthData.halfDay += 1;
+
+        monthData.total += 1; // মোট উপস্থিতি (PRESENT + LATE + HALF_DAY)
+    });
+
+    // ==========================================
+    // ফাইনাল রিটার্ন
+    // ==========================================
     return {
         startDate,
         endDate,
@@ -483,7 +511,9 @@ const getAttendanceStatsFromDB = async (
         late: summary.late,
         halfDay: summary.halfDay,
         attendanceRate,
-        departmentWise
+        departmentWise,
+        // ✅ নতুন যুক্ত করা ডেটা
+        monthlyBreakdown,
     };
 };
 
