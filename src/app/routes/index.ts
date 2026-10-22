@@ -18,6 +18,7 @@ import { stripeRoute } from "../module/stripe/stripe.route";
 import { sslCommerzRoute } from "../module/sslCommerz/sslCommerz.route";
 import { paymentRoute } from "../module/payment/payment.route";
 import { subscriptionHistoryRoute } from "../module/subscriptionHistory/subscriptionHistory.route";
+import { statsRoute } from "../module/stats/stats.route";
 
 const router = Router();
 
@@ -40,5 +41,6 @@ router.use("/stripe", stripeRoute);
 router.use("/sslcommerz", sslCommerzRoute);
 router.use("/payments", paymentRoute);
 router.use("/subscription-history", subscriptionHistoryRoute);
+router.use("/statistics", statsRoute);
 
 export const indexRoute = router;

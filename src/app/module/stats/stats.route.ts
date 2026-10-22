@@ -24,17 +24,20 @@ router.get(
     statsController.getAttendanceStats
 );
 
-router.get("/leave/stats",
+router.get(
+    "/leave/stats",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     statsController.getLeaveStats
 );
 
-router.get("/payroll/stats",
+router.get(
+    "/payroll/stats",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.EMPLOYEE, Role.ACCOUNTANT),
     statsController.getPayrollStats
 );
 
-router.get("/platform-overview-stats",
+router.get(
+    "/platform-overview-stats",
     checkAuthMiddleware(Role.PLATFORM_SUPER_ADMIN),
     statsController.getPlatformOverviewStats
 );
