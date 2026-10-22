@@ -13,7 +13,7 @@ export interface IGetPayrollReportPayload {
     year?: number;
     departmentId?: string;
     status?: PayrollStatus;
-    salaryType?: SalaryType; // ✅ NEW: Filter by MONTHLY, DAILY, HOURLY
-    startPeriod?: string;    // ✅ NEW: ISO Date string (e.g., "2026-09-01")
-    endPeriod?: string;      // ✅ NEW: ISO Date string (e.g., "2026-09-30")
+    salaryType?: SalaryType;
+    startDate?: string;  // ✅ NEW: ISO Date string (filters by createdAt)
+    endDate?: string;    // ✅ NEW: ISO Date string (filters by createdAt)
 }
