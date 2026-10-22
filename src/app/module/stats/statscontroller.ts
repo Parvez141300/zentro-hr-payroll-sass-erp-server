@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { statsService } from "./stats.service";
 import status from "http-status";
-import { PayrollStatus, Role } from "../../../generated/prisma/enums";
+import { PayrollStatus, Role, SalaryType } from "../../../generated/prisma/enums";
 import { sendResponse } from "../../utils/sendResponse";
+import { IGetPayrollReportPayload } from "./stats.interface";
 
 const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
     const { companyId, userId, role } = req.user;
@@ -59,11 +60,35 @@ const getPayrollStats = catchAsync(async (req: Request, res: Response) => {
     const month = req.query.month ? parseInt(req.query.month as string) : undefined;
     const year = req.query.year ? parseInt(req.query.year as string) : undefined;
     const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
-    const payrollStatus = typeof req.query.status === "string" ? (req.query.status as PayrollStatus) : undefined;
+    const status = typeof req.query.status === "string" ? (req.query.status as PayrollStatus) : undefined;
 
-    const result = await statsService.getPayrollStatsFromDB(companyId, userId, role as Role, { month, year, departmentId, status: payrollStatus });
+    const salaryType = typeof req.query.salaryType === "string"
+        ? (req.query.salaryType as SalaryType)
+        : undefined;
+
+    // ✅ NEW: Read startDate and endDate
+    const startDate = typeof req.query.startDate === "string" ? req.query.startDate : undefined;
+    const endDate = typeof req.query.endDate === "string" ? req.query.endDate : undefined;
+
+    const payload: IGetPayrollReportPayload = {
+        month,
+        year,
+        departmentId,
+        status,
+        salaryType,
+        startDate,
+        endDate,
+    };
+
+    const result = await statsService.getPayrollStatsFromDB(
+        companyId,
+        userId,
+        role as Role,
+        payload
+    );
+
     sendResponse(res, {
-        httpStatusCode: status.OK,
+        httpStatusCode: 200,
         success: true,
         message: "Payroll stats fetched successfully",
         data: result,
