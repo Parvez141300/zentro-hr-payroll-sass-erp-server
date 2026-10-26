@@ -24,7 +24,7 @@ const getAllOrQueryAttendance = catchAsync(async (req: Request, res: Response) =
     const startDate = typeof req.query.startDate === "string" ? new Date(req.query.startDate) : undefined;
     const endDate = typeof req.query.endDate === "string" ? new Date(req.query.endDate) : undefined;
     const attendanceStatus = typeof req.query.status === "string" ? (req.query.status as AttendanceStatus) : undefined;
-    const role = typeof req.query.role === "string" ? (req.query.role as Role) : undefined;
+    const role = typeof user.role === "string" ? (user.role as Role) : undefined;
     const departmentId = typeof req.query.departmentId === "string" ? req.query.departmentId : undefined;
     const designationId = typeof req.query.designationId === "string" ? req.query.designationId : undefined;
 
