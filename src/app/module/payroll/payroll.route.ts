@@ -19,11 +19,11 @@ router.post(
 );
 router.get(
     "/",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
+    checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT, Role.EMPLOYEE, Role.HR_MANAGER),
     payrollController.getAllOrQueryPayrolls
 );
 router.patch(
-    "/:id", 
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.ACCOUNTANT),
     payrollController.updatePayrollInDB
 );

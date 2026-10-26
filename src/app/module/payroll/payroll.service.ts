@@ -15,12 +15,12 @@ import {
     // IPayslipData,
     IUpdatePayrollPayload
 } from "./payroll.interface";
-import { 
-    calculateDailyPayroll, 
-    calculateHourlyPayroll, 
-    calculateMonthlyPayroll, 
+import {
+    calculateDailyPayroll,
+    calculateHourlyPayroll,
+    calculateMonthlyPayroll,
     // calculateSalaryPayroll, 
-    getMonthRange, 
+    getMonthRange,
 } from "./payroll.utils";
 
 
@@ -574,7 +574,8 @@ const getAllOrQueryPayrollsFromDB = async (
                             }
                         }
                     }
-                }
+                },
+                company: true,
             }
         });
 
