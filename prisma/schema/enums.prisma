@@ -33,6 +33,7 @@ enum EmployeeStatus {
 
 // Attendance Status Enum
 enum AttendanceStatus {
+  PENDING
   PRESENT
   ABSENT
   LATE

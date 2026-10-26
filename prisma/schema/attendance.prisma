@@ -2,7 +2,7 @@ model Attendance {
     id String @id @default(cuid())
 
     date             DateTime
-    status           AttendanceStatus @default(PRESENT)
+    status           AttendanceStatus @default(PENDING)
     checkIn          DateTime?
     checkOut         DateTime?
     note             String?
