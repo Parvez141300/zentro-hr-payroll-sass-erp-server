@@ -21,6 +21,16 @@ const markAttendanceInDB = async (companyId: string, userId: string, paylaod: IM
         throw new Error("Attendance already marked");
     }
 
+    const isExistUser = await prisma.user.findUnique({
+        where: {
+            id: userId
+        }
+    });
+
+    if (!isExistUser?.id) {
+        throw new Error("The user not found to mark attendance");
+    }
+
     let lateMinutes = 0;
     let earlyExitMinutes = 0;
     let overtimeHours = 0;
@@ -47,7 +57,7 @@ const markAttendanceInDB = async (companyId: string, userId: string, paylaod: IM
         data: {
             companyId: companyId,
             employeeId: employeeId,
-            approvedBy: userId,
+            approvedBy: isExistUser.name,
             date: date,
             status: status,
             checkIn: checkIn,
