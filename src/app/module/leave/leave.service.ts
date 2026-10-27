@@ -6,62 +6,89 @@ import { prisma } from "../../lib/prisma";
 import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeavesPayload, IUpdateLeavePayload } from "./leave.interface"
 import { totalDaysForLeaveCalculation } from "./leave.utils";
 
-const applyForLeaveInDB = async (companyId: string, userId: string, payload: IApplyForLeavePayload) => {
-    const { leaveTypeId, startDate, endDate, reason, attachmentUrl } = payload;
+const applyForLeaveInDB = async (
+  companyId: string,
+  userId: string,
+  payload: IApplyForLeavePayload
+) => {
+  const { leaveTypeId, startDate, endDate, reason, photoUrl: attachmentUrl } = payload;
 
-    const isExistCompany = await prisma.company.findUnique({
-        where: {
-            id: companyId
-        }
-    });
+  // ✅ Guard clauses
+  if (!leaveTypeId) {
+    throw new Error("Leave type ID is required");
+  }
+  if (!startDate || !endDate) {
+    throw new Error("Start date and end date are required");
+  }
+  if (!reason) {
+    throw new Error("Reason is required");
+  }
 
-    if (!isExistCompany) {
-        throw new Error("Company not found for apply leave");
-    }
+  // ✅ Convert strings to Date objects
+  const parsedStartDate = new Date(startDate);
+  const parsedEndDate = new Date(endDate);
 
-    const isExistEmployee = await prisma.employee.findUnique({
-        where: {
-            userId: userId,
-            companyId: companyId
-        }
-    });
+  // ✅ Validate dates are valid
+  if (isNaN(parsedStartDate.getTime())) {
+    throw new Error("Invalid start date");
+  }
+  if (isNaN(parsedEndDate.getTime())) {
+    throw new Error("Invalid end date");
+  }
 
-    if (!isExistEmployee) {
-        throw new Error("User not found for apply leave");
-    }
+  // Verify company
+  const isExistCompany = await prisma.company.findUnique({
+    where: { id: companyId },
+  });
+  if (!isExistCompany) {
+    throw new Error("Company not found");
+  }
 
-    const isExistLeaveType = await prisma.leaveType.findUnique({
-        where: {
-            id: leaveTypeId,
-            companyId: companyId
-        }
-    });
+  // ✅ Use findFirst (not findUnique) for non-unique combinations
+  const isExistEmployee = await prisma.employee.findFirst({
+    where: { userId, companyId },
+  });
+  if (!isExistEmployee) {
+    throw new Error("Employee not found");
+  }
 
-    if (!isExistLeaveType) {
-        throw new Error("Leave type not found for apply leave");
-    }
+  // ✅ Use findFirst for LeaveType
+  const isExistLeaveType = await prisma.leaveType.findFirst({
+    where: {
+      id: leaveTypeId,
+      companyId,
+      isActive: true,
+    },
+  });
+  if (!isExistLeaveType) {
+    throw new Error("Leave type not found or inactive");
+  }
 
-    const totalDays = totalDaysForLeaveCalculation(startDate, endDate);
+  // ✅ Pass Date objects (not strings) to the utility function
+  const totalDays = totalDaysForLeaveCalculation(parsedStartDate, parsedEndDate);
 
-    if (totalDays > isExistLeaveType.daysAllowed) {
-        throw new Error("Your Leave is not allowed because you have exceeded the number of days allowed for this leave type.");
-    }
+  if (totalDays > isExistLeaveType.daysAllowed) {
+    throw new Error(
+      `This leave type allows a maximum of ${isExistLeaveType.daysAllowed} days. You requested ${totalDays} days.`
+    );
+  }
 
-    const leave = await prisma.leave.create({
-        data: {
-            companyId: isExistCompany.id,
-            employeeId: isExistEmployee.id,
-            leaveTypeId: leaveTypeId,
-            startDate: startDate,
-            endDate: endDate,
-            totalDays: totalDays,
-            reason: reason,
-            attachmentUrl: attachmentUrl || null,
-        }
-    });
+  // ✅ Create leave with Date objects
+  const leave = await prisma.leave.create({
+    data: {
+      companyId,
+      employeeId: isExistEmployee.id,
+      leaveTypeId,
+      startDate: parsedStartDate, // ✅ Date object
+      endDate: parsedEndDate,     // ✅ Date object
+      totalDays,
+      reason,
+      attachmentUrl: attachmentUrl || null,
+    },
+  });
 
-    return leave;
-}
+  return leave;
+};
 
 const getAllOrQueryLeavesFromDB = async (
     companyId: string,

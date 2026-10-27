@@ -5,7 +5,7 @@ export interface IApplyForLeavePayload {
     startDate: Date,
     endDate: Date,
     reason: string,
-    attachmentUrl?: string,
+    photoUrl?: string,
 }
 
 export interface IGetAllOrQueryLeavesPayload {
