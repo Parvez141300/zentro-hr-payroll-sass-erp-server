@@ -7,21 +7,21 @@ const router = Router();
 
 router.get(
     "/",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     leaveTypeController.getAllOrQueryLeaveTypes
 );
 router.post(
-    "/", 
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), 
+    "/",
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     leaveTypeController.createLeaveType
 );
 router.patch(
-    "/:id", 
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     leaveTypeController.updateLeaveType
 );
 router.delete(
-    "/:id", 
+    "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     leaveTypeController.deleteLeaveType
 );
