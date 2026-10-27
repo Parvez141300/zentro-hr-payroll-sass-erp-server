@@ -7,87 +7,87 @@ import { IApplyForLeavePayload, IEmployeeLeaveUpdatePayload, IGetAllOrQueryLeave
 import { totalDaysForLeaveCalculation } from "./leave.utils";
 
 const applyForLeaveInDB = async (
-  companyId: string,
-  userId: string,
-  payload: IApplyForLeavePayload
+    companyId: string,
+    userId: string,
+    payload: IApplyForLeavePayload
 ) => {
-  const { leaveTypeId, startDate, endDate, reason, photoUrl: attachmentUrl } = payload;
+    const { leaveTypeId, startDate, endDate, reason, photoUrl: attachmentUrl } = payload;
 
-  // ✅ Guard clauses
-  if (!leaveTypeId) {
-    throw new Error("Leave type ID is required");
-  }
-  if (!startDate || !endDate) {
-    throw new Error("Start date and end date are required");
-  }
-  if (!reason) {
-    throw new Error("Reason is required");
-  }
+    // ✅ Guard clauses
+    if (!leaveTypeId) {
+        throw new Error("Leave type ID is required");
+    }
+    if (!startDate || !endDate) {
+        throw new Error("Start date and end date are required");
+    }
+    if (!reason) {
+        throw new Error("Reason is required");
+    }
 
-  // ✅ Convert strings to Date objects
-  const parsedStartDate = new Date(startDate);
-  const parsedEndDate = new Date(endDate);
+    // ✅ Convert strings to Date objects
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
 
-  // ✅ Validate dates are valid
-  if (isNaN(parsedStartDate.getTime())) {
-    throw new Error("Invalid start date");
-  }
-  if (isNaN(parsedEndDate.getTime())) {
-    throw new Error("Invalid end date");
-  }
+    // ✅ Validate dates are valid
+    if (isNaN(parsedStartDate.getTime())) {
+        throw new Error("Invalid start date");
+    }
+    if (isNaN(parsedEndDate.getTime())) {
+        throw new Error("Invalid end date");
+    }
 
-  // Verify company
-  const isExistCompany = await prisma.company.findUnique({
-    where: { id: companyId },
-  });
-  if (!isExistCompany) {
-    throw new Error("Company not found");
-  }
+    // Verify company
+    const isExistCompany = await prisma.company.findUnique({
+        where: { id: companyId },
+    });
+    if (!isExistCompany) {
+        throw new Error("Company not found");
+    }
 
-  // ✅ Use findFirst (not findUnique) for non-unique combinations
-  const isExistEmployee = await prisma.employee.findFirst({
-    where: { userId, companyId },
-  });
-  if (!isExistEmployee) {
-    throw new Error("Employee not found");
-  }
+    // ✅ Use findFirst (not findUnique) for non-unique combinations
+    const isExistEmployee = await prisma.employee.findFirst({
+        where: { userId, companyId },
+    });
+    if (!isExistEmployee) {
+        throw new Error("Employee not found");
+    }
 
-  // ✅ Use findFirst for LeaveType
-  const isExistLeaveType = await prisma.leaveType.findFirst({
-    where: {
-      id: leaveTypeId,
-      companyId,
-      isActive: true,
-    },
-  });
-  if (!isExistLeaveType) {
-    throw new Error("Leave type not found or inactive");
-  }
+    // ✅ Use findFirst for LeaveType
+    const isExistLeaveType = await prisma.leaveType.findFirst({
+        where: {
+            id: leaveTypeId,
+            companyId,
+            isActive: true,
+        },
+    });
+    if (!isExistLeaveType) {
+        throw new Error("Leave type not found or inactive");
+    }
 
-  // ✅ Pass Date objects (not strings) to the utility function
-  const totalDays = totalDaysForLeaveCalculation(parsedStartDate, parsedEndDate);
+    // ✅ Pass Date objects (not strings) to the utility function
+    const totalDays = totalDaysForLeaveCalculation(parsedStartDate, parsedEndDate);
 
-  if (totalDays > isExistLeaveType.daysAllowed) {
-    throw new Error(
-      `This leave type allows a maximum of ${isExistLeaveType.daysAllowed} days. You requested ${totalDays} days.`
-    );
-  }
+    if (totalDays > isExistLeaveType.daysAllowed) {
+        throw new Error(
+            `This leave type allows a maximum of ${isExistLeaveType.daysAllowed} days. You requested ${totalDays} days.`
+        );
+    }
 
-  // ✅ Create leave with Date objects
-  const leave = await prisma.leave.create({
-    data: {
-      companyId,
-      employeeId: isExistEmployee.id,
-      leaveTypeId,
-      startDate: parsedStartDate, // ✅ Date object
-      endDate: parsedEndDate,     // ✅ Date object
-      totalDays,
-      reason,
-      attachmentUrl: attachmentUrl || null,
-    },
-  });
+    // ✅ Create leave with Date objects
+    const leave = await prisma.leave.create({
+        data: {
+            companyId,
+            employeeId: isExistEmployee.id,
+            leaveTypeId,
+            startDate: parsedStartDate, // ✅ Date object
+            endDate: parsedEndDate,     // ✅ Date object
+            totalDays,
+            reason,
+            attachmentUrl: attachmentUrl || null,
+        },
+    });
 
-  return leave;
+    return leave;
 };
 
 const getAllOrQueryLeavesFromDB = async (
@@ -410,48 +410,156 @@ const getAllOrQueryLeavesFromDB = async (
     };
 };
 
-const employeeLeaveUpdateInDB = async (companyId: string, leaveId: string, payload: IEmployeeLeaveUpdatePayload) => {
-    const isExistCompany = await prisma.company.findUnique({
-        where: {
-            id: companyId
-        }
-    });
+const employeeLeaveUpdateInDB = async (
+    companyId: string,
+    leaveId: string,
+    payload: IEmployeeLeaveUpdatePayload
+) => {
+    const {
+        leaveTypeId,
+        startDate,
+        endDate,
+        reason,
+        photoUrl: attachmentUrl,
+        status,
+    } = payload;
 
+    // ✅ 1. Guard clauses
+    if (status && status !== LeaveStatus.CANCELLED) {
+        throw new Error("Only cancelled leave can be updated by employee");
+    }
+
+    // ✅ 2. Verify company
+    const isExistCompany = await prisma.company.findUnique({
+        where: { id: companyId },
+    });
     if (!isExistCompany) {
         throw new Error("Company not found");
     }
 
+    // ✅ 3. Verify leave exists and belongs to this company
     const isExistLeave = await prisma.leave.findUnique({
-        where: {
-            id: leaveId,
-            employee: {
-                companyId: companyId
-            },
+        where: { id: leaveId },
+        include: {
+            employee: { select: { id: true, companyId: true } },
         },
     });
 
-    if (!isExistLeave) {
+    if (!isExistLeave || isExistLeave.employee.companyId !== companyId) {
         throw new Error("Leave not found");
     }
 
-    if (payload.status && payload.status !== LeaveStatus.CANCELLED) {
-        throw new Error("Only cancelled leave can be updated by employee");
+    // ✅ 4. Verify leave is still PENDING (only pending leaves can be edited)
+    if (isExistLeave.status !== LeaveStatus.PENDING) {
+        throw new Error(
+            `Only pending leaves can be updated. Current status: ${isExistLeave.status}`
+        );
     }
 
-    const updateLeave = await prisma.leave.update({
-        where: {
-            id: leaveId,
-            employee: {
-                companyId: companyId
+    // ✅ 5. Build the update payload (partial update)
+    const updateData: Record<string, unknown> = {};
+
+    // Leave Type (optional — only if changed)
+    if (leaveTypeId && leaveTypeId !== isExistLeave.leaveTypeId) {
+        const isExistLeaveType = await prisma.leaveType.findFirst({
+            where: {
+                id: leaveTypeId,
+                companyId,
+                isActive: true,
             },
-        },
-        data: {
-            ...payload,
-        },
+        });
+        if (!isExistLeaveType) {
+            throw new Error("Leave type not found or inactive");
+        }
+        updateData.leaveTypeId = leaveTypeId;
+    }
+
+    // Dates (optional — need to validate both)
+    const parsedStartDate = startDate
+        ? new Date(startDate)
+        : new Date(isExistLeave.startDate);
+    const parsedEndDate = endDate
+        ? new Date(endDate)
+        : new Date(isExistLeave.endDate);
+
+    if (startDate) {
+        if (isNaN(parsedStartDate.getTime())) {
+            throw new Error("Invalid start date");
+        }
+        updateData.startDate = parsedStartDate;
+    }
+    if (endDate) {
+        if (isNaN(parsedEndDate.getTime())) {
+            throw new Error("Invalid end date");
+        }
+        updateData.endDate = parsedEndDate;
+    }
+
+    // ✅ 6. Recalculate totalDays if any date changed
+    if (startDate || endDate) {
+        if (parsedEndDate < parsedStartDate) {
+            throw new Error("End date cannot be before start date");
+        }
+
+        const totalDays = totalDaysForLeaveCalculation(
+            parsedStartDate,
+            parsedEndDate
+        );
+
+        // Re-check against daysAllowed
+        const leaveTypeIdToCheck = (updateData.leaveTypeId as string) || isExistLeave.leaveTypeId;
+        const leaveType = await prisma.leaveType.findUnique({
+            where: { id: leaveTypeIdToCheck },
+            select: { daysAllowed: true, name: true },
+        });
+
+        if (!leaveType) {
+            throw new Error("Leave type not found");
+        }
+
+        if (totalDays > leaveType.daysAllowed) {
+            throw new Error(
+                `This leave type allows a maximum of ${leaveType.daysAllowed} days. You requested ${totalDays} days.`
+            );
+        }
+
+        updateData.totalDays = totalDays;
+    }
+
+    // Reason (optional)
+    if (reason && reason.trim() !== "") {
+        updateData.reason = reason;
+    }
+
+    // Attachment (optional — only if a new file was uploaded)
+    if (attachmentUrl) {
+        updateData.attachmentUrl = attachmentUrl;
+    }
+
+    // Status (optional — only allowed CANCELLED)
+    if (status) {
+        updateData.status = status;
+    }
+
+    // ✅ 7. Prevent empty updates
+    if (Object.keys(updateData).length === 0) {
+        throw new Error("No changes were provided");
+    }
+
+    // ✅ 8. Update the leave
+    const updateLeave = await prisma.leave.update({
+        where: { id: leaveId },
+        data: updateData,
     });
 
-    if (updateLeave.id && isExistLeave.attachmentUrl) {
-        await deleteFileFromCloudinary(isExistLeave.attachmentUrl);
+    // ✅ 9. Delete old attachment from Cloudinary ONLY if a new one was uploaded
+    if (attachmentUrl && isExistLeave.attachmentUrl) {
+        try {
+            await deleteFileFromCloudinary(isExistLeave.attachmentUrl);
+        } catch (error) {
+            console.error("Failed to delete old attachment:", error);
+            // Don't throw — the update was successful, cleanup is best-effort
+        }
     }
 
     return updateLeave;

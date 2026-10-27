@@ -28,7 +28,7 @@ export interface IEmployeeLeaveUpdatePayload {
     startDate?: Date;
     endDate?: Date;
     reason?: string;
-    attachmentUrl?: string;
+    photoUrl?: string;
     status?: LeaveStatus;
 }
 
