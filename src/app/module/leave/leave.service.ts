@@ -21,7 +21,7 @@ const applyForLeaveInDB = async (companyId: string, userId: string, payload: IAp
 
     const isExistEmployee = await prisma.employee.findUnique({
         where: {
-            id: userId,
+            userId: userId,
             companyId: companyId
         }
     });
