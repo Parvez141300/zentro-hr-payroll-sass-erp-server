@@ -5,250 +5,183 @@ import { deleteFileFromCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { IGetAllOrQueryEmployeePayload, IUpdateEmployeePayload } from "./employee.interface";
 
-const getAllOrQueryEmployeesFromDB = async (companyId: string, email: string | undefined, role: Role | undefined, payload: IGetAllOrQueryEmployeePayload) => {
-
-    const { search, page, limit, skip, sortBy, sortOrder, salaryType, employmentType, status, gender, departmentId, designationId } = payload;
+const getAllOrQueryEmployeesFromDB = async (
+    companyId: string,
+    email: string | undefined,
+    role: Role | undefined,
+    payload: IGetAllOrQueryEmployeePayload
+) => {
+    const {
+        search,
+        page,
+        limit,
+        skip,
+        sortBy,
+        sortOrder,
+        salaryType,
+        employmentType,
+        status,
+        gender,
+        departmentId,
+        designationId,
+    } = payload;
 
     const isExistCompany = await prisma.company.findUnique({
-        where: {
-            id: companyId
-        }
+        where: { id: companyId },
     });
 
     if (!isExistCompany) {
         throw new Error("Company not found");
     }
 
+    // ✅ Shared include config — used by ALL branches
+    const employeeInclude = {
+        user: {
+            include: {
+                employee: {
+                    include: {
+                        attendances: true,
+                    },
+                },
+            },
+        },
+        department: true,
+        designation: true,
+        company: true,
+    } as const;
+
     const addCondition: EmployeeWhereInput[] = [];
 
     let departmentHeadData: DepartmentHead | null = null;
     let hrManagerData: HrManager | null = null;
 
+    // Fetch role-specific data
     if (role === Role.DEPARTMENT_HEAD) {
-        const isExistsDepartmentHead = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        });
-
-        if (!isExistsDepartmentHead) {
-            throw new Error("Department head not found");
-        }
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) throw new Error("Department head not found");
 
         departmentHeadData = await prisma.departmentHead.findUnique({
-            where: {
-                companyId: companyId,
-                userId: isExistsDepartmentHead.id
-            },
+            where: { companyId, userId: user.id },
             include: {
                 user: {
                     include: {
                         employee: {
-                            include: {
-                                attendances: true,
-                            }
-                        }
-                    }
-                }
-            }
+                            include: { attendances: true },
+                        },
+                    },
+                },
+            },
         });
     }
 
     if (role === Role.HR_MANAGER) {
-        const isExistsHrManager = await prisma.user.findUnique({
-            where: {
-                email: email
-            }
-        });
-
-        if (!isExistsHrManager) {
-            throw new Error("HR Manager not found");
-        }
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) throw new Error("HR Manager not found");
 
         hrManagerData = await prisma.hrManager.findUnique({
-            where: {
-                companyId: companyId,
-                userId: isExistsHrManager.id
-            },
+            where: { companyId, userId: user.id },
             include: {
                 user: {
                     include: {
                         employee: {
-                            include: {
-                                attendances: true,
-                            }
-                        }
-                    }
-                }
-            }
-        })
+                            include: { attendances: true },
+                        },
+                    },
+                },
+            },
+        });
     }
 
+    // Build filters
     if (search) {
         addCondition.push({
             OR: [
-                {
-                    name: {
-                        contains: search,
-                        mode: "insensitive"
-                    }
-                },
-                {
-                    phone: {
-                        contains: search,
-                        mode: "insensitive"
-                    }
-                },
-                {
-                    employeeCode: {
-                        contains: search,
-                        mode: "insensitive"
-                    }
-                },
-            ]
+                { name: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } },
+                { employeeCode: { contains: search, mode: "insensitive" } },
+            ],
         });
     }
 
-    if (salaryType) {
-        addCondition.push({
-            salaryType: salaryType
-        });
-    }
-
-    if (employmentType) {
-        addCondition.push({
-            employmentType: employmentType
-        });
-    }
-
-    if (status) {
-        addCondition.push({
-            status: status
-        });
-    }
-
-    if (gender) {
-        addCondition.push({
-            gender: gender
-        });
-    }
+    if (salaryType) addCondition.push({ salaryType });
+    if (employmentType) addCondition.push({ employmentType });
+    if (status) addCondition.push({ status });
+    if (gender) addCondition.push({ gender });
 
     let employees;
     let employeeCount: number;
 
+    // ✅ DEPARTMENT_HEAD — now includes attendances
     if (role === Role.DEPARTMENT_HEAD && departmentHeadData) {
+        const where: EmployeeWhereInput = {
+            companyId,
+            AND: addCondition,
+            departmentId: departmentHeadData.departmentId,
+        };
+
         employees = await prisma.employee.findMany({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-                departmentId: departmentHeadData?.departmentId,
-            },
-            skip: skip,
+            where,
+            skip,
             take: limit,
-            orderBy: {
-                [sortBy]: sortOrder
-            },
-            include: {
-                user: true,
-                department: true,
-                designation: true,
-                company: true,
-            }
+            orderBy: { [sortBy]: sortOrder },
+            include: employeeInclude,
         });
 
-        employeeCount = await prisma.employee.count({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-                departmentId: departmentHeadData?.departmentId,
-            }
-        });
+        employeeCount = await prisma.employee.count({ where });
     }
-    else if (role === Role.HR_MANAGER && hrManagerData?.scope === HrScope.DEPARTMENT_SPECIFIC && hrManagerData?.departmentId) {
+    // ✅ HR_MANAGER (department-specific) — now includes attendances
+    else if (
+        role === Role.HR_MANAGER &&
+        hrManagerData?.scope === HrScope.DEPARTMENT_SPECIFIC &&
+        hrManagerData?.departmentId
+    ) {
+        const where: EmployeeWhereInput = {
+            companyId,
+            AND: addCondition,
+            departmentId: hrManagerData.departmentId,
+        };
+
         employees = await prisma.employee.findMany({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-                departmentId: hrManagerData?.departmentId,
-            },
-            skip: skip,
+            where,
+            skip,
             take: limit,
-            orderBy: {
-                [sortBy]: sortOrder
-            },
-            include: {
-                user: true,
-                department: true,
-                designation: true,
-                company: true,
-            }
+            orderBy: { [sortBy]: sortOrder },
+            include: employeeInclude,
         });
 
-        employeeCount = await prisma.employee.count({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-                departmentId: hrManagerData?.departmentId,
-            }
-        });
+        employeeCount = await prisma.employee.count({ where });
     }
+    // ✅ else branch (Admin, HR company-wide, Employee-own) — includes attendances
     else {
-        if (departmentId) {
-            addCondition.push({
-                departmentId: departmentId
-            });
-        }
+        if (departmentId) addCondition.push({ departmentId });
+        if (designationId) addCondition.push({ designationId });
 
-        if (designationId) {
-            addCondition.push({
-                designationId: designationId
-            });
-        }
+        const where: EmployeeWhereInput = {
+            companyId,
+            AND: addCondition,
+        };
 
         employees = await prisma.employee.findMany({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-            },
-            skip: skip,
+            where,
+            skip,
             take: limit,
-            orderBy: {
-                [sortBy]: sortOrder
-            },
-            include: {
-                user: {
-                    include: {
-                        employee: {
-                            include: {
-                                attendances: true,
-                            }
-                        }
-                    }
-                },
-                department: true,
-                designation: true,
-                company: true,
-            }
+            orderBy: { [sortBy]: sortOrder },
+            include: employeeInclude,
         });
 
-        employeeCount = await prisma.employee.count({
-            where: {
-                companyId: companyId,
-                AND: addCondition,
-            }
-        });
+        employeeCount = await prisma.employee.count({ where });
     }
 
     return {
         data: employees,
         pagination: {
             total: employeeCount,
-            page: page,
-            limit: limit,
+            page,
+            limit,
             totalPages: Math.ceil(employeeCount / limit),
-        }
+        },
     };
-}
+};
 
 const getEmployeeOwnProfileFromDB = async (companyId: string, userId: string) => {
     const employee = await prisma.employee.findUnique({
