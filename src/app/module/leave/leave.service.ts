@@ -716,6 +716,132 @@ const updateLeaveInDB = async (companyId: string, userId: string, leaveId: strin
     return updatedLeave;
 };
 
+const updateLeaveStatusInDB = async (
+    companyId: string,
+    userId: string,
+    leaveId: string,
+    role: Role,
+    payload: IUpdateLeavePayload
+) => {
+    const { status, reviewNote, rejectedReason } = payload;
+
+    // ✅ 1. Status is REQUIRED — this endpoint only changes status
+    if (!status) {
+        throw new Error("Status is required");
+    }
+
+    // ✅ 2. Validate company
+    const isExistCompany = await prisma.company.findUnique({
+        where: { id: companyId },
+    });
+    if (!isExistCompany) throw new Error("Company not found");
+
+    // ✅ 3. Validate leave exists
+    const isExistLeave = await prisma.leave.findFirst({
+        where: { id: leaveId, companyId },
+        include: {
+            employee: { include: { department: true, user: true } },
+            leaveType: true,
+        },
+    });
+    if (!isExistLeave) throw new Error("Leave not found");
+
+    // ✅ 4. Role-based access
+    if (role === Role.EMPLOYEE) {
+        throw new Error("Employees cannot update leave status");
+    }
+
+    if (role === Role.DEPARTMENT_HEAD) {
+        const departmentHead = await prisma.departmentHead.findUnique({
+            where: { userId },
+        });
+        if (!departmentHead) throw new Error("Department Head not found");
+        if (isExistLeave.employee.departmentId !== departmentHead.departmentId) {
+            throw new Error("You can only update leaves from your department");
+        }
+        // Head can only APPROVE_BY_HEAD, REJECT, or CANCEL
+        if (!([LeaveStatus.APPROVED_BY_HEAD, LeaveStatus.REJECTED, LeaveStatus.CANCELLED] as LeaveStatus[]).includes(status)) {
+            throw new Error("Department Heads can only approve (head), reject, or cancel");
+        }
+    }
+
+    if (role === Role.HR_MANAGER) {
+        const hrManager = await prisma.hrManager.findUnique({
+            where: { userId },
+        });
+        if (!hrManager) throw new Error("HR Manager not found");
+        if (hrManager.scope === HrScope.DEPARTMENT_SPECIFIC && hrManager.departmentId) {
+            if (isExistLeave.employee.departmentId !== hrManager.departmentId) {
+                throw new Error("You can only update leaves from your assigned department");
+            }
+        }
+        // HR can only APPROVE, REJECT, or CANCEL
+        if (!([LeaveStatus.APPROVED, LeaveStatus.REJECTED, LeaveStatus.CANCELLED] as LeaveStatus[]).includes(status)) {
+            throw new Error("HR Managers can only approve, reject, or cancel");
+        }
+    }
+
+    // ✅ 5. Validate status transitions
+    const allowedTransitions: Record<LeaveStatus, LeaveStatus[]> = {
+        [LeaveStatus.PENDING]: [
+            LeaveStatus.APPROVED_BY_HEAD,
+            LeaveStatus.APPROVED,
+            LeaveStatus.REJECTED,
+            LeaveStatus.CANCELLED,
+        ],
+        [LeaveStatus.APPROVED_BY_HEAD]: [
+            LeaveStatus.APPROVED,
+            LeaveStatus.REJECTED,
+            LeaveStatus.CANCELLED,
+        ],
+        [LeaveStatus.APPROVED]: [], // final
+        [LeaveStatus.REJECTED]: [], // final
+        [LeaveStatus.CANCELLED]: [], // final
+    };
+
+    if (!allowedTransitions[isExistLeave.status].includes(status)) {
+        throw new Error(`Cannot change status from ${isExistLeave.status} to ${status}`);
+    }
+
+    // ✅ 6. Rejection reason is required when rejecting
+    if (status === LeaveStatus.REJECTED && !rejectedReason) {
+        throw new Error("Rejection reason is required");
+    }
+
+    // ✅ 7. Build update payload
+    const updateData: LeaveUpdateInput = {
+        status,
+        reviewedById: userId,
+    };
+
+    if (reviewNote) updateData.reviewNote = reviewNote;
+
+    // Timestamps
+    const now = new Date();
+    if (status === LeaveStatus.APPROVED_BY_HEAD) {
+        updateData.approvedByHeadAt = now;
+    }
+    if (status === LeaveStatus.APPROVED) {
+        updateData.approvedByHRAt = now;
+    }
+    if (status === LeaveStatus.REJECTED) {
+        updateData.rejectedAt = now;
+        updateData.rejectedReason = rejectedReason;
+    }
+
+    // ✅ 8. Update
+    const updatedLeave = await prisma.leave.update({
+        where: { id: leaveId },
+        data: updateData,
+        include: {
+            employee: { include: { department: true, user: true } },
+            leaveType: true,
+        },
+    });
+
+    return updatedLeave;
+};
+
 const deleteLeaveFromDB = async (companyId: string, leaveId: string) => {
     const isExistCompany = await prisma.company.findUnique({
         where: {
@@ -753,5 +879,6 @@ export const leaveService = {
     getAllOrQueryLeavesFromDB,
     employeeLeaveUpdateInDB,
     updateLeaveInDB,
+    updateLeaveStatusInDB,
     deleteLeaveFromDB,
 }

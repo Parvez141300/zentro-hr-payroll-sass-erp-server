@@ -27,15 +27,16 @@ router.patch(
     updateProfileMiddlewareSecond,
     leaveController.employeeLeaveUpdate
 );
-// for body use form data
+
 router.patch(
     "/:id",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
-    leaveController.updateLeave
+    leaveController.updateLeaveStatus
 );
+
 router.delete(
     "/:id",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE),
     leaveController.deleteLeave
 );
 

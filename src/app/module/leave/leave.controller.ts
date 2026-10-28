@@ -53,11 +53,11 @@ const employeeLeaveUpdate = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const updateLeave = catchAsync(async (req: Request, res: Response) => {
+const updateLeaveStatus = catchAsync(async (req: Request, res: Response) => {
     const { id: leaveId } = req.params;
     const user = req.user;
     const payload = req.body;
-    const result = await leaveService.updateLeaveInDB(user.companyId, user.userId, leaveId as string, user.role as Role, payload);
+    const result = await leaveService.updateLeaveStatusInDB(user.companyId, user.userId, leaveId as string, user.role as Role, payload);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,
@@ -82,6 +82,6 @@ export const leaveController = {
     applyForLeave,
     getAllOrQueryLeaves,
     employeeLeaveUpdate,
-    updateLeave,
+    updateLeaveStatus,
     deleteLeave,
 };
