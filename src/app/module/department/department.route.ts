@@ -5,13 +5,23 @@ import { Role } from "../../../generated/prisma/enums";
 
 const router = Router();
 
-router.get("/", checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), departmentController.getCompanyAllOrQueryDepartments);
+router.get(
+    "/", 
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD), departmentController.getCompanyAllOrQueryDepartments
+);
 router.post(
     "/",
     checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER),
     departmentController.createDepartment
 );
-router.patch("/:id", checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), departmentController.updateDepartment);
-router.delete("/:id", checkAuthMiddleware(Role.Super_ADMIN), departmentController.deleteDepartment);
+router.patch(
+    "/:id", 
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER), departmentController.updateDepartment
+);
+router.delete(
+    "/:id", 
+    checkAuthMiddleware(Role.Super_ADMIN), 
+    departmentController.deleteDepartment
+);
 
 export const departmentRoute = router;
