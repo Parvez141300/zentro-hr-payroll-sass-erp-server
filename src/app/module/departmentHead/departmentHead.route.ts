@@ -9,7 +9,7 @@ const router = Router();
 
 router.get(
     "/",
-    checkAuthMiddleware(Role.Super_ADMIN),
+    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD),
     departmentHeadController.getAllOrQueryDepartmentHeads
 );
 router.get(
