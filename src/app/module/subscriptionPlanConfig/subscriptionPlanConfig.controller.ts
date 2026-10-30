@@ -3,17 +3,37 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import status from "http-status";
 import { subscriptionPlanConfigService } from "./subscriptionPlanConfig.service";
+import { paginationAndSortingHelper } from "../../utils/paginationAndSortingHelper";
 
-const getAllSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
-    const search = req.query.search;
-    const result = await subscriptionPlanConfigService.getAllSubscriptionPlanConfigFromDB(search as string);
-    sendResponse(res, {
-        httpStatusCode: status.OK,
-        success: true,
-        message: "Subscription plan config fetched successfully",
-        data: result,
-    });
-});
+const getAllSubscriptionPlanConfig = catchAsync(
+    async (req: Request, res: Response) => {
+        // ✅ Parse filters from query
+        const search =
+            typeof req.query.search === "string" ? req.query.search : "";
+
+        // ✅ Use the shared helper (same as employees)
+        const { page, limit, skip, sortBy, sortOrder } =
+            paginationAndSortingHelper(req.query);
+
+        // ✅ Call service
+        const result =
+            await subscriptionPlanConfigService.getAllSubscriptionPlanConfigFromDB({
+                search,
+                page,
+                limit,
+                skip,
+                sortBy,
+                sortOrder,
+            });
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Subscription plan config fetched successfully",
+            data: result,
+        });
+    }
+);
 
 const createSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
     const payload = req.body;

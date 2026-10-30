@@ -61,3 +61,18 @@ export interface IUpdateSubscriptionPlanConfigPayload {
     sortOrder?: number;
     popularBadge?: boolean;
 }
+
+export interface IGetAllSubscriptionPlanConfigPayload {
+  search?: string;
+  isActive?: boolean;
+  popularBadge?: boolean;
+
+  // Pagination
+  page: number;
+  limit: number;
+  skip: number;
+
+  // Sorting
+  sortBy: string;
+  sortOrder: string;
+}

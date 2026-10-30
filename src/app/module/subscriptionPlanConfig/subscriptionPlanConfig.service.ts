@@ -1,32 +1,65 @@
 import { Prisma, SubscriptionPlan } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
-import { ISubscriptionPlanConfigPayload, IUpdateSubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
+import { IGetAllSubscriptionPlanConfigPayload, ISubscriptionPlanConfigPayload, IUpdateSubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
 
 
 
-const getAllSubscriptionPlanConfigFromDB = async (search?: string) => {
-    const where: Prisma.SubscriptionPlanConfigWhereInput = {};
+const getAllSubscriptionPlanConfigFromDB = async (
+  payload: IGetAllSubscriptionPlanConfigPayload
+) => {
+  const {
+    search,
+    page,
+    limit,
+    skip,
+    sortBy,
+    sortOrder,
+  } = payload;
 
-    // ✅ Universal search — matches name OR displayName
-    if (search) {
-        const matchingEnums = Object.values(SubscriptionPlan).filter((plan) =>
-            plan.toLowerCase().includes(search.toLowerCase())
-        );
+  // ✅ Build the where clause
+  const addCondition: Prisma.SubscriptionPlanConfigWhereInput[] = [];
 
-        where.OR = [
-            { name: { in: matchingEnums } },
-            { displayName: { contains: search, mode: "insensitive" } },
-        ];
-    }
+  // ✅ Universal search — matches name OR displayName
+  if (search) {
+    const matchingEnums = Object.values(SubscriptionPlan).filter((plan) =>
+      plan.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.findMany({
-        where,
-        orderBy: {
-            sortOrder: "asc",
-        },
+    addCondition.push({
+      OR: [
+        { name: { in: matchingEnums } },
+        { displayName: { contains: search, mode: "insensitive" } },
+      ],
     });
+  }
 
-    return subscriptionPlanConfig;
+  // ✅ Final where clause
+  const where: Prisma.SubscriptionPlanConfigWhereInput = {
+    AND: addCondition,
+  };
+
+  // ✅ Fetch with pagination, sorting, and count in parallel
+  const [subscriptionPlanConfigs, total] = await Promise.all([
+    prisma.subscriptionPlanConfig.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
+    }),
+    prisma.subscriptionPlanConfig.count({ where }),
+  ]);
+
+  return {
+    data: subscriptionPlanConfigs,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 const createSubscriptionPlanConfigInDB = async (payload: ISubscriptionPlanConfigPayload) => {
