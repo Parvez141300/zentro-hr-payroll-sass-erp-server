@@ -5,7 +5,8 @@ import status from "http-status";
 import { subscriptionPlanConfigService } from "./subscriptionPlanConfig.service";
 
 const getAllSubscriptionPlanConfig = catchAsync(async (req: Request, res: Response) => {
-    const result = await subscriptionPlanConfigService.getAllSubscriptionPlanConfigFromDB();
+    const search = req.query.search;
+    const result = await subscriptionPlanConfigService.getAllSubscriptionPlanConfigFromDB(search as string);
     sendResponse(res, {
         httpStatusCode: status.OK,
         success: true,

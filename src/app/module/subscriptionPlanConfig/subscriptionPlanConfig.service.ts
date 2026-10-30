@@ -1,11 +1,31 @@
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma, SubscriptionPlan } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { ISubscriptionPlanConfigPayload, IUpdateSubscriptionPlanConfigPayload } from "./subscriptionPlanConfig.interface";
 
 
 
-const getAllSubscriptionPlanConfigFromDB = async () => {
-    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.findMany();
+const getAllSubscriptionPlanConfigFromDB = async (search?: string) => {
+    const where: Prisma.SubscriptionPlanConfigWhereInput = {};
+
+    // ✅ Universal search — matches name OR displayName
+    if (search) {
+        const matchingEnums = Object.values(SubscriptionPlan).filter((plan) =>
+            plan.toLowerCase().includes(search.toLowerCase())
+        );
+
+        where.OR = [
+            { name: { in: matchingEnums } },
+            { displayName: { contains: search, mode: "insensitive" } },
+        ];
+    }
+
+    const subscriptionPlanConfig = await prisma.subscriptionPlanConfig.findMany({
+        where,
+        orderBy: {
+            sortOrder: "asc",
+        },
+    });
+
     return subscriptionPlanConfig;
 };
 
