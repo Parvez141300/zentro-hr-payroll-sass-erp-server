@@ -11,7 +11,7 @@ import Stripe from "stripe";
 const stripe = new Stripe(envVars.STRIPE.STRIPE_SECRET_KEY);
 
 const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSessionPayload) => {
-    const { companyId, userId, planName, successUrl, cancelUrl } = payload;
+    const { companyId, userId, planName, billingCycle, successUrl, cancelUrl } = payload;
 
     // validation check
     const isExistCompany = await prisma.company.findUnique({
@@ -45,13 +45,24 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
         throw new Error("Subscription plan config not found for create stripe checkout session");
     }
 
+    const amountUSD =
+        billingCycle === "monthly"
+            ? isExistsSubscriptionPlanConfig.priceUSD
+            : billingCycle === "yearly"
+                ? isExistsSubscriptionPlanConfig.yearlyPriceUSD
+                : null;
+
+    if (amountUSD === null) {
+        throw new Error(`Invalid billing cycle: ${billingCycle}`);
+    }
+
     // create payment record (pending)
     const payment = await prisma.payment.create({
         data: {
             companyId: isExistCompany.id,
             gateway: PaymentGateway.STRIPE,
             plan: planName as SubscriptionPlan,
-            amountUSD: isExistsSubscriptionPlanConfig.priceUSD,
+            amountUSD: amountUSD,
             status: PaymentStatus.PENDING,
             transactionId: `txn-${Date.now()}-${isExistCompany.id}`,
         }
