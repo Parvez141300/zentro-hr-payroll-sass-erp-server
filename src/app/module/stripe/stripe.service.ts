@@ -101,8 +101,8 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
             {
                 price_data: {
                     currency: "usd",
-                    unit_amount: Math.round(isExistsSubscriptionPlanConfig.priceUSD * 100), // cents
-                    recurring: { interval: "month" },
+                    unit_amount: Math.round(billingCycle === "monthly" ? isExistsSubscriptionPlanConfig.priceUSD * 100 : isExistsSubscriptionPlanConfig.yearlyPriceUSD as number * 100), // cents
+                    recurring: { interval: billingCycle === "monthly" ? "month" : "year" },
                     product_data: {
                         name: `Zentro ${isExistsSubscriptionPlanConfig.name} Plan`
                     },
@@ -119,6 +119,7 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
             companyName: isExistCompany.name,
             planName: isExistsSubscriptionPlanConfig.name,
             paymentId: payment.id,
+            billingCycle: billingCycle,
         },
     });
 
@@ -170,29 +171,91 @@ const handleStripeWebhookInDB = async (payload: any, signature: string) => {
     return { message: "Stripe webhook processed successfully event: " + event.id };
 };
 
+/**
+ * Returns the end date of the subscription period.
+ * - monthly → +1 calendar month (day clamped to month length)
+ * - yearly  → +1 calendar year  (Feb 29 → Feb 28 in non-leap years)
+ *
+ * Examples:
+ *   Jan 31 2025 + 1 month  → Feb 28 2025 (not Mar 3)
+ *   Aug 31 2025 + 1 month  → Sep 30 2025 (not Oct 1)
+ *   Feb 29 2024 + 1 year   → Feb 28 2025 (not Mar 1)
+ *   May 31 2025 + 1 year   → May 31 2026
+ */
+export const getSubscriptionEndDate = (
+    billingCycle: string,
+    from: Date = new Date()
+): Date => {
+    const start = new Date(from);
+    const day = start.getDate(); // remember original day-of-month
+
+    if (billingCycle === "yearly") {
+        const targetYear = start.getFullYear() + 1;
+        const targetMonth = start.getMonth();
+
+        // Clamp day to last day of the target month/year (handles Feb 29 → Feb 28)
+        const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const clampedDay = Math.min(day, lastDay);
+
+        return new Date(
+            targetYear,
+            targetMonth,
+            clampedDay,
+            start.getHours(),
+            start.getMinutes(),
+            start.getSeconds(),
+            start.getMilliseconds()
+        );
+    }
+
+    // monthly (default)
+    const targetMonth = start.getMonth() + 1;
+    const targetYear = start.getFullYear() + Math.floor(targetMonth / 12);
+    const normalizedMonth = targetMonth % 12;
+
+    // Last day of the target month
+    const lastDay = new Date(targetYear, normalizedMonth + 1, 0).getDate();
+    const clampedDay = Math.min(day, lastDay);
+
+    return new Date(
+        targetYear,
+        normalizedMonth,
+        clampedDay,
+        start.getHours(),
+        start.getMinutes(),
+        start.getSeconds(),
+        start.getMilliseconds()
+    );
+};
+
 const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) => {
-    const { companyId, companyName, paymentId, planName } = session.metadata as Record<string, string>;
+    const { companyId, companyName, paymentId, planName, billingCycle } =
+        session.metadata as Record<string, string>;
+
+    // Compute the subscription window once, based on the billing cycle
+    const subscriptionStart = new Date();
+    const subscriptionEnd = getSubscriptionEndDate(billingCycle, subscriptionStart);
 
     const result = await prisma.$transaction(async (tx) => {
         const subscriptionPlanConfig = await tx.subscriptionPlanConfig.findUnique({
-            where: {
-                name: planName as SubscriptionPlan,
-            }
+            where: { name: planName as SubscriptionPlan },
         });
 
+        if (!subscriptionPlanConfig) {
+            throw new Error(`Subscription plan config not found for plan: ${planName}`);
+        }
+
         const payment = await tx.payment.update({
-            where: {
-                id: paymentId,
-            },
+            where: { id: paymentId },
             data: {
                 status: PaymentStatus.SUCCESS,
                 stripePaymentIntentId: session.payment_intent as string,
                 stripeSubscriptionId: session.subscription as string,
                 stripeInvoiceId: session.invoice as string,
-                paidAt: new Date(),
-                subscriptionStart: new Date(),
-                subscriptionEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-            }
+                paidAt: subscriptionStart,
+                subscriptionStart: subscriptionStart,
+                subscriptionEnd: subscriptionEnd,       // ✅ based on billingCycle
+            },
         });
 
         const company = await tx.company.update({
@@ -201,45 +264,43 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
                 name: companyName,
             },
             data: {
-                subscriptionPlan: subscriptionPlanConfig!.name as SubscriptionPlan,
+                subscriptionPlan: subscriptionPlanConfig.name as SubscriptionPlan,
                 subscriptionStatus: SubscriptionStatus.ACTIVE,
-                subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-                maxEmployees: subscriptionPlanConfig!.maxEmployees,
+                subscriptionExpiry: subscriptionEnd,    // ✅ based on billingCycle
+                maxEmployees: subscriptionPlanConfig.maxEmployees,
                 stripeSubscriptionId: session.subscription as string,
-            }
+            },
         });
 
         const subscriptionHistory = await tx.subscriptionHistory.create({
             data: {
-                plan: subscriptionPlanConfig!.name as SubscriptionPlan,
+                plan: subscriptionPlanConfig.name as SubscriptionPlan,
                 status: SubscriptionStatus.ACTIVE,
                 companyId: companyId,
                 paymentId: payment.id,
-                startDate: new Date(),
-                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-            }
+                startDate: subscriptionStart,
+                endDate: subscriptionEnd,               // ✅ based on billingCycle
+            },
         });
 
         return {
             companyId: company.id,
             paymentId: payment.id,
             subscriptionHistoryId: subscriptionHistory.id,
-            planName: subscriptionPlanConfig!.name as SubscriptionPlan
+            planName: subscriptionPlanConfig.name as SubscriptionPlan,
         };
     });
 
     // get payment data
     const paymentData = await prisma.payment.findUnique({
-        where: {
-            id: paymentId,
-        },
+        where: { id: paymentId },
         include: {
             company: {
                 include: {
                     users: true,
-                }
-            }
-        }
+                },
+            },
+        },
     });
 
     // Generate Invoice PDF
@@ -252,21 +313,20 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         planName: paymentData?.plan as string,
         amount: paymentData?.amountUSD as number,
         paymentDate: paymentData?.paidAt as Date,
-        paymentGateway: paymentData?.gateway as string
+        paymentGateway: paymentData?.gateway as string,
     });
 
     // upload file to cloudinary
-    const cloudinaryResponse = await uploadFileToCloudinary(pdfBuffer, 'invoice.pdf') as { secure_url: string };
+    const cloudinaryResponse = (await uploadFileToCloudinary(
+        pdfBuffer,
+        "invoice.pdf"
+    )) as { secure_url: string };
 
     const invoiceUrl = cloudinaryResponse.secure_url;
 
     await prisma.payment.update({
-        where: {
-            id: paymentId,
-        },
-        data: {
-            invoiceUrl: invoiceUrl,
-        }
+        where: { id: paymentId },
+        data: { invoiceUrl: invoiceUrl },
     });
 
     // send email to customer
@@ -282,15 +342,19 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
             customerEmail: paymentData?.company?.users[0]?.email as string,
             planName: paymentData?.plan as string,
             amount: paymentData?.amountUSD as number,
-            paymentDate: paymentData?.paidAt ? new Date(paymentData?.paidAt).toISOString() : new Date(),
+            paymentDate: paymentData?.paidAt
+                ? new Date(paymentData?.paidAt).toISOString()
+                : new Date(),
             invoiceUrl: invoiceUrl,
-            paymentGateway: paymentData?.gateway as string
+            paymentGateway: paymentData?.gateway as string,
         },
-        attachments: [{
-            filename: 'invoice.pdf',
-            content: pdfBuffer,
-            contentType: 'application/pdf',
-        }]
+        attachments: [
+            {
+                filename: "invoice.pdf",
+                content: pdfBuffer,
+                contentType: "application/pdf",
+            },
+        ],
     });
 
     return result;
