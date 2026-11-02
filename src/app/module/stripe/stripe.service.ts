@@ -49,6 +49,25 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
         throw new Error("Subscription plan config not found for create stripe checkout session");
     }
 
+    // ✅ check whether the user already brought or not
+    const hasActiveSubscription =
+        isExistCompany.subscriptionPlan !== SubscriptionPlan.FREE &&
+        isExistCompany.subscriptionStatus === SubscriptionStatus.ACTIVE &&
+        !!isExistCompany.subscriptionExpiry &&
+        isExistCompany.subscriptionExpiry > new Date();
+
+    if (hasActiveSubscription) {
+        if (isExistCompany.subscriptionPlan === planName) {
+            throw new Error(
+                `You already have an active ${planName} plan until ${isExistCompany.subscriptionExpiry!.toDateString()}`
+            );
+        }
+
+        throw new Error(
+            "You already have an active subscription. To change your plan, please use 'Manage Subscription'."
+        );
+    }
+
     const amountUSD =
         billingCycle === "MONTHLY"
             ? isExistsSubscriptionPlanConfig.priceUSD
