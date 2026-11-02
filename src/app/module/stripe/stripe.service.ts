@@ -348,6 +348,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
                 : new Date(),
             invoiceUrl: invoiceUrl,
             paymentGateway: paymentData?.gateway as string,
+            billingCycle: billingCycle,
         },
         attachments: [
             {

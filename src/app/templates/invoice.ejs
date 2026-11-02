@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -9,63 +8,47 @@
 </head>
 
 <body style="margin:0;padding:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#334155;">
-
-    ```
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:40px 20px;">
         <tr>
             <td align="center">
-
                 <table width="650" cellpadding="0" cellspacing="0"
                     style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);">
 
                     <!-- Header -->
                     <tr>
                         <td align="center" style="background:#2563EB;padding:40px 30px;">
-
                             <h1 style="margin:0;color:#ffffff;font-size:34px;">
                                 ZENTRO
                             </h1>
-
                             <p style="margin-top:10px;color:#dbeafe;font-size:16px;line-height:26px;">
                                 Modern HR & Payroll ERP Platform
                             </p>
-
                         </td>
                     </tr>
 
                     <!-- Greeting -->
                     <tr>
                         <td style="padding:40px 40px 15px;">
-
                             <h2 style="margin:0;color:#0f172a;font-size:24px;">
                                 Hello <%= customerName %>,
                             </h2>
-
                             <p style="margin-top:18px;font-size:15px;line-height:28px;color:#475569;">
-
                                 Thank you for choosing
                                 <strong>Zentro HR & Payroll ERP</strong>.
-
                                 Your payment has been
                                 <strong style="color:#16a34a;">successfully processed</strong>
                                 and your subscription has been activated.
-
                             </p>
-
                             <p style="margin-top:10px;font-size:15px;line-height:28px;color:#475569;">
-
                                 Your invoice is attached with this email and can
                                 also be downloaded using the button below.
-
                             </p>
-
                         </td>
                     </tr>
 
                     <!-- Invoice Summary -->
                     <tr>
                         <td style="padding:10px 40px 20px;">
-
                             <table width="100%"
                                 style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
 
@@ -73,7 +56,6 @@
                                     <td style="padding:14px;font-weight:bold;width:38%;">
                                         Invoice ID
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= invoiceId %>
                                     </td>
@@ -83,7 +65,6 @@
                                     <td style="padding:14px;font-weight:bold;">
                                         Transaction ID
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= transactionId %>
                                     </td>
@@ -93,7 +74,6 @@
                                     <td style="padding:14px;font-weight:bold;">
                                         Payment Gateway
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= paymentGateway %>
                                     </td>
@@ -103,7 +83,6 @@
                                     <td style="padding:14px;font-weight:bold;">
                                         Company
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= companyName %>
                                     </td>
@@ -113,7 +92,6 @@
                                     <td style="padding:14px;font-weight:bold;">
                                         Customer
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= customerName %><br />
                                             <span style="color:#64748b;font-size:14px;">
@@ -126,7 +104,6 @@
                                     <td style="padding:14px;font-weight:bold;">
                                         Subscription Plan
                                     </td>
-
                                     <td style="padding:14px;">
                                         <strong>
                                             <%= planName %>
@@ -134,103 +111,89 @@
                                     </td>
                                 </tr>
 
+                                <!-- ✅ NEW: Billing Cycle -->
                                 <tr style="background:#f8fafc;">
                                     <td style="padding:14px;font-weight:bold;">
-                                        Amount Paid
+                                        Billing Cycle
                                     </td>
-
-                                    <td style="padding:14px;font-size:17px;font-weight:bold;color:#16a34a;">
-                                        ৳ <%= amount %>
+                                    <td style="padding:14px;">
+                                        <span
+                                            style="display:inline-block;background:#eff6ff;color:#2563EB;font-size:12px;font-weight:bold;padding:5px 12px;border-radius:999px;letter-spacing:0.5px;">
+                                            <%= billingCycle %>
+                                        </span>
                                     </td>
                                 </tr>
 
                                 <tr>
                                     <td style="padding:14px;font-weight:bold;">
+                                        Amount Paid
+                                    </td>
+                                    <td style="padding:14px;font-size:17px;font-weight:bold;color:#16a34a;">
+                                        ৳ <%= amount %>
+                                    </td>
+                                </tr>
+
+                                <tr style="background:#f8fafc;">
+                                    <td style="padding:14px;font-weight:bold;">
                                         Payment Date
                                     </td>
-
                                     <td style="padding:14px;">
                                         <%= paymentDate %>
                                     </td>
                                 </tr>
 
                             </table>
-
                         </td>
                     </tr>
 
                     <!-- Download Button -->
                     <tr>
                         <td align="center" style="padding:20px 40px;">
-
                             <a href="<%= invoiceUrl %>"
                                 style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;padding:16px 34px;border-radius:8px;font-size:16px;font-weight:bold;">
-
                                 Download Invoice
-
                             </a>
-
                         </td>
                     </tr>
 
                     <!-- Note -->
                     <tr>
                         <td style="padding:20px 40px 35px;">
-
                             <div
                                 style="background:#eff6ff;border-left:4px solid #2563EB;padding:18px;border-radius:6px;">
-
                                 <p style="margin:0;font-size:14px;line-height:24px;color:#475569;">
-
                                     A PDF copy of your invoice has been attached
                                     to this email for your convenience. Please
                                     keep it for your financial records.
-
                                 </p>
-
                             </div>
-
                         </td>
                     </tr>
 
                     <!-- Footer -->
                     <tr>
                         <td style="background:#0f172a;padding:30px;text-align:center;">
-
                             <h3 style="margin:0;color:#ffffff;font-size:22px;">
                                 Zentro
                             </h3>
-
                             <p style="margin-top:10px;color:#cbd5e1;font-size:14px;line-height:24px;">
-
                                 Modern HR & Payroll ERP Platform
-
                             </p>
-
                             <p style="margin-top:20px;font-size:12px;color:#94a3b8;line-height:20px;">
-
                                 This is an automated email from Zentro.
                                 Please do not reply to this message.
-
                             </p>
-
                             <p style="margin-top:12px;font-size:12px;color:#64748b;">
-
                                 © <%= new Date().getFullYear() %> Zentro.
                                     All rights reserved.
-
                             </p>
-
                         </td>
                     </tr>
 
                 </table>
-
             </td>
         </tr>
     </table>
-    ```
-
 </body>
 
 </html>
