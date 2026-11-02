@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { cookieUtils } from "../utils/cookie";
-import { Role } from "better-auth/plugins";
 import { prisma } from "../lib/prisma";
 import { jwtUtils } from "../utils/jwt";
 import { envVars } from "../utils/env";
+import { Role } from "../../generated/prisma/enums";
 
 export const checkAuthMiddleware = (...authRoles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {

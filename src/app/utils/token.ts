@@ -32,7 +32,7 @@ const setAccessTokenInCookie = (res: Response, accessToken: string) => {
         { 
             httpOnly: true, 
             secure: envVars.NODE_ENV === "production",
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: maxAge,
         }
     );
@@ -47,7 +47,7 @@ const setRefreshTokenInCookie = (res: Response, refreshToken: string) => {
         { 
             httpOnly: true, 
             secure: envVars.NODE_ENV === "production",
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: maxAge,
         }
     );
@@ -62,7 +62,7 @@ const setBetterAuthSessionTokenInCookie = (res: Response, sessionToken: string) 
         { 
             httpOnly: true, 
             secure: envVars.NODE_ENV === "production",
-            sameSite: "none",
+            sameSite: "lax",
             maxAge: maxAge,
         }
     );

@@ -6,7 +6,15 @@ import express from "express";
 
 const router = Router();
 
-router.post("/create-checkout-session", checkAuthMiddleware(Role.Super_ADMIN), stripeController.createStripeCheckoutSession);
-router.post("/webhook", express.raw({ type: 'application/json' }), stripeController.handleStripeWebhook);
+router.post(
+    "/create-checkout-session",
+    checkAuthMiddleware(Role.Super_ADMIN),
+    stripeController.createStripeCheckoutSession
+);
+router.post(
+    "/webhook",
+    express.raw({ type: 'application/json' }),
+    stripeController.handleStripeWebhook
+);
 
 export const stripeRoute = router;

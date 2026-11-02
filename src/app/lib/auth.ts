@@ -57,7 +57,7 @@ export const auth = betterAuth({
                 attributes: {
                     httpOnly: true,
                     secure: envVars.NODE_ENV === "production",
-                    sameSite: "none",
+                    sameSite: "lax",
                     path: "/",
                 }
             },
