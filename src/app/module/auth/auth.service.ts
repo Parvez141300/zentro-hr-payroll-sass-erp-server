@@ -369,6 +369,7 @@ const getLoggedInUserInfoFromDB = async (accessToken: string) => {
           accountant: true,
           departmentHead: true,
           employee: true,
+          company: true,
         }
       })
 
