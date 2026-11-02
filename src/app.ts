@@ -8,12 +8,20 @@ import path from "path";
 import { envVars } from "./app/utils/env";
 import crone from "node-cron";
 import { companyService } from "./app/module/company/company.service";
+import { stripeController } from "./app/module/stripe/stripe.controller";
 
 export const app: Application = express();
 
 // view engine
 app.set("view engine", "ejs");
 app.set("views", path.resolve(process.cwd(), "src/app/templates"));
+
+// stripe webhook
+app.use(
+  "/api/v1/stripe/webhook",
+  express.raw({ type: 'application/json' }),
+  stripeController.handleStripeWebhook
+);
 
 // Middleware to parse JSON bodies
 app.use(express.json());

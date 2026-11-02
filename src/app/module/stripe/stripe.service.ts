@@ -149,7 +149,8 @@ const handleStripeWebhookInDB = async (payload: any, signature: string) => {
     try {
         event = stripe.webhooks.constructEvent(payload, signature, envVars.STRIPE.STRIPE_WEBHOOK_SECRET);
     } catch (error: any) {
-        throw new Error("Stripe webhook error", error);
+        console.error("Stripe signature verification failed:", error.message);
+        throw new Error("Stripe webhook error", error.message);
     }
 
     switch (event.type) {
@@ -196,7 +197,7 @@ export const getSubscriptionEndDate = (
     const start = new Date(from);
     const day = start.getDate(); // remember original day-of-month
 
-    if (billingCycle === "yearly") {
+    if (billingCycle === "YEARLY") {
         const targetYear = start.getFullYear() + 1;
         const targetMonth = start.getMonth();
 
