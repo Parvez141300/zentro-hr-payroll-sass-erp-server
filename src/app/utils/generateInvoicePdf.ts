@@ -10,14 +10,13 @@ interface GenerateInvoicePdfPayload {
     amount: number;
     paymentDate: Date;
     paymentGateway: string;
+    billingCycle: string;
 }
 
 export const generateInvoicePdf = (
     payload: GenerateInvoicePdfPayload
 ): Promise<Buffer> => {
-
     return new Promise((resolve, reject) => {
-
         const doc = new PDFDocument({
             size: "A4",
             margin: 50,
@@ -83,7 +82,13 @@ export const generateInvoicePdf = (
 
         doc.moveDown();
 
+        // ✅ Subscription Plan + Billing Cycle একসাথে
         doc.text(`Subscription Plan : ${payload.planName}`);
+        doc.text(
+            `Billing Cycle         : ${payload.billingCycle.charAt(0).toUpperCase() +
+            payload.billingCycle.slice(1)
+            }` // "monthly" → "Monthly", "yearly" → "Yearly"
+        );
 
         doc.moveDown();
 

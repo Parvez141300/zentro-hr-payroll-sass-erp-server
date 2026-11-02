@@ -314,6 +314,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         amount: paymentData?.amountUSD as number,
         paymentDate: paymentData?.paidAt as Date,
         paymentGateway: paymentData?.gateway as string,
+        billingCycle: billingCycle,
     });
 
     // upload file to cloudinary

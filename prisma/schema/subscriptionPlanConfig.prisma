@@ -1,17 +1,17 @@
 model SubscriptionPlanConfig {
-    id             String           @id @default(cuid())
-    name           SubscriptionPlan @unique // FREE, BASIC, PRO, ENTERPRISE
-    displayName    String
-    description    String?
-    priceUSD       Float
-    priceBDT       Float
-    yearlyPriceUSD Float?
-    yearlyPriceBDT Float?
-    maxEmployees   Int
-    features       Json
-    isActive       Boolean          @default(true)
-    sortOrder      Int              @default(0)
-    popularBadge   Boolean          @default(false)
+    id               String           @id @default(cuid())
+    name             SubscriptionPlan @unique // FREE, BASIC, PRO, ENTERPRISE
+    displayName      String
+    description      String?
+    priceUSD         Float
+    priceBDT         Float
+    yearlyPriceUSD   Float?
+    yearlyPriceBDT   Float?
+    maxEmployees     Int
+    features         Json
+    isActive         Boolean          @default(true)
+    sortOrder        Int              @default(0)
+    popularBadge     Boolean          @default(false)
 
     // ⭐ NO companyId here! - This is PLATFORM level
     createdAt DateTime @default(now())
