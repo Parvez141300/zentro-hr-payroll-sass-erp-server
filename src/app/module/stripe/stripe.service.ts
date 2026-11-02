@@ -50,9 +50,9 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
     }
 
     const amountUSD =
-        billingCycle === "monthly"
+        billingCycle === "MONTHLY"
             ? isExistsSubscriptionPlanConfig.priceUSD
-            : billingCycle === "yearly"
+            : billingCycle === "YEARLY"
                 ? isExistsSubscriptionPlanConfig.yearlyPriceUSD
                 : null;
 
@@ -105,8 +105,8 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
             {
                 price_data: {
                     currency: "usd",
-                    unit_amount: Math.round(billingCycle === "monthly" ? isExistsSubscriptionPlanConfig.priceUSD * 100 : isExistsSubscriptionPlanConfig.yearlyPriceUSD as number * 100), // cents
-                    recurring: { interval: billingCycle === "monthly" ? "month" : "year" },
+                    unit_amount: Math.round(billingCycle === "MONTHLY" ? isExistsSubscriptionPlanConfig.priceUSD * 100 : isExistsSubscriptionPlanConfig.yearlyPriceUSD as number * 100), // cents
+                    recurring: { interval: billingCycle === "MONTHLY" ? "month" : "year" },
                     product_data: {
                         name: `Zentro ${isExistsSubscriptionPlanConfig.name} Plan`
                     },

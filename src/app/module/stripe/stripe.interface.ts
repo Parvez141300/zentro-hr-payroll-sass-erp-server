@@ -2,7 +2,7 @@ export interface ICreateStripeCheckoutSessionPayload {
     companyId: string;
     userId: string;
     planName: string;
-    billingCycle: "yearly" | "monthly";
+    billingCycle: "YEARLY" | "MONTHLY";
     successUrl: string;
     cancelUrl: string;
 }
