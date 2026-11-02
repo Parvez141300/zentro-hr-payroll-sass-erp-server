@@ -1,111 +1,78 @@
 import { NextFunction, Request, Response } from "express";
 import { cookieUtils } from "../utils/cookie";
+import { Role } from "better-auth/plugins";
 import { prisma } from "../lib/prisma";
 import { jwtUtils } from "../utils/jwt";
 import { envVars } from "../utils/env";
-import { Role } from "../../generated/prisma/enums";
 
 export const checkAuthMiddleware = (...authRoles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            console.log('cookie data from global check auth', req.cookies);
             const sessionToken = cookieUtils.getCookie(req, "better-auth.session_token");
             const refreshToken = cookieUtils.getCookie(req, "refreshToken");
-
-            if (!sessionToken) {
-                throw new Error("Unauthorized access! No session token found.");
-            }
-
-            if (!refreshToken) {
-                throw new Error("Unauthorized access! No refresh token found.");
-            }
-
-            if (sessionToken && refreshToken) {
-                const isExistSessionToken = await prisma.session.findUnique({
-                    where: {
-                        token: sessionToken,
-                        expiresAt: {
-                            gt: new Date(),
-                        },
-                    },
-                    include: {
-                        user: true,
-                    }
-                });
-
-                if (isExistSessionToken && isExistSessionToken.user && refreshToken) {
-                    const refreshTokenVerify = jwtUtils.verifyToken(refreshToken, envVars.JWT_TOKEN_SECRET);
-
-                    if (!refreshTokenVerify.success && refreshTokenVerify.error) {
-                        throw new Error("Refresh token is invalid");
-                    }
-
-                    if (!refreshTokenVerify.data || !refreshTokenVerify.data.exp || !refreshTokenVerify.data.iat) {
-                        throw new Error("Refresh token data is invalid");
-                    }
-
-                    const user = isExistSessionToken.user;
-                    console.log("user data from check auth middleware", user);
-
-                    const now = new Date();
-                    const expiresAt = new Date((refreshTokenVerify.data.exp) / 1000);
-                    const createdAt = new Date((refreshTokenVerify.data.iat) / 1000);
-
-                    const refreshTokenLifeTime = expiresAt.getTime() - createdAt.getTime();
-                    const remainingTime = expiresAt.getTime() - now.getTime();
-
-                    const remainingTimePercentage = (remainingTime / refreshTokenLifeTime) * 100;
-
-                    console.log("remaining time percentage", remainingTimePercentage);
-
-                    if (remainingTimePercentage < 20) {
-                        res.set({
-                            "X-Refresh-Token-Refresh": "true",
-                            "X-Refresh-Token-Expires-At": expiresAt.toISOString(),
-                            "X-Time-Remaining": remainingTime.toString(),
-                        });
-
-                        console.log('sessin is expiring soon');
-                    }
-
-                    if (!user.isActive) {
-                        throw new Error("Unauthorized access! User is inactive.");
-                    }
-
-                    if (user.isDeleted) {
-                        throw new Error("Unauthorized access! User is deleted.");
-                    }
-                }
-            }
-
-            // access token check
             const accessToken = cookieUtils.getCookie(req, "accessToken");
-            if (!accessToken) {
-                throw new Error("Unauthorized access! No access token found.");
+
+            if (!sessionToken) throw new Error("Unauthorized! No session token.");
+            if (!refreshToken) throw new Error("Unauthorized! No refresh token.");
+            if (!accessToken) throw new Error("Unauthorized! No access token.");
+
+            // 1. সস্তা চেক আগে: access token
+            const verifyAccess = jwtUtils.verifyToken(accessToken, envVars.JWT_TOKEN_SECRET);
+            if (!verifyAccess.success || !verifyAccess.data) {
+                throw new Error("Unauthorized! Invalid access token.");
             }
 
-            const verifyToken = jwtUtils.verifyToken(accessToken, envVars.JWT_TOKEN_SECRET);
-            if (!verifyToken.success) {
-                throw new Error("Unauthorized access! Invalid access token.");
+            // 2. refresh token
+            const verifyRefresh = jwtUtils.verifyToken(refreshToken, envVars.JWT_TOKEN_SECRET);
+            if (!verifyRefresh.success || !verifyRefresh.data?.exp || !verifyRefresh.data?.iat) {
+                throw new Error("Unauthorized! Invalid refresh token.");
+            }
+
+            // 3. DB session
+            const session = await prisma.session.findUnique({
+                where: { token: sessionToken },
+                include: { user: true },
+            });
+            if (!session || session.expiresAt <= new Date() || !session.user) {
+                throw new Error("Unauthorized! Invalid or expired session.");
+            }
+
+            const user = session.user;
+            if (!user.isActive) throw new Error("Unauthorized! User is inactive.");
+            if (user.isDeleted) throw new Error("Unauthorized! User is deleted.");
+
+            // 4. refresh token কত সময় বাকি (exp/iat সেকেন্ডে, তাই * 1000)
+            const expiresAtMs = verifyRefresh.data.exp * 1000;
+            const createdAtMs = verifyRefresh.data.iat * 1000;
+            const lifeTime = expiresAtMs - createdAtMs;
+            const remaining = expiresAtMs - Date.now();
+
+            if ((remaining / lifeTime) * 100 < 20) {
+                res.set({
+                    "X-Refresh-Token-Refresh": "true",
+                    "X-Refresh-Token-Expires-At": new Date(expiresAtMs).toISOString(),
+                });
+            }
+
+            // 5. role চেক
+            const role = verifyAccess.data.role;
+            if (authRoles.length > 0 && !authRoles.includes(role)) {
+                throw new Error("Unauthorized! Invalid user role.");
             }
 
             req.user = {
-                companyId: verifyToken.data?.companyId,
-                userId: verifyToken.data?.userId,
-                name: verifyToken.data?.name,
-                email: verifyToken.data?.email,
-                role: verifyToken.data?.role,
-                isActive: verifyToken.data?.isActive,
-                isDeleted: verifyToken.data?.isDeleted
-            }
-
-            if (authRoles.length > 0 && !authRoles.includes(verifyToken.data?.role as Role)) {
-                throw new Error("Unauthorized access! Invalid user role.");
-            }
+                companyId: verifyAccess.data.companyId,
+                userId: verifyAccess.data.userId,
+                name: verifyAccess.data.name,
+                email: verifyAccess.data.email,
+                role: role,
+                isActive: user.isActive,
+                isDeleted: user.isDeleted,
+            };
 
             next();
         } catch (error) {
             next(error);
         }
-    }
-}
+    };
+};

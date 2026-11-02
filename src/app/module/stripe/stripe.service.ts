@@ -115,8 +115,11 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
             },
         ],
         mode: "subscription",
-        success_url: successUrl || `${envVars.FRONTEND_URL}/dashboard/settings/billing?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: cancelUrl || `${envVars.FRONTEND_URL}/dashboard/settings/billing?payment=cancel`,
+        success_url: successUrl ?
+            `${successUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}`
+            :
+            `${envVars.FRONTEND_URL}/api/v1/super-admin/dashboard/payments?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: cancelUrl || `${envVars.FRONTEND_URL}/api/v1/super-admin/dashboard/payments?payment=cancel`,
         metadata: {
             userId: isExistUser.id,
             companyId: isExistCompany.id,
