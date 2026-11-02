@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { paymentService } from "./payment.service";
 import { checkAuthMiddleware } from "../../middleware/checkAuthMiddleware";
 import { Role } from "../../../generated/prisma/enums";
+import { paymentController } from "./payment.controller";
 
 const router = Router();
 
-router.get("/", checkAuthMiddleware(Role.Super_ADMIN), paymentService.getCompanyPaymentsFromDB);
+router.get("/", checkAuthMiddleware(Role.Super_ADMIN), paymentController.getCompanyPayments);
 
 export const paymentRoute = router;
