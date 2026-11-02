@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PaymentGateway, PaymentStatus, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
+import { PaymentGateway, PaymentStatus, Role, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { uploadFileToCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
 import { envVars } from "../../utils/env";
@@ -33,6 +33,10 @@ const createStripeCheckoutSessionInDB = async (payload: ICreateStripeCheckoutSes
 
     if (!isExistUser) {
         throw new Error("User not found for create stripe checkout session");
+    }
+
+    if (isExistUser.role !== Role.Super_ADMIN) {
+        throw new Error("User is not eligible to buy this plan only Super Admin of the company can buy this plan");
     }
 
     const isExistsSubscriptionPlanConfig = await prisma.subscriptionPlanConfig.findUnique({
