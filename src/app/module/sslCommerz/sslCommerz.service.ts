@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { PaymentGateway, PaymentStatus, Role, SubscriptionPlan, SubscriptionStatus } from "../../../generated/prisma/enums";
 import { uploadFileToCloudinary } from "../../config/cloudinary.utils";
 import { prisma } from "../../lib/prisma";
