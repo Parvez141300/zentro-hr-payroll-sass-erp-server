@@ -6,12 +6,15 @@ import status from "http-status";
 
 const initiateSSLCommerzPayment = catchAsync(async (req: Request, res: Response) => {
     const user = req.user;
-    const payload = req.body;
-
-    const result = await sslCommerzService.initiateSSLCommerzPaymentInDB({ companyId: user.companyId, userId: user.userId, planName: payload.planName });
+    const result = await sslCommerzService.initiateSSLCommerzPaymentInDB({
+        userId: user.userId as string,
+        companyId: user.companyId,
+        planName: req.body.planName,
+        billingCycle: req.body.billingCycle,
+    });
 
     sendResponse(res, {
-        httpStatusCode: status.OK,
+        httpStatusCode: status.CREATED,
         success: true,
         message: "SSLCommerz payment initiated successfully",
         data: result,
