@@ -15,11 +15,15 @@ import SSLCommerzPayment from "sslcommerz-lts";
 
 const PAYMENTS_PAGE = `${envVars.FRONTEND_URL}/super-admin/dashboard/payments`;
 
+const store_id = envVars.SSLCOMMERZ.SSLCOMMERZ_STORE_ID;
+const store_passwd = envVars.SSLCOMMERZ.SSLCOMMERZ_STORE_PASSWORD;
+const is_live = process.env.SSLCOMMERZ_IS_LIVE === "true";
+
 const getSSLCommerzClient = () =>
     new SSLCommerzPayment(
-        envVars.SSLCOMMERZ.SSLCOMMERZ_STORE_ID,
-        envVars.SSLCOMMERZ.SSLCOMMERZ_STORE_PASSWORD,
-        envVars.SSLCOMMERZ.SSLCOMMERZ_IS_LIVE
+        store_id,
+        store_passwd,
+        is_live,
     );
 
 /* ------------------------------------------------------------------ */
