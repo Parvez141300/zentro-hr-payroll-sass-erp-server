@@ -7,11 +7,23 @@ import { updateCompanyProfileMiddleware } from "../../middleware/updateCompanyPr
 
 const router = Router();
 
-router.get("/", companyController.getAllOrQueryCompanies);
-router.get("/single-company/:id", companyController.getSingleCompany);
+router.get(
+    "/",
+    companyController.getAllOrQueryCompanies
+);
+router.get(
+    "/single-company/:id",
+    companyController.getSingleCompany
+);
 router.get(
     "/own-company",
-    checkAuthMiddleware(Role.Super_ADMIN, Role.HR_MANAGER, Role.DEPARTMENT_HEAD, Role.EMPLOYEE, Role.ACCOUNTANT),
+    checkAuthMiddleware(
+        Role.Super_ADMIN,
+        Role.HR_MANAGER,
+        Role.DEPARTMENT_HEAD,
+        Role.EMPLOYEE,
+        Role.ACCOUNTANT
+    ),
     companyController.getUserOwnCompany
 );
 router.patch(
@@ -24,6 +36,9 @@ router.patch(
     updateCompanyProfileMiddleware,
     companyController.updateOwnCompany
 );
-router.delete("/:id", companyController.deleteCompany);
+router.delete(
+    "/:id",
+    companyController.deleteCompany
+);
 
 export const companyRoute = router;
