@@ -3,7 +3,7 @@ import { prisma } from "../app/lib/prisma";
 import { envVars } from "../app/utils/env";
 import { Role } from "../generated/prisma/enums";
 
-const seedPlatformSuperAdmin = async () => {
+export const seedPlatformSuperAdmin = async () => {
     const platformSuperAdminData = {
         name: envVars.PLATFORM_SUPER_ADMIN_NAME,
         email: envVars.PLATFORM_SUPER_ADMIN_EMAIL,
