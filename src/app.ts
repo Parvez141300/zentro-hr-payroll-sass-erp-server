@@ -40,12 +40,15 @@ app.use(cors({
 app.use(cookieParser());
 
 // node cron job
-crone.schedule("*/5 * * * *", async () => {
+crone.schedule("*/30 * * * *", async () => {
   try {
-    console.log("running a task every 5 minutes to check company subscription status is expired or not");
-    await companyService.cancelCompanySubscriptionInDB();
+    console.log("[cron] Checking expired company subscriptions...");
+    const result = await companyService.cancelCompanySubscriptionInDB();
+    console.log(
+      `[cron] Done. Processed: ${result.totalProcessed}, Failed: ${result.totalFailed}`
+    );
   } catch (error) {
-    console.log("error from node cron job", error);
+    console.error("[cron] Fatal error in subscription expiry job", error);
   }
 });
 

@@ -148,77 +148,92 @@ const deleteCompany = async (id: string) => {
 
 const cancelCompanySubscriptionInDB = async () => {
     const today = new Date();
+    let totalProcessed = 0;
+    let totalFailed = 0;
 
-    const expiredCompanies = await prisma.company.findMany({
-        where: {
-            subscriptionStatus: SubscriptionStatus.ACTIVE,
-            subscriptionExpiry: {
-                lte: today
+    // batch loop — একবারে সব লোড না করে 100 করে
+    while (true) {
+        const expiredCompanies = await prisma.company.findMany({
+            where: {
+                isDeleted: false,                                     // ✅ soft-deleted বাদ
+                subscriptionStatus: SubscriptionStatus.ACTIVE,
+                subscriptionExpiry: { lte: today },
+                NOT: { subscriptionPlan: SubscriptionPlan.FREE },
             },
-            NOT: {
-                subscriptionPlan: SubscriptionPlan.FREE,
-            }
-        },
-        include: {
-            users: {
-                where: {
-                    role: Role.Super_ADMIN,
+            take: 100,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                subscriptionPlan: true,
+                subscriptionExpiry: true,
+                users: {
+                    where: { role: Role.Super_ADMIN },  // ⚠️ spelling যাচাই করো
+                    select: { email: true },
+                    take: 1,
                 },
-                include: {
-                    superAdmin: true,
-                }
             },
-        }
-    });
-
-    for (const company of expiredCompanies) {
-        await prisma.$transaction(async (tx) => {
-            await tx.company.update({
-                where: {
-                    id: company.id
-                },
-                data: {
-                    subscriptionStatus: SubscriptionStatus.EXPIRED,
-                    subscriptionPlan: SubscriptionPlan.FREE,
-                    maxEmployees: 10,
-                    stripeSubscriptionId: null,
-                }
-            });
-
-            await tx.subscriptionHistory.create({
-                data: {
-                    companyId: company.id,
-                    plan: SubscriptionPlan.FREE,
-                    status: SubscriptionStatus.EXPIRED,
-                    startDate: company.subscriptionExpiry || new Date(),
-                    // FREE plan never expires
-                    // No paymentId for automatic expiry
-                    endDate: new Date('2099-12-31'),
-                }
-            });
-
-            sendEmail({
-                to: company.users[0].email || company.email,
-                subject: "Subscription Expired",
-                templateName: "expiration",
-                templateData: {
-                    name: company.name,
-                    subscriptionPlan: company.subscriptionPlan,
-                    subscriptionStatus: SubscriptionStatus.EXPIRED,
-                    subscriptionExpiry: company.subscriptionExpiry?.toLocaleDateString(
-                        "en-GB",
-                        {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                        }
-                    ),
-                    renewSubscriptionUrl: `${envVars.FRONTEND_URL}/dashboard/subscription`
-                }
-            });
         });
+
+        if (expiredCompanies.length === 0) break;
+
+        for (const company of expiredCompanies) {
+            try {
+                // ── DB transaction: atomic ──
+                await prisma.$transaction(async (tx) => {
+                    await tx.company.update({
+                        where: { id: company.id },
+                        data: {
+                            subscriptionStatus: SubscriptionStatus.EXPIRED,
+                            subscriptionPlan: SubscriptionPlan.FREE,
+                            subscriptionExpiry: null,                       // ✅ stale date clear
+                            maxEmployees: 10,
+                            stripeSubscriptionId: null,
+                        },
+                    });
+
+                    await tx.subscriptionHistory.create({
+                        data: {
+                            companyId: company.id,
+                            plan: SubscriptionPlan.FREE,
+                            status: SubscriptionStatus.EXPIRED,
+                            startDate: new Date(),                          // ✅ এখন
+                            endDate: new Date("2099-12-31"),
+                        },
+                    });
+                });
+
+                totalProcessed++;
+
+                // ── Email: transaction-এর বাইরে, isolated ──
+                await sendEmail({
+                    to: company.users[0]?.email ?? company.email,       // ✅ safe fallback
+                    subject: "Subscription Expired",
+                    templateName: "expiration",
+                    templateData: {
+                        name: company.name,
+                        subscriptionPlan: company.subscriptionPlan,
+                        subscriptionStatus: SubscriptionStatus.EXPIRED,
+                        subscriptionExpiry: company.subscriptionExpiry?.toLocaleDateString(
+                            "en-GB",
+                            { day: "2-digit", month: "long", year: "numeric" }
+                        ),
+                        renewSubscriptionUrl: `${envVars.FRONTEND_URL}/dashboard/subscription`,
+                    },
+                }).catch((err) => {
+                    console.error(`Email failed for company ${company.id}`, err);
+                });
+            } catch (err) {
+                totalFailed++;
+                console.error(`Failed to expire company ${company.id}`, err);
+            }
+        }
+
+        if (expiredCompanies.length < 100) break;
     }
-}
+
+    return { totalProcessed, totalFailed };
+};
 
 export const companyService = {
     getAllOrQueryCompaniesFromDB,
