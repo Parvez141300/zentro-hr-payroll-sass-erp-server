@@ -1,3 +1,4 @@
+import { envVars } from "./app/utils/env";
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { indexRoute } from "./app/routes";
@@ -5,7 +6,6 @@ import { notFoundMiddleware } from "./app/middleware/notFound";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import cookieParser from "cookie-parser";
 import path from "path";
-import { envVars } from "./app/utils/env";
 import crone from "node-cron";
 import { companyService } from "./app/module/company/company.service";
 import { stripeController } from "./app/module/stripe/stripe.controller";
@@ -27,7 +27,12 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: [envVars.FRONTEND_URL, envVars.BETTER_AUTH_URL, "http://localhost:3000", "http://localhost:5000"],
+  origin: [
+    envVars.FRONTEND_URL,
+    envVars.BETTER_AUTH_URL,
+    "http://localhost:3000",
+    "http://localhost:5000"
+  ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
