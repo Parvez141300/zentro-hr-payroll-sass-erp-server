@@ -18,7 +18,9 @@ const seedPlatformSuperAdmin = async () => {
     });
 
     if (isExistSuperAdmin) {
-        throw new Error("Platform super admin already exist");
+        console.log("Platform super admin already exist");
+
+        return;
     }
 
     const platformSuperAdmin = await auth.api.signUpEmail({
