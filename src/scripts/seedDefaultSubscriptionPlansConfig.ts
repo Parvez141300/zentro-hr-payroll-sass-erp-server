@@ -7,7 +7,7 @@ export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = 
   {
     name: "FREE",
     displayName: "Free Plan",
-    description: "Perfect for small teams starting out",
+    description: "Perfect for small teams starting out now",
     priceUSD: 0,
     priceBDT: 0,
     yearlyPriceUSD: 0,
@@ -26,37 +26,45 @@ export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = 
         category: "core"
       },
       {
-        id: "feat_002",
-        name: "Attendance Tracking",
-        description: "Mark daily attendance and view history",
+        id: "feat_1793797950802_c3pr1o",
+        name: "Manage Department",
+        description: "Manage Department like add, edit, delete",
         included: true,
-        icon: "Clock",
-        category: "attendance"
+        icon: "Settings",
+        category: "General"
       },
       {
-        id: "feat_003",
-        name: "Leave Management",
-        description: "Apply for leave and view balance",
+        id: "feat_1793797950937_o8kapa",
+        name: "Manage Designation",
+        description: "Manage Designation like add, edit, delete",
         included: true,
-        icon: "Calendar",
-        category: "leave"
+        icon: "Settings",
+        category: "General"
       },
       {
-        id: "feat_004",
-        name: "Payroll Processing",
-        description: "Generate and process payroll",
-        included: false,
-        icon: "DollarSign",
-        category: "payroll"
+        id: "feat_1793806325989_fiezw3",
+        name: "Manage HR ",
+        description: "Manage HR like only can create HR",
+        included: true,
+        icon: "Users",
+        category: "General"
       },
       {
-        id: "feat_005",
-        name: "Reports & Analytics",
-        description: "Advanced HR and financial reports",
-        included: false,
-        icon: "BarChart",
-        category: "reports"
+        id: "feat_1793806326117_khltk2",
+        name: "Manage Department Head",
+        description: "Manage Department Head like only can create Department Head",
+        included: true,
+        icon: "Users",
+        category: "General"
       },
+      {
+        id: "feat_1793806806857_sb0459",
+        name: "Manage Company",
+        description: "Manage company details like logo, banner and other details",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      }
     ]
   },
   {
@@ -112,6 +120,46 @@ export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = 
         icon: "BarChart",
         category: "reports"
       },
+      {
+        id: "feat_1793797409565_hveqkd",
+        name: "Manage Department Head",
+        description: "Manage Department Heads like Add, Edit, Delete",
+        included: true,
+        icon: "Shield",
+        category: "General"
+      },
+      {
+        id: "feat_1793797541698_z5o4ed",
+        name: "Mange HR",
+        description: "Manage HR like add, edit, delete",
+        included: true,
+        icon: "Crown",
+        category: "General"
+      },
+      {
+        id: "feat_1793797892678_wsjx4c",
+        name: "Manage Department ",
+        description: "Manage Department like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793797894485_vueanx",
+        name: "Manage Designation",
+        description: "Manage Designation like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793806946742_xd4029",
+        name: "Manage Company",
+        description: "Manage company details like logo, banner and other details",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      }
     ]
   },
   {
@@ -175,6 +223,46 @@ export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = 
         icon: "BarChart",
         category: "reports"
       },
+      {
+        id: "feat_1793797641552_7pe1nx",
+        name: "Manage Department Heads",
+        description: "Manage Department Head like add, edit, delete",
+        included: true,
+        icon: "Shield",
+        category: "General"
+      },
+      {
+        id: "feat_1793797641973_ideoz7",
+        name: "Manage HR",
+        description: "Manage HR like add, edit, delete",
+        included: true,
+        icon: "Crown",
+        category: "General"
+      },
+      {
+        id: "feat_1793797838331_acjhns",
+        name: "Manage Department",
+        description: "Manage Department like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793797850264_q7f999",
+        name: "Manage Designation",
+        description: "Manage Designation like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793806917521_8j758r",
+        name: "Manage Company",
+        description: "Manage company details like logo, banner and other details",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      }
     ]
   },
   {
@@ -238,6 +326,46 @@ export const defaultSubscriptionPlansConfig: ISubscriptionPlanConfigPayload[] = 
         icon: "BarChart",
         category: "reports"
       },
+      {
+        id: "feat_1793797705341_9vfjdu",
+        name: "Manage Department Heads",
+        description: "Manage Department Head like add, edit, delete",
+        included: true,
+        icon: "Shield",
+        category: "General"
+      },
+      {
+        id: "feat_1793797733376_f3lpdy",
+        name: "Manage HR",
+        description: "Manage HR like add, edit, delete",
+        included: true,
+        icon: "Crown",
+        category: "General"
+      },
+      {
+        id: "feat_1793797782411_cmkcnj",
+        name: "Manage Department",
+        description: "Manage Department like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793797782546_me2kuf",
+        name: "Manage Designation",
+        description: "Manage Designation like add, edit, delete",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      },
+      {
+        id: "feat_1793806887814_tnc4up",
+        name: "Manage Company",
+        description: "Manage company details like logo, banner and other details",
+        included: true,
+        icon: "Settings",
+        category: "General"
+      }
     ]
   }
 ];

@@ -16,7 +16,7 @@ export interface IFeaturePlan {
     description?: string;
     included: boolean;
     icon?: string;
-    category: 'core' | 'hr' | 'payroll' | 'attendance' | 'leave' | 'reports';
+    category: 'core' | 'hr' | 'payroll' | 'attendance' | 'leave' | 'reports' | 'General';
     limit?: number;
     tooltip?: string;
 }
