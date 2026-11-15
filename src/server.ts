@@ -3,7 +3,7 @@ import { prisma } from "./app/lib/prisma";
 import { envVars } from "./app/utils/env";
 import { seedPlatformSuperAdmin } from "./scripts/seedPlatformSuperAdmin";
 
-const port = envVars.PORT || 5000; // The port your express server will be running on.
+const port = Number(envVars.PORT) || 5000; // The port your express server will be running on.
 
 
 const bootstrap = async () => {
@@ -13,7 +13,7 @@ const bootstrap = async () => {
         // seed super admin first time when run the server
         await seedPlatformSuperAdmin();
         // Start the server
-        app.listen(port, () => {
+        app.listen(port, '0.0.0.0', () => {
             console.log(`Zentro Server is running on http://localhost:${port}`);
         });
     } catch (error) {

@@ -59,4 +59,4 @@ export const seedPlatformSuperAdmin = async () => {
     return platformSuperAdmin.user;
 };
 
-seedPlatformSuperAdmin();
+// seedPlatformSuperAdmin();
